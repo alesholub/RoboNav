@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cz.vmoste.robonav;
+package cz.vmoste.robonav; 
 
 import java.util.Set;
 

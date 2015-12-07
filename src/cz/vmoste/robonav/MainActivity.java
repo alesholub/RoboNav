@@ -1,13 +1,13 @@
 package cz.vmoste.robonav;
 
 /*
-RoboNav = visual navigation for mobile robot (openCv + BlueTerm) [author's email is aholub@centrum.cz]
+RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email is aholub@centrum.cz]
 
 **Notes:**
 - application tries to follow defined GPS waypoints and stay on road (by avoiding road edges)
 - application sends bluetooth commands to robot (see below) [so you need a bluetooth enabled robot]
 - RoboNav.apk is targeted for Android 2.3.3 Gingerbread (API level 10) [it also runs in higher versions of Android]
-- RoboNav.apk requires OpenCV Manager installed in your Android system
+- RoboNav.apk requires OpenCV Manager installed in your Android system (app uses OpenCV Library 2.4.9)
 - for proper function, you have to put map file RoboNavMap.txt (see map format below) to root of SD card
 - application at startup tries to connect to a paired and active bluetooth device nearby
 - default screen orientation is portrait (changeable at preferences)
@@ -82,7 +82,7 @@ pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 
 Changelog:
 V1.9.1 2015-12-06 support for commands "p" and "t" at manual control
-V1.9.0 2015-12-03 initial github version
+V1.9.0 2015-12-03 initial github version (earlier changes have been hidden)
 ```  
 */
 

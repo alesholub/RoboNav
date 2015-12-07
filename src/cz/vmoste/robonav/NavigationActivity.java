@@ -1,4 +1,4 @@
-package cz.vmoste.robonav;
+package cz.vmoste.robonav; 
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
