@@ -8,7 +8,8 @@ RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email
 - application sends bluetooth commands to robot (see below) [so you need a bluetooth enabled robot]
 - RoboNav.apk is targeted for Android 2.3.3 Gingerbread (API level 10) [it also runs in higher versions of Android]
 - RoboNav.apk requires OpenCV Manager installed in your Android system (app uses OpenCV Library 2.4.9)
-- for proper function, you have to put map file RoboNavMap.txt (see map format below) to root of SD card
+- for proper function, you have to put map file RoboNavMap.txt (see map format below) into SD card root
+- for conversion from OSM file to RoboNavMap.txt is my online tool at http://www.vmoste.cz/RoboNav/maps/index.php 
 - application at startup tries to connect to a paired and active bluetooth device nearby
 - default screen orientation is portrait (changeable at preferences)
 - you can define GPS waypoints directly on-screen at input mode 1 (long touch define waypoint with expected payload drop)
@@ -79,6 +80,19 @@ lef: 58 - 60 (left sonar range: 0 - 50) [dm] [used in the algorithm] (if availab
 rig: 62 - 64 (right sonar range: 0 - 50) [dm] [used in the algorithm] (if available)
 bck: 66 - 68 (back IR range: 0 - 255) [cm] [used in the algorithm] (if available)
 pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
+
+To-do:
+- automatic routing (find optimal path in the map)
+- more robust road detection (merging of multiple detection methods)
+- navigation through the crossroads
+- simulation of the path (reading of the itinerary)
+- complete RoboOrienteering navigation (detection of orange cone)
+- better displaying of the state
+- GPS odometry
+- visual detection and avoiding of obstacles
+- video recording (to SD card)
+- wifi telemetry and video streaming
+- probability and artificial intelligence
 
 Changelog:
 V1.9.1 2015-12-06 support for commands "p" and "t" at manual control
