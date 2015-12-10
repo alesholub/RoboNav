@@ -13,7 +13,7 @@ RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email
 - for conversion from OSM file to RoboNavMap.txt is my online tool at http://www.vmoste.cz/RoboNav/maps/index.php 
 - application at startup tries to connect to a paired and active bluetooth device nearby
 - default screen orientation is portrait (changeable at preferences)
-- you can define GPS waypoints directly on-screen at input mode 1 (long touch define waypoint with expected payload drop)
+- you can define GPS waypoints directly on-screen at input mode 1 (long touch define waypoint with payload drop)
 - operational logs are created automatically at root of SD card
 
 **Active buttons (corners) on screen (in portrait orientation):**
