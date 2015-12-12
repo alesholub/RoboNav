@@ -1,5 +1,5 @@
 # RoboNav
-RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email is aholub@centrum.cz]
+RoboNav is Android application for visual navigation of mobile robots (OpenCV + BlueTerm)
 
 **Notes:**
 - application navigates to defined GPS waypoints and uses a camera to stay on road (by avoiding road edges)
@@ -27,8 +27,37 @@ RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email
  - 4 = color avoid
  - 5 = color follow
  - 6 = line detection (not yet fully implemented)
+- "minus" and "plus" (bottom center) = set parameters
+ - in input mode 1 you can set start time (for RoboTour competition [search mode 3])
+ - in run mode (input mode 0) you can set threshold value (0 - 255) and road detection mode
+    - RGB R channel only (red)
+    - RGB G channel only (green)
+    - RGB B channel only (blue)
+    - CSV C channel (color) inserted to RGB R channel
+    - CSV S channel (inverted saturation) inserted to RGB G channel
+    - CSV V channel only (value) inserted to RGB B channel
+    - CSV S channel (inverted saturation) inserted to all RGB channels
+    - RGB G channel zeroed (black instead of green)
+    - (according to my tests it is the best to use CSV S channel for road detection)
 
 - more preferences are available at bluetooth terminal (after quitting of visual navigation by standard "back" button in Android)
+
+**RoboNav screenshot (example)**  
+![RoboNav screenshot (example)](http://www.vmoste.cz/RoboNav/RoboNav01m.png)  
+Search mode is 3 (RoboTour). Debug is off. Input mode is 0 (run). Voice output is muted. Blue dots and lines are part of map. Green dots in the map are defined waypoints. Orange dot is actual (next) waypoint. Red contour indicates detected road. Sloping red line indicates navigation recommendation (turn left). Red point and black line indicates top point of detected road. Yellow numbers at right center shows actual time and configured start time (in brackets).
+
+**Supported serial/bluetooth commands for robot:**
+- s = stop
+- f or w = forward
+- b or x = backward
+- l or a = left
+- r or d = right
+- y = straight
+- h = slightly left
+- k = slightly right
+- p = payload drop
+- 0 - 9 = speed (0 - 9 [max])
+- t = turn (reverse course)
 
 ```
 Required map format (for RoboNavMap.txt) [example]:
@@ -43,19 +72,6 @@ Required map format (for RoboNavMap.txt) [example]:
 3 4
 (first few linas are in format "id latitude longitude 0" => nodes)
 (last/shorter lines are in format "id1 id2" => edges)
-
-Supported serial/bluetooth commands for robot:
-s = stop
-f or w = forward
-b or x = backward
-l or a = left
-r or d = right
-y = straight
-h = slightly left
-k = slightly right
-p = payload drop
-0 - 9 = speed (0 - 9 [max])
-t = turn (reverse course)
 
 Expected serial/bluetooth telemetry from robot (about once per second):
 -------------------------------------------------------------------------
@@ -79,8 +95,9 @@ lef: 58 - 60 (left sonar range: 0 - 50) [dm] [used in the algorithm] (if availab
 rig: 62 - 64 (right sonar range: 0 - 50) [dm] [used in the algorithm] (if available)
 bck: 66 - 68 (back IR range: 0 - 255) [cm] [used in the algorithm] (if available)
 pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
+```
 
-To-do:
+**To-do:**
 - automatic routing (find optimal path in the map)
 - more robust road detection (merging of multiple detection methods)
 - navigation through the crossroads
@@ -93,7 +110,8 @@ To-do:
 - wifi telemetry and video streaming
 - probability and artificial intelligence
 
-Changelog:
-V1.9.1 2015-12-06 support for commands "p" and "t" at manual control
-V1.9.0 2015-12-03 initial github version (earlier changes have been hidden)
-```  
+**Changelog:**
+- V1.9.1 2015-12-06 support for commands "p" and "t" at manual control
+- V1.9.0 2015-12-03 initial github version (earlier changes have been hidden)
+
+_Author: Ales Holub (aholub@centrum.cz)_
