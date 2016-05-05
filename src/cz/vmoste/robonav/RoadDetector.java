@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 //import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
@@ -30,10 +31,7 @@ public class RoadDetector {
 	private Point topPoint = new Point(0,0);
 
     // Cache
-    Mat mPyrDownMat = new Mat();
-    Mat mHsvMat = new Mat();
-    Mat mMask = new Mat();
-    Mat mDilatedMask = new Mat();
+    Mat mGreyMat = new Mat();
     Mat mHierarchy = new Mat();
     Mat mResultMat = new Mat();
 
@@ -97,81 +95,65 @@ public class RoadDetector {
     	int w = rgbaImage.width();
     	int h = rgbaImage.height();
     	int lin = h/4;
-    	Mat z = Mat.zeros(h, w, 0);
+        int mod6 = mLevel % 6;
+        Mat mZeroMat = new Mat(h, w, 0, new Scalar(255, CvType.CV_8UC1));
     	if (mSearchMode>=0) {
             Vector<Mat> channels = new Vector<Mat>();
-            int channel = (int)Math.floor(mLevel - (int)Math.floor(mLevel/8)*8);
-            if (channel<3) {
-            	// RGB kanály
-                Core.split(rgbaImage, channels);
-                mResultMat = channels.get(channel);
-                if (channel!=0) channels.set(0,z);
-                if (channel!=1) channels.set(1,z);
-                if (channel!=2) channels.set(2,z);
-                Core.merge(channels, rgbaImage);;
-            } else if (channel<6) {
-            	// HSV kanály
-                Imgproc.cvtColor(rgbaImage, rgbaImage, Imgproc.COLOR_RGB2HSV_FULL);
-                Core.split(rgbaImage, channels);
-                if (channel!=3) channels.set(0,z);
-                if (channel!=4) channels.set(1,z);
-                if (channel!=5) channels.set(2,z);
-                if (channel==4) {
-                	Mat obrat = new Mat(h, w, 0, new Scalar(255));
-                	Core.subtract(obrat, channels.get(1), obrat);
-                	channels.set(1,obrat);
-                }
-                mResultMat = channels.get(channel-3);
-                Core.merge(channels, rgbaImage);;
-                //Imgproc.cvtColor(rgbaImage, rgbaImage, Imgproc.COLOR_HSV2RGB_FULL);
-            } else if (channel==6) {
-            	// S kanál vložený do všech RGB kanálù
-                Imgproc.cvtColor(rgbaImage, mResultMat, Imgproc.COLOR_RGB2HSV_FULL);
-                Core.split(mResultMat, channels);
-            	Mat obrat = new Mat(h, w, 0, new Scalar(255));
-            	Core.subtract(obrat, channels.get(1), obrat);
-            	channels.set(0,obrat);
-            	channels.set(1,obrat);
-            	channels.set(2,obrat);
-                Core.merge(channels, rgbaImage);;
-                //Imgproc.cvtColor(rgbaImage, rgbaImage, Imgproc.COLOR_HSV2RGB_FULL);
-            } else {
-            	// vynulovaný zelený kanál
-                Core.split(rgbaImage, channels);
-                channels.set(1,z);
-                Core.merge(channels, rgbaImage);;
-            }
+            Imgproc.cvtColor(rgbaImage, mResultMat, Imgproc.COLOR_RGB2HSV_FULL);
+            Core.split(mResultMat, channels);
+            //channels.set(2,new Mat(h, w, 0, new Scalar(220))); //Set V
+        	if (mod6!=2 && mod6!=5) {
+        		// detect road by combining H and S channels
+        		mResultMat = channels.get(0);
+            	Imgproc.threshold(mResultMat, mResultMat, mLevel/2+20, 255, Imgproc.THRESH_BINARY);
+            	Imgproc.threshold(channels.get(1), mGreyMat, 255-mLevel, 255, Imgproc.THRESH_BINARY_INV);
+            	Core.add(mGreyMat, mResultMat, mGreyMat);
+            	//channels.set(0,mGreyMat);
+            	//channels.set(1,mGreyMat);
+            	//channels.set(2,mGreyMat);
+                //Core.merge(channels, rgbaImage);;
+        	} else {
+        		// detect road by S channel only
+                mGreyMat = mZeroMat;
+            	Core.subtract(mGreyMat, channels.get(1), mGreyMat);
+        	}
     	}
-    	Imgproc.cvtColor(rgbaImage, mResultMat, Imgproc.COLOR_RGB2GRAY );
-    	Imgproc.blur(mResultMat, mResultMat, new org.opencv.core.Size(9,9));
-    	Imgproc.equalizeHist(mResultMat, mResultMat);
+    	//Imgproc.cvtColor(rgbaImage, mGreyMat, Imgproc.COLOR_RGB2GRAY );
+    	//Imgproc.GaussianBlur(mResultMat, mResultMat, new org.opencv.core.Size(9,9), 0); // 31.3.2016
+    	if (mod6<6) Imgproc.blur(mGreyMat, mGreyMat, new org.opencv.core.Size(w/100,w/100));
+        Mat kernel1 = Mat.ones(w/100, w/100, CvType.CV_8UC1); // 30.03.2016
+        if (mod6<3) Imgproc.dilate(mGreyMat, mGreyMat, kernel1); // 05.05.2016
+        //Imgproc.erode(mResultMat, mResultMat, kernel1); // 30.03.2016
+    	//if (mod4>1) Imgproc.equalizeHist(mGreyMat, mGreyMat);
+    	//if (mod4>1) Core.normalize(mGreyMat, mGreyMat);
     	if (mOrientation==2) {
     		// landscape
-        	Core.line(mResultMat, new Point(0,lin/2), new Point(w,lin/2), new Scalar(0,0,0), lin);
-        	Core.line(mResultMat, new Point(0,h-lin/2), new Point(w,h-lin/2), new Scalar(0,0,0), lin);
-        	Core.line(mResultMat, new Point(lin/2,0), new Point(lin/2,h), new Scalar(0,0,0), lin);
-        	Core.line(mResultMat, new Point(w-lin/2,0), new Point(w-lin/2,h), new Scalar(0,0,0), lin);
-        	Core.line(mResultMat, new Point(w/2-lin,0), new Point(0,h-lin), new Scalar(0,0,0), lin);
-        	Core.line(mResultMat, new Point(w/2+lin,0), new Point(w,h-lin), new Scalar(0,0,0), lin);
+        	//Core.line(mResultMat, new Point(0,lin/8), new Point(w,lin/8), new Scalar(0,0,0), lin/4);
+        	Core.line(mGreyMat, new Point(0,h-lin/4), new Point(w,h-lin/4), new Scalar(0,0,0), lin/2);
+        	Core.line(mGreyMat, new Point(lin/8,0), new Point(lin/8,h), new Scalar(0,0,0), lin/4);
+        	Core.line(mGreyMat, new Point(w-lin/8,0), new Point(w-lin/8,h), new Scalar(0,0,0), lin/4);
+        	Core.line(mGreyMat, new Point(w/6,0), new Point(0,h/2), new Scalar(0,0,0), lin);
+        	Core.line(mGreyMat, new Point(w-w/6,0), new Point(w,h/2), new Scalar(0,0,0), lin);
     	} else {
     		// portrait
-        	Core.line(mResultMat, new Point(lin/2,0), new Point(lin/2,h), new Scalar(0,0,0), lin);
-        	Core.line(mResultMat, new Point(w-lin,0), new Point(w-lin,h), new Scalar(0,0,0), 2*lin);
-        	Core.line(mResultMat, new Point(0,lin), new Point(w/2-lin,0), new Scalar(0,0,0), lin);
-        	Core.line(mResultMat, new Point(0,h-lin), new Point(w/2-lin,h), new Scalar(0,0,0), lin);
+        	Core.line(mGreyMat, new Point(lin/2,0), new Point(lin/2,h), new Scalar(0,0,0), lin);
+        	Core.line(mGreyMat, new Point(w-lin,0), new Point(w-lin,h), new Scalar(0,0,0), 2*lin);
+        	Core.line(mGreyMat, new Point(0,lin), new Point(w/2-lin,0), new Scalar(0,0,0), lin);
+        	Core.line(mGreyMat, new Point(0,h-lin), new Point(w/2-lin,h), new Scalar(0,0,0), lin);
     	}
     	//Imgproc.watershed(mResultMat, mResultMat);
-    	if (mSearchMode==1) {
-    		// RobotemRovne (threshold)
-        	Imgproc.threshold(mResultMat, mResultMat, mLevel, 255, 0);
-    	} else {
-    		// RoboTour (inrange)
-        	//Core.inRange(mResultMat, new Scalar(mLevel), new Scalar(mLevel2), mResultMat);
-        	Imgproc.threshold(mResultMat, mResultMat, mLevel, 255, 0);
+    	if (mSearchMode<=9) {
+    		//if (mod4>1) Imgproc.threshold(mGreyMat, mGreyMat, mLevel, 255, Imgproc.THRESH_BINARY+Imgproc.THRESH_OTSU);
+    		//else Imgproc.threshold(mGreyMat, mGreyMat, mLevel, 255, Imgproc.THRESH_BINARY);
+        	Imgproc.threshold(mGreyMat, mGreyMat, mLevel, 255, Imgproc.THRESH_BINARY);
+        	//Imgproc.threshold(mGreyMat, mGreyMat, mLevel, 255, Imgproc.THRESH_BINARY+Imgproc.THRESH_OTSU);
+        	//Imgproc.threshold(mGreyMat, mGreyMat, mLevel, 255, Imgproc.THRESH_BINARY_INV);
+        	//Imgproc.threshold(mGreyMat, mGreyMat, mLevel, 255, Imgproc.THRESH_BINARY_INV+Imgproc.THRESH_OTSU);
+        	
     	}
 
     	List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-        Imgproc.findContours(mResultMat, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(mGreyMat, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Find max contour area
         double maxArea = 0;
@@ -209,6 +191,7 @@ public class RoadDetector {
     		y = (mo.get_m01() / mo.get_m00());
     		if (mOrientation==2) mDirection = (int)Math.round(Math.toDegrees(Math.atan((x-(w/2))/(h-lin-y))));
     		else mDirection = (int)Math.round(Math.toDegrees(Math.atan((h/2-y)/(w-2*lin-x))));
+        	//Imgproc.drawContours(rgbaImage, mContours, 0, new Scalar(255,255,255), Core.FILLED);
         	Imgproc.drawContours(rgbaImage, mContours, 0, new Scalar(255,0,0), 2);
         	MatOfInt hull = new MatOfInt();
         	Imgproc.convexHull(mContour, hull);
@@ -247,11 +230,11 @@ public class RoadDetector {
 		if (mOrientation==2) {
 			// landscape
 			Core.line(rgbaImage, new Point(x,y), new Point(w/2,h-lin), mColor, 3);
-			Core.line(rgbaImage, new Point(topPoint.x,topPoint.y), new Point(w/2,h-lin), new Scalar(0), 1);
+			Core.line(rgbaImage, new Point(topPoint.x,topPoint.y), new Point(w/2,h-lin), new Scalar(255,255,0), 1);
 		} else {
 			// portrait
 			Core.line(rgbaImage, new Point(x,y), new Point(w-2*lin,h/2), mColor, 3);
-			Core.line(rgbaImage, new Point(topPoint.x,topPoint.y), new Point(w-2*lin,h/2), new Scalar(0), 1);
+			Core.line(rgbaImage, new Point(topPoint.x,topPoint.y), new Point(w-2*lin,h/2), new Scalar(255,255,0), 1);
 		}
     	mResultMat = rgbaImage;
     }

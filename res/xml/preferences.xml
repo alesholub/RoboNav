@@ -87,7 +87,12 @@
 			android:entryValues="@array/entryvalues_screenorientation_preference"
 			android:dialogTitle="@string/dialog_title_screenorientation_preference" />
 
-        <CheckBoxPreference 
+		<EditTextPreference
+            android:key="commands"
+            android:title="@string/title_commands_preference"
+            android:summary="@string/summary_commands_preference" />
+		
+		<CheckBoxPreference 
                 android:key="localecho"
                 android:defaultValue="@string/default_value_localecho_preference"
                 android:title="@string/title_localecho_preference"
