@@ -30,15 +30,12 @@ RoboNav is Android application for visual navigation of mobile robots (OpenCV + 
 - "minus" and "plus" (bottom center) = set parameters
  - in input mode 1 you can set start time (for RoboTour competition [search mode 3])
  - in run mode (input mode 0) you can set threshold value (0 - 255) and road detection mode
-    - RGB R channel only (red)
-    - RGB G channel only (green)
-    - RGB B channel only (blue)
-    - CSV C channel (color) inserted to RGB R channel
-    - CSV S channel (inverted saturation) inserted to RGB G channel
-    - CSV V channel only (value) inserted to RGB B channel
-    - CSV S channel (inverted saturation) inserted to all RGB channels
-    - RGB G channel zeroed (black instead of green)
-    - (according to my tests it is the best to use CSV S channel for road detection)
+    - HSV H+S, blur, dilate, topPointDirection only
+    - HSV H+S, blur, dilate, topPointDirection + centroidDirection
+    - HSV S, blur, dilate, topPointDirection only
+    - HSV H+S, blur, topPointDirection only, course azimuth check
+    - HSV H+S, blur, topPointDirection + centroidDirection, course azimuth check
+    - HSV S, blur, topPointDirection only, course azimuth check
 
 - more preferences are available at bluetooth terminal (after quitting of visual navigation by standard "back" button in Android)
 
@@ -99,7 +96,6 @@ pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 
 **To-do:**
 - automatic routing (find optimal path in the map)
-- more robust road detection (merging of multiple detection methods)
 - navigation through the crossroads
 - simulation of the path (reading of the itinerary)
 - complete RoboOrienteering navigation (detection of orange cone)
@@ -111,6 +107,7 @@ pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 - probability and artificial intelligence
 
 **Changelog:**
+- V1.9.2 2016-05-05 version for Robotem Rovne 2016 (shadow removal, compass, PID)
 - V1.9.1 2015-12-06 support for commands "p" and "t" at manual control
 - V1.9.0 2015-12-03 initial github version (earlier changes have been hidden)
 
