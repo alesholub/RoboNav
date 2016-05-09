@@ -84,7 +84,6 @@ pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 
 To-do:
 - automatic routing (find optimal path in the map)
-- more robust road detection (merging of multiple detection methods)
 - navigation through the crossroads
 - simulation of the path (reading of the itinerary)
 - complete RoboOrienteering navigation (detection of orange cone)

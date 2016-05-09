@@ -102,7 +102,6 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private String tx = "";
 	private Size textSize;
 	private int[] baseline = null;
-	private static double drivingSignal = 0.0;
 	private static double minArea = 0.5;
 	private static String[] sm = new String[]{"MC","RR","RO","RT","BA","BF","LD","KH","BR","RC"};
 	private static int mOrientation = 0;
@@ -116,7 +115,6 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private SharedPreferences mPrefs;
 	private int direction = 0;
 	private int topDirection = 0;
-	private int lastTopDirection = 0;
     private int directionTrend = 0;
 	private int directionNum = 0;
 	private static int azimuth = 0;
@@ -216,6 +214,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private String mTxt6 = "";
 	private int mTargetAzimuth = 999;
 	private int compassAzimuth = 0;
+	private int numCleanCommands = 0;
+	private static double drivingSignal = 0.0;
+	private int lastDirectionOK = 0;
+	private int directionOK = 0;
+	private int mLeftOK = 1;
+	private int mRightOK = 1;
 	
 	private static int searchMode = 0;
 	private static int mArea = 50;
@@ -965,6 +969,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	direction = mRoadDetector.getDirection();
             	topDirection = mRoadDetector.getTopDirection();
             	topHeight = mRoadDetector.getTopHeight();
+            	mLeftOK = mRoadDetector.getLeftOK();
+            	mRightOK = mRoadDetector.getRightOK();
             	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
@@ -1021,16 +1027,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	//if (debugMode>=0) Core.putText(mRgba, ""+mLevel+" "+cameraDirection+" "+" "+Math.round(drivingSignal)+" "+mod4, new Point(w/6,h-h/6), 1, siz*2, new Scalar(255,255,50), wi*3);
         	mTxt1 = ""+String.format("%4d", (int)azimuthOK);
         	mTxt2 = ""+String.format("%4d", (int)mTargetAzimuth);
-        	//mTxt3 = ""+String.format("%4d", (int)azimDiff);
-        	mTxt3 = " "+(char)(out1[0] & 0xFF);
+        	mTxt3 = ""+String.format("%4d", (int)azimDiffOK);
         	mTxt4 = ""+String.format("%4d", (int)drivingSignal);
-        	mTxt5 = ""+String.format("%4d", (int)commandsMap.size());
+        	mTxt5 = " "+(char)(out1[0] & 0xFF)+"/"+mLeftOK+"/"+mRightOK;
+        	//mTxt5 = ""+String.format("%4d", (int)commandsMap.size());
         	//mTxt5 = ""+String.format("%4d", (int)azimLimit);
         	//mTxt5 = ""+String.format("%4d", (int)wpAzim0);
         	//mTxt6 = ""+String.format("%4d", (int)wpAzim1);
         	mTxt6 = ""+String.format("%4d", (int)mod6);
         	//mTxt5 = "a:"+String.format("%4d", (int)azimuthOK);
-        	if (debugMode>=0) Core.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6, new Point(1,0.7*h), 1, siz*2, new Scalar(255,255,50), wi*3);
+        	if (debugMode>=0) Core.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6, new Point(1,0.7*h), 1, siz*1.5, new Scalar(255,255,50), wi*2);
         	if (debugMode>=0) Core.putText(mRgba, ""+txtCommand, new Point(w/2,h-h/60), 1, siz*2, new Scalar(255,0,255), wi*3);
         	int ok = 0;
         	double tmpx = 0;
@@ -1930,47 +1936,52 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		cameraDiff = Math.abs(direction - 2*topDirection);
 	  		cameraProbability = 100 - (2*cameraDiff);
 	  		if (topHeight<2) cameraProbability = 0; // blob is too close, camera is not reliable
-	  		azimDiffOK = (int)(azimuthValid * azimDiff);
+	  		azimDiffOK = (int)(-azimuthValid * azimDiff);
 	  		if (searchMode==1) mCommand = '-'; // delete previously computed command (set default command to none for RR)
-			if (mod6<3) {
-  			    // navigation by camera only
-				drivingSignal = cameraDirection;
+			if (mod6==0 || mod6==2 || mod6==3) {
+  			    // navigation by topDirection
+				//drivingSignal = cameraDirection;
+				directionOK = topDirection;
+			} else if (mod6==1 || mod6==4 || mod6==5) {
+  			    // navigation by camera direction
+				directionOK = cameraDirection;
+				//drivingSignal = topDirection;
 			} else {
 				// navigation by camera and compass
 	  			if (azimuthValid>0) {
 	  				// traversibility check by compass
 	  				if (Math.abs(azimDiffOK)<azimLimit) {
-	  	  				drivingSignal = azimDiffOK * 0.2 + cameraProbability * cameraDirection * 0.008;
+	  					directionOK = (int)Math.round(azimDiffOK * 0.2 + cameraProbability * cameraDirection * 0.008);
 	  				}
 	  				else if ((azimDiff>0 && cameraDirection>0) || (azimDiff<0 && cameraDirection<0)) {
-	  					drivingSignal = azimDiffOK * 0.1 + cameraProbability * cameraDirection * 0.009;
+	  					directionOK = (int)Math.round(azimDiffOK * 0.1 + cameraProbability * cameraDirection * 0.009);
 	  				}
 	  				else {
-	  					drivingSignal = azimDiffOK * 0.8 + cameraProbability * cameraDirection * 0.002;
+	  					directionOK = (int)Math.round(azimDiffOK * 0.8 + cameraProbability * cameraDirection * 0.002);
 	  				}
 	  			}
-	  			else drivingSignal = cameraProbability * cameraDirection * 0.01;
+	  			else directionOK = (int)Math.round(cameraProbability * cameraDirection * 0.01);
 			}
 	  		if (mod6<3) {
 	  			// PD navigation by computed driving signal
-	  			drivingSignal = drivingSignal + 0.6 * (topDirection - lastTopDirection);
-	  			lastTopDirection = topDirection;
-                if (drivingSignal<-limit2) mCommand = 'l'; // extra left
+	  			drivingSignal = directionOK - 0.2 * (directionOK - lastDirectionOK);
+	  			lastDirectionOK = directionOK;
+                if (drivingSignal<-limit2) mCommand = 'h'; // extra left
 	  			else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
-	  			else if (drivingSignal>limit2) mCommand = 'r'; // extra right
+	  			else if (drivingSignal>limit2) mCommand = 'k'; // extra right
 	  			else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
 	  		} else {
 	  			// navigation by logic
+	  			drivingSignal = directionOK;
 		  		if (cameraProbability>20) {
 		  			// steer to center of the road
-	  				if (cameraDirection>limit2) mCommand = 'r'; // extra right
-	  				else if (cameraDirection<-limit2) mCommand = 'l'; // extra left
-	  				else if (cameraDirection>limit1 && azimDiffOK>-limit1) mCommand = 'k'; // slightly right
-	  				else if (cameraDirection<-limit1 && azimDiffOK<limit1) mCommand = 'h'; // slightly left
-		  		} else {
-	  				if (azimDiffOK>limit2) mCommand = 'r'; // extra right
-	  				else if (azimDiffOK<-limit2) mCommand = 'l'; // extra left
+	  				if (drivingSignal>limit2) mCommand = 'k'; // extra right
+	  				else if (drivingSignal<-limit2) mCommand = 'h'; // extra left
+	  				else if (drivingSignal>limit1 && azimDiffOK>-limit1) mCommand = 'k'; // slightly right
+	  				else if (drivingSignal<-limit1 && azimDiffOK<limit1) mCommand = 'h'; // slightly left
 		  		}
+	  			if (azimDiffOK>azimuthLimit && mRightOK>0) mCommand = 'r'; // extra right
+	  			else if (azimDiffOK<-azimuthLimit && mLeftOK>0) mCommand = 'l'; // extra left
 	  		}
 	  		if (" wlhkr-".indexOf(mCommand)>0 && topHeight<2) {
   				// road border seems too close, rather stop and step back (not for RR)
@@ -1987,6 +1998,17 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	if ((" lhkr-".indexOf(""+mCommand)>0 && (state=="normal" && mPrevCommand=='s')) || state=="stop") mCommand = 'f'; // straight
     	if (" lhkr-".indexOf(""+mCommand)>0 && state=="normal" && btSpd<1 && btValid>0) mCommand = 'w'; // forward (if speed is 0)
     	if (mCommand=='w' && state=="stop") state = "normal";
-		if (mod2<1 && searchMode==1 && mPrevCommand!='w' && mCommand!='w') mCommand = 'w'; // stabilization for RR
+		if (searchMode==1) {
+			// stabilization for RR
+			numCleanCommands++;
+			if (mCommand!='w') {
+				if (numCleanCommands<3) mCommand = 'w';
+			    else {
+			    	numCleanCommands = 0;
+			    	if (btSpd>160) numCleanCommands = 1;
+			    }
+				
+			}
+		}
     }
 }

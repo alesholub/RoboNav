@@ -29,6 +29,8 @@ public class RoadDetector {
     private int mTopDirection = 0;
     private int mTopHeight = 0;
 	private Point topPoint = new Point(0,0);
+    private int mLeftOK = 1;
+    private int mRightOK = 1;
 
     // Cache
     Mat mGreyMat = new Mat();
@@ -231,10 +233,18 @@ public class RoadDetector {
 			// landscape
 			Core.line(rgbaImage, new Point(x,y), new Point(w/2,h-lin), mColor, 3);
 			Core.line(rgbaImage, new Point(topPoint.x,topPoint.y), new Point(w/2,h-lin), new Scalar(255,255,0), 1);
+			mLeftOK = 0;
+			if (mGreyMat.get(2*h/3,w/4)[0]>0.5) mLeftOK = 1;
+			mRightOK = 0;
+			if (mGreyMat.get(2*h/3,3*w/4)[0]>0.5) mRightOK = 1;
 		} else {
 			// portrait
 			Core.line(rgbaImage, new Point(x,y), new Point(w-2*lin,h/2), mColor, 3);
 			Core.line(rgbaImage, new Point(topPoint.x,topPoint.y), new Point(w-2*lin,h/2), new Scalar(255,255,0), 1);
+			mLeftOK = 0;
+			if (mGreyMat.get(3*h/4,2*w/3)[0]>0.5) mLeftOK = 1;
+			mRightOK = 0;
+			if (mGreyMat.get(h/4,2*w/3)[0]>0.5) mRightOK = 1;
 		}
     	mResultMat = rgbaImage;
     }
@@ -257,5 +267,13 @@ public class RoadDetector {
 
     public int getTopHeight() {
         return mTopHeight;
+    }
+
+    public int getLeftOK() {
+        return mLeftOK;
+    }
+
+    public int getRightOK() {
+        return mRightOK;
     }
 }
