@@ -1932,7 +1932,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  			direction /= 3-btDst/10;
 	  			topDirection /= 3-btDst/10;
 	  		}
-	  		cameraDirection = (direction + 2*topDirection) / 2;
+	  		cameraDirection = (2*direction + 3*topDirection) / 5;
 	  		cameraDiff = Math.abs(direction - 2*topDirection);
 	  		cameraProbability = 100 - (2*cameraDiff);
 	  		if (topHeight<2) cameraProbability = 0; // blob is too close, camera is not reliable
@@ -1941,7 +1941,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			if (mod6==0 || mod6==2 || mod6==3) {
   			    // navigation by topDirection
 				//drivingSignal = cameraDirection;
-				directionOK = topDirection;
+				directionOK = topDirection/2;
 			} else if (mod6==1 || mod6==4 || mod6==5) {
   			    // navigation by camera direction
 				directionOK = cameraDirection;
@@ -1983,6 +1983,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  			if (azimDiffOK>azimuthLimit && mRightOK>0) mCommand = 'r'; // extra right
 	  			else if (azimDiffOK<-azimuthLimit && mLeftOK>0) mCommand = 'l'; // extra left
 	  		}
+  			if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
+  			else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
 	  		if (" wlhkr-".indexOf(mCommand)>0 && topHeight<2) {
   				// road border seems too close, rather stop and step back (not for RR)
 	  			if (searchMode>1) {
