@@ -1941,7 +1941,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			if (mod6==0 || mod6==2 || mod6==3) {
   			    // navigation by topDirection
 				//drivingSignal = cameraDirection;
-				directionOK = topDirection/2;
+				directionOK = topDirection;
 			} else if (mod6==1 || mod6==4 || mod6==5) {
   			    // navigation by camera direction
 				directionOK = cameraDirection;
@@ -1964,7 +1964,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			}
 	  		if (mod6<3) {
 	  			// PD navigation by computed driving signal
-	  			drivingSignal = directionOK - 0.2 * (directionOK - lastDirectionOK);
+	  			drivingSignal = directionOK + 0.2 * (directionOK - lastDirectionOK);
 	  			lastDirectionOK = directionOK;
                 if (drivingSignal<-limit2) mCommand = 'h'; // extra left
 	  			else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
