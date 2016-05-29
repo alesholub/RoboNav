@@ -31,6 +31,7 @@ public class RoadDetector {
 	private Point topPoint = new Point(0,0);
     private int mLeftOK = 1;
     private int mRightOK = 1;
+    private int mCenterOK = 1;
 
     // Cache
     Mat mGreyMat = new Mat();
@@ -246,6 +247,8 @@ public class RoadDetector {
 			mRightOK = 0;
 			if (mGreyMat.get(h/4,2*w/3)[0]>0.5) mRightOK = 1;
 		}
+		mCenterOK = 0;
+		if (mGreyMat.get(h/2,w/2)[0]>0.5) mCenterOK = 1;
     	mResultMat = rgbaImage;
     }
 
@@ -275,5 +278,9 @@ public class RoadDetector {
 
     public int getRightOK() {
         return mRightOK;
+    }
+
+    public int getCenterOK() {
+        return mCenterOK;
     }
 }

@@ -10,6 +10,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
@@ -25,10 +26,11 @@ public class ColorBlobDetector {
     private Scalar mColorRadius = new Scalar(25,50,50,0);
     private Mat mSpectrum = new Mat();
     private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
-    private int mDirection = 0;
+    private int direction = 0;
     private int mTopDirection = 0;
     private int mTopHeight = 0;
 	private Point mTopPoint = new Point(0,0);
+	private Rect mBoundingRectangle = null;
 
     // Cache
     Mat mPyrDownMat = new Mat();
@@ -110,6 +112,11 @@ public class ColorBlobDetector {
     }
 
     public void process(Mat mRgba) {
+    	// detect one or two largest areas with defined color
+    	// return contours of this areas (draw contours to original image, but not in searchMode 2 [RoboOrienteering])
+    	// return direction to the largest area
+    	// return central point of the largest area
+    	// return bounding rectangle of the largest area
         Imgproc.pyrDown(mRgba, mPyrDownMat);
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
 
@@ -132,8 +139,9 @@ public class ColorBlobDetector {
     	p3 = w/2;
     	p4 = h/4;
     	p5 = h/2;
+        mBoundingRectangle = new Rect(w/2,h/2,1,1);
         double maxArea = 0;
-        minArea = w/10;
+        //minArea = w/10;
     	int corner = w/8;
         Iterator<MatOfPoint> each = contours.iterator();
         while (each.hasNext()) {
@@ -162,14 +170,16 @@ public class ColorBlobDetector {
         	}
         }
         Scalar CONTOUR_COLOR = new Scalar(255,0,0,255);
-    	Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 2);
+		if (mSearchMode!=2) {
+    	  Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 2);
+		}
 
         Scalar mBlobColorRgba = converScalarHsv2Rgba(mHsvColor);
     	Mat colorLabel = mRgba.submat(0, corner, 0, corner);
     	colorLabel.setTo(mBlobColorRgba);
 
     	Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
-    	mSpectrum.copyTo(spectrumLabel);
+    	if (mSearchMode!=2) mSpectrum.copyTo(spectrumLabel);
     	Moments mo = new Moments();
     	int x = 0;
     	int y = 0;
@@ -177,17 +187,22 @@ public class ColorBlobDetector {
     	int y2 = 0;
 		double x3 = w/2;
 		double y3 = 0;
-		int direction = 0;
+		direction = 0;
     	if (contours.size()>0) {
     		// set direction by position of first two contours
     		MatOfPoint contour = contours.get(0);
+    		mBoundingRectangle = Imgproc.boundingRect(contour);
     		mo = Imgproc.moments(contour);
     		x = (int) (mo.get_m10() / mo.get_m00());
     		y = (int) (mo.get_m01() / mo.get_m00());
+    		if (mBoundingRectangle.height<10 || (mBoundingRectangle.x<=corner && mBoundingRectangle.y<=corner)) {
+    			x = w/2;
+    			y = h/2;
+    		}
     		Core.circle(mRgba, new Point(x, y), 4, new Scalar(255,49,0,255));
 			x3 = x;
 			y3 = y;
-    		if (contours.size()>1) {
+    		if (contours.size()>1 && mSearchMode!=2) {
     			// process second contour
     			contour = contours.get(1);
     			mo = Imgproc.moments(contour);
@@ -247,7 +262,7 @@ public class ColorBlobDetector {
     }
 
     public int getDirection() {
-        return mDirection;
+        return direction;
     }
 
     public int getTopDirection() {
@@ -260,6 +275,10 @@ public class ColorBlobDetector {
 
     public Point getTopPoint() {
         return mTopPoint;
+    }
+
+    public Rect getBoundingRectangle() {
+        return mBoundingRectangle;
     }
 
     private Scalar converScalarHsv2Rgba(Scalar hsvColor) {

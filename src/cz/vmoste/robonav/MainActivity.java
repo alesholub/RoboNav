@@ -95,6 +95,7 @@ To-do:
 - probability and artificial intelligence
 
 Changelog:
+V1.9.3 2016-05-?? version for RoboOrienteering 2016 (orange blob search)
 V1.9.2 2016-05-05 version for Robotem Rovne 2016 (shadow removal, compass, PID)
 V1.9.1 2015-12-06 support for commands "p" and "t" at manual control
 V1.9.0 2015-12-03 initial github version (earlier changes have been hidden)
@@ -129,9 +130,9 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+//import android.location.Location;
+//import android.location.LocationListener;
+//import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -163,7 +164,7 @@ import android.widget.Toast;
 import cz.vmoste.robonav.R;
 
 
-public class MainActivity extends Activity implements LocationListener {
+public class MainActivity extends Activity {
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
@@ -293,6 +294,8 @@ public class MainActivity extends Activity implements LocationListener {
 
     private int mControlKeyCode;
 
+    //LocationManager locationManager;
+
     private SharedPreferences mPrefs;
 	
     private MenuItem mMenuItemConnect;
@@ -340,8 +343,8 @@ public class MainActivity extends Activity implements LocationListener {
 		if (DEBUG)
 			Log.e(LOG_TAG, "+++ ON CREATE +++");
 
-	    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-	    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+	    //locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+	    //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
 
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         readPrefs();
@@ -543,8 +546,8 @@ public class MainActivity extends Activity implements LocationListener {
     	if (mSerialService != null)
         	mSerialService.stop();
         
-	    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.removeUpdates(this);
+	    //LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        //locationManager.removeUpdates(this);
 
         finish();
         
@@ -979,13 +982,29 @@ public class MainActivity extends Activity implements LocationListener {
 
 
     private void doStartRecording(boolean auto) {
-    	File sdCard = Environment.getExternalStorageDirectory();
+    	//File sdCard = Environment.getExternalStorageDirectory();
+    	//SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd_HHmmss",Locale.US);
+    	//String currentDateTimeString = format.format(new Date());
+    	//String fileName = sdCard.getAbsolutePath() + "/RoboNav_" + currentDateTimeString + ".log";
     	
-    	SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd_HHmmss",Locale.US);
-    	String currentDateTimeString = format.format(new Date());
-    	String fileName = sdCard.getAbsolutePath() + "/RoboNav_" + currentDateTimeString + ".log";
-    	
-    	mEmulatorView.setFileNameLog( fileName );
+	   File sdCard = Environment.getExternalStorageDirectory();
+	   SimpleDateFormat format = new SimpleDateFormat("yyMMdd",Locale.US);
+	   String dateString = format.format(new Date());
+	   String fileName = sdCard.getAbsolutePath() + "/RoboNav" + dateString + "bt.log";
+	   File logFile = new File(fileName);
+	   if (!logFile.exists())
+	   {
+	      try
+	      {
+	          logFile.createNewFile();
+	      } 
+	      catch (IOException e)
+	      {
+	         e.printStackTrace();
+	      }
+	   }
+
+	    mEmulatorView.setFileNameLog( fileName );
     	mEmulatorView.startRecording();
 
     	if (!auto) mMenuItemStartStopRecording.setTitle(R.string.menu_stop_logging);
@@ -1021,29 +1040,29 @@ public class MainActivity extends Activity implements LocationListener {
 
     }
 
-	@Override
-	public void onLocationChanged(Location arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onProviderDisabled(String arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onProviderEnabled(String arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
-		// TODO Auto-generated method stub
-		
-	}
+//	@Override
+//	public void onLocationChanged(Location arg0) {
+//		// TODO Auto-generated method stub
+//		
+//	}
+//
+//	@Override
+//	public void onProviderDisabled(String arg0) {
+//		// TODO Auto-generated method stub
+//		
+//	}
+//
+//	@Override
+//	public void onProviderEnabled(String arg0) {
+//		// TODO Auto-generated method stub
+//		
+//	}
+//
+//	@Override
+//	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
+//		// TODO Auto-generated method stub
+//		
+//	}
 }
 
 
