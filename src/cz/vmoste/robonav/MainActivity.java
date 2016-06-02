@@ -95,7 +95,7 @@ To-do:
 - probability and artificial intelligence
 
 Changelog:
-V1.9.3 2016-05-?? version for RoboOrienteering 2016 (orange blob search)
+V1.9.3 2016-05-29 version for RoboOrienteering 2016 (orange blob search)
 V1.9.2 2016-05-05 version for Robotem Rovne 2016 (shadow removal, compass, PID)
 V1.9.1 2015-12-06 support for commands "p" and "t" at manual control
 V1.9.0 2015-12-03 initial github version (earlier changes have been hidden)

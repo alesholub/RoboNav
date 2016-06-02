@@ -170,7 +170,7 @@ public class ColorBlobDetector {
         	}
         }
         Scalar CONTOUR_COLOR = new Scalar(255,0,0,255);
-		if (mSearchMode!=2) {
+		if (mSearchMode>9) {
     	  Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 2);
 		}
 
@@ -202,7 +202,7 @@ public class ColorBlobDetector {
     		Core.circle(mRgba, new Point(x, y), 4, new Scalar(255,49,0,255));
 			x3 = x;
 			y3 = y;
-    		if (contours.size()>1 && mSearchMode!=2) {
+    		if (contours.size()>1 && mSearchMode<1) {
     			// process second contour
     			contour = contours.get(1);
     			mo = Imgproc.moments(contour);
@@ -230,7 +230,7 @@ public class ColorBlobDetector {
         			direction = -direction;
         		}
     		}
-	    	Scalar mColor = new Scalar(0,255,0); // yellow
+	    	Scalar mColor = new Scalar(0,255,0); // green
 			if (direction<-limit1 || direction>limit1) mColor = new Scalar(0,0,255); // blue
 			if (direction<-limit2 || direction>limit2) mColor = new Scalar(255,0,0); // red
 	    	Core.line(mRgba, new Point(x3,y3), endPoint, mColor, 3);
