@@ -1915,9 +1915,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	compassAzimuth = compass.getAzimuth();
     	latOK = lat;
     	lonOK = lon;
-		azimuthValid = 1;
+		azimuthValid = 0;
+	    if (compassAzimuth!=999 && compassAzimuth!=0) {
+			azimuthOK = compassAzimuth;
+			azimuthValid = 1;
+	    }
     	if (btValid>0) {
-        	azimuthOK = azimuth;
+        	if (searchMode!=2 || azimuthValid<1) {
+        		azimuthOK = azimuth;
+    			azimuthValid = 1;
+        	}
         	distanceOK = btDst;
         	if (btLat>30f) {
         		// GPS at robot is better
@@ -1928,16 +1935,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     		// azimuth from GPS?
     		if (bearing!=0) {
             	azimuthOK = (bearing + 360) % 360;
+    			azimuthValid = 1;
     		}
     	} else {
     		// azimuth from path
         	azimuthOK = wpAzim0;
     		azimuthValid = 0;
     	}
-	    if (compassAzimuth!=999) {
-			azimuthOK = compassAzimuth;
-			azimuthValid = 1;
-	    }
     	if (azimuthOK>180) azimuthOK -= 360;
     }
     
@@ -2072,11 +2076,6 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		    			// start payload drop procedure
 	  		    			state = "drop";
 	  		    			tmpSec0 = tmpSec;
-		  		    		mCommand = 's'; // stop
-		  		    		counter = 0;
-		  		    		return;
-	  		    		} else if ((tmpSec0-tmpSec)>9) {
-	  		    			// end of payload drop procedure
 	  		    			if (goalReached>0) {
 		  		    			if (path.size()==(wp+1) || wp==0) {
 		  		    				// end of mission
@@ -2093,6 +2092,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		  		    			goalReached = 1; // go to next waypoint
 				  				computeNextWaypoint(1);
 	  		    			}
+		  		    		mCommand = 's'; // stop
+		  		    		counter = 0;
+		  		    		return;
+	  		    		} else if ((tmpSec0-tmpSec)>9) {
+	  		    			// end of payload drop procedure
 	  		    			state = "normal";
 	  		    			tmpSec0 = 0;
 		  		    		mCommand = 'w'; // forward
@@ -2297,7 +2301,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
   			}
 		}
 		
-		// new procedure
+		// new procedure (since 2016-06-02)
 		if (searchMode==1) {
 			if (mBoundingRectangle.height>9) {
 				if (blobDirection<=0 && blobDirection>-15) drivingSignal = 30;
@@ -2326,9 +2330,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		}
         
 		if (state=="normal") {
-			if (drivingSignal<-limit2) mCommand = 'h'; // extra left
+			if (drivingSignal<-limit2) mCommand = 'l'; // extra left
 		    else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
-			else if (drivingSignal>limit2) mCommand = 'k'; // extra right
+			else if (drivingSignal>limit2) mCommand = 'r'; // extra right
 			else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
 			if (mGrass<1 && mCenterOK>0) {
 				if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
@@ -2342,11 +2346,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		if ((searchMode==1 || searchMode>=2) && mCommand=='-') mCommand = 'w'; // normal mCommand for RR & RO is "forward"
     	//if ((" lhkr-".indexOf(""+mCommand)>0 && (state=="normal" && mPrevCommand=='s')) || state=="stop") mCommand = 'f'; // straight
     	if (" lhkr-".indexOf(""+mCommand)>0 && state=="normal" && btSpd<1 && btValid>0) mCommand = 'w'; // forward (if speed is 0)
-    	if (" lh".indexOf(""+mCommand)>0 && btRngLeft<10) mCommand = 'w'; // can't turn left
-    	if (" kr".indexOf(""+mCommand)>0 && btRngRight<10) mCommand = 'w'; // can't turn right
+ 		if (mod6!=1 && mod6!=4) {
+ 			// check L/R sonars
+ 	    	if (" lh".indexOf(""+mCommand)>0 && btRngLeft<10) mCommand = 'w'; // can't turn left
+ 	    	else if (" kr".indexOf(""+mCommand)>0 && btRngRight<10) mCommand = 'w'; // can't turn right
+ 		}
     	if (mCommand=='w' && state=="stop") state = "normal";
 		if (searchMode>=1) {
-			// stabilization for RR
+			// stabilization
 			numCleanCommands++;
 			if (mCommand!='w') {
 				if (numCleanCommands<3) mCommand = 'w';
