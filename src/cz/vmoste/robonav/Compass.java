@@ -13,7 +13,7 @@ public class Compass implements SensorEventListener {
 	private Sensor msensor;
 	private float[] mGravity = new float[3];
 	private float[] mGeomagnetic = new float[3];
-	private float iAzimuth = 0f;
+	private float iAzimuth = 999f;
 
 	public Compass(Context context) {
 		sensorManager = (SensorManager) context
@@ -25,7 +25,7 @@ public class Compass implements SensorEventListener {
 	public void start() {
 		sensorManager.registerListener(this, gsensor,
 				SensorManager.SENSOR_DELAY_GAME);
-		sensorManager.registerListener(this, msensor,
+		if (msensor!=null) sensorManager.registerListener(this, msensor,
 				SensorManager.SENSOR_DELAY_GAME);
 	}
 
