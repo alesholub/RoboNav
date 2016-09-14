@@ -24,7 +24,7 @@ RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email
 - bottom left corner = search mode switch (incremental)
  - 0 = manual control
  - 1 = RobotemRovne
- - 2 = RoboOrienteering (not yet fully implemented)
+ - 2 = RoboOrienteering
  - 3 = RoboTour
  - 4 = color avoid
  - 5 = color follow
@@ -85,8 +85,6 @@ pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 To-do:
 - automatic routing (find optimal path in the map)
 - navigation through the crossroads
-- simulation of the path (reading of the itinerary)
-- complete RoboOrienteering navigation (detection of orange cone)
 - better displaying of the state
 - GPS odometry
 - visual detection and avoiding of obstacles

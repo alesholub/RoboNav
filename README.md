@@ -22,7 +22,7 @@ RoboNav is Android application for visual navigation of mobile robots (OpenCV + 
 - bottom left corner = search mode switch (incremental)
  - 0 = manual control
  - 1 = RobotemRovne
- - 2 = RoboOrienteering (not yet fully implemented)
+ - 2 = RoboOrienteering
  - 3 = RoboTour
  - 4 = color avoid
  - 5 = color follow
@@ -97,8 +97,6 @@ pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 **To-do:**
 - automatic routing (find optimal path in the map)
 - navigation through the crossroads
-- simulation of the path (reading of the itinerary)
-- complete RoboOrienteering navigation (detection of orange cone)
 - better displaying of the state
 - GPS odometry
 - visual detection and avoiding of obstacles
@@ -107,6 +105,8 @@ pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 - probability and artificial intelligence
 
 **Changelog:**
+- V1.9.4 2016-07-19 version for RoboTour 2016 (safer navigation)
+- V1.9.3 2016-05-29 version for RoboOrienteering 2016 (orange blob search)
 - V1.9.2 2016-05-05 version for Robotem Rovne 2016 (shadow removal, compass, PID)
 - V1.9.1 2015-12-06 support for commands "p" and "t" at manual control
 - V1.9.0 2015-12-03 initial github version (earlier changes have been hidden)
