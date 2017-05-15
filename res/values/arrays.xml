@@ -120,9 +120,9 @@
       <item>Robotem rovne</item>  
 	  <item>RoboOrienteering</item>
 	  <item>RoboTour</item>  
-      <item>Blob avoid</item>
-	  <item>Blob follow</item>  
-	  <item>Line detection</item>  
+      <item>Road Assistance</item>
+	  <item>Puck Collect</item>  
+	  <item>Line Follower</item>  
 	  <item>Ketchup House</item>  
 	  <item>Bear Rescue</item>  
 	  <item>Robo Carts</item>  

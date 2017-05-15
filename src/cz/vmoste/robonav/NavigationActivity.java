@@ -15,6 +15,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+//import java.util.Vector;
+
 
 import org.opencv.android.BaseLoaderCallback;
 //import org.opencv.core.Size;
@@ -26,10 +28,12 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
 
 //import com.google.android.gms.common.ConnectionResult;
@@ -40,6 +44,10 @@ import org.opencv.imgproc.Imgproc;
 //import com.google.android.gms.location.LocationListener;
 //import com.google.android.gms.location.LocationRequest;
 //import com.google.android.gms.location.LocationServices;
+
+
+
+
 
 
 import android.annotation.SuppressLint;
@@ -86,7 +94,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     private Scalar               mBlobColorHsv2;
     private ColorBlobDetector    mColorDetector;
     private RoadDetector         mRoadDetector;
-    private LineDetector         mLineDetector;
+    private ObstacleDetector         mObstacleDetector;
     private byte                 mCommand = '-';
     private byte                 mPrevCommand = '-';
     private byte[]               out = new byte[1];
@@ -119,14 +127,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private Size textSize;
 	private int[] baseline = null;
 	private static double minArea = 0.5;
-	private static String[] sm = new String[]{"MC","RR","RO","RT","BA","BF","LD","KH","BR","RC"};
+	private static String[] sm = new String[]{"MC","RR","RO","RT","RA","PC","LF","KH","BR","RC"};
 	private static int mOrientation = 0;
 	private static String mHSV1 = "";
 	private static String mHSV2 = "";
     private static String address = "00:00:00:00:00:00";
     private static String address2 = "00:00:00:00:00:00";
-	private static String commandsTable0 = "lrswfbhkpt";
-	private static String commandsTable = "lrswfbhkpt";
+	private static String commandsTable0 = "lrswfbhkptn";
+	private static String commandsTable = "lrswfbhkptn";
 	private static Map<Character, Character> commandsMap = new HashMap<Character, Character>();
 	private SharedPreferences mPrefs;
 	private int direction = 0;
@@ -139,6 +147,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static int azimuthLimit = 25;
 	private static int azimuthDifference = 0;
 	private static Time now = new Time();
+	private static long firstTime = now.toMillis(false);
 	private static long azimuthValidTime = 0;
 	private static int azimuthValid = 0;
 	private static int btValid = 0;
@@ -166,6 +175,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     private static double latOK = 0.0; // best estimation of lattitude
     private static double lonOK = 0.0; // best estimation of longitude
     private static double azimuthOK = 0.0; // best estimation of azimuth (course)
+    private static double azimuth_calib = 0.0; // calibration of azimuth (shift)
     private static int distanceOK = 0; // best estimation of distance (traveled)
 	private static List<Point> path = new ArrayList<Point>(); // desired path
 	private static int wp = 0; // waypoint number
@@ -251,6 +261,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private int mRightOK = 1;
 	private int mCenterOK = 1;
 	private int mGrass = 0;
+	private Point topPoint =  new Point(w/2,h/2);
+	private Point centPoint =  new Point(w/2,h/2);
+    private List<KeyPoint> mObstacles = new ArrayList<KeyPoint>();
 	
 	private static int searchMode = 0;
 	private static int mArea = 50;
@@ -264,6 +277,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static long lastNETtime = -1;
 	
 	private static Rect mBoundingRectangle = null;
+	//private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
+	private List<MatOfPoint> mContours = null;
 
 	float[] results = new float[3];
 
@@ -299,7 +314,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     void setLevel() {
     	mRoadDetector.setLevel(mLevel);
-    	mLineDetector.setLevel(mLevel);
+    	mObstacleDetector.setLevel(mLevel);
     	mColorDetector.setLevel(mLevel);
     }
     
@@ -380,7 +395,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
       	      });
         //if (tts!=null) Toast.makeText(getApplicationContext(), "TTS OK", Toast.LENGTH_SHORT).show();
         //else Toast.makeText(getApplicationContext(), "TTS ERR", Toast.LENGTH_SHORT).show();
-    	stopped = false;
+        stopped = false;
         appendLog("resume");
     }
 
@@ -393,7 +408,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
     	}
         //mGoogleApiClient.connect();
-        compass.start();
+    	compass.start();
 		//Toast.makeText(getApplicationContext(), "compass start", Toast.LENGTH_SHORT).show();
     	stopped = false;
         super.onStart();
@@ -583,7 +598,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mColorDetector = new ColorBlobDetector();
         mRoadDetector = new RoadDetector();
-        mLineDetector = new LineDetector();
+        mObstacleDetector = new ObstacleDetector();
         // autotouch (green)
         //Toast.makeText(getApplicationContext(), "autotouch", Toast.LENGTH_SHORT).show();
         //mColorDetector.setColorRadius(new Scalar(25,50,50,0));
@@ -604,7 +619,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             mColorDetector.setHsvColor(mBlobColorHsv2);
         }
         mRoadDetector.setHsvColor(mBlobColorHsv);
-        mLineDetector.setHsvColor(mBlobColorHsv);
+        mObstacleDetector.setHsvColor(mBlobColorHsv);
     	w = mRgba.width();
     	h = mRgba.height();
     	corner = w/8;
@@ -633,9 +648,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	mColorDetector.setOrientation(mOrientation);
         mColorDetector.setMinContourArea(minArea);
         mColorDetector.setMinArea(mArea);
-    	mLineDetector.setLevel(mLevel);
-    	mLineDetector.setLimits(limit1,limit2);
-    	mLineDetector.setOrientation(mOrientation);
+    	mObstacleDetector.setLevel(mLevel);
+    	mObstacleDetector.setLimits(limit1,limit2);
+    	mObstacleDetector.setOrientation(mOrientation);
     	readMap("RoboNavMap.txt");
     	goals = readPoints("RoboNavGoals.txt");
     	path = readPoints("RoboNavPath.txt");
@@ -880,7 +895,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         else if ((x>(cols-2*corner)) && (y>(rows-corner)) && inputMode<1) {
         	// searchmode corner (bottom right)
         	searchMode++;
-    	    if (searchMode>6) searchMode = 0;
+    	    if (searchMode>3) searchMode = 0;
     	    if (searchMode>=1) {
                 mBlobColorHsv = mBlobColorHsv2;
     	    	mColorDetector.setHsvColor(mBlobColorHsv2);
@@ -923,13 +938,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 mLevel = mLevel + 10;
                 if (mLevel>255) mLevel = 255;
                 mRoadDetector.setLevel(mLevel);
-                mLineDetector.setLevel(mLevel);
+                mObstacleDetector.setLevel(mLevel);
         	}
         	else if (searchMode==1 || searchMode==2 || searchMode==3) {
                 mLevel = mLevel + 1;
                 if (mLevel>255) mLevel = 255;
                 mRoadDetector.setLevel(mLevel);
-                mLineDetector.setLevel(mLevel);
+                mObstacleDetector.setLevel(mLevel);
         	}
         	else {
                 //minArea = (double)Math.round((minArea + 0.1)*100)/100;
@@ -939,7 +954,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 if (limit1>25) limit1 = 25;
                 limit2 = limit1 + 10;
                 mRoadDetector.setLimits(limit1,limit2);
-                mLineDetector.setLimits(limit1,limit2);
+                mObstacleDetector.setLimits(limit1,limit2);
         	}
             if (mColor1==BLUE) mColor1 = YELLOW; else mColor1 = BLUE;
         	mColor1 = RED;
@@ -959,13 +974,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 mLevel = mLevel - 10;
                 if (mLevel<0) mLevel = 0;
                 mRoadDetector.setLevel(mLevel);
-                mLineDetector.setLevel(mLevel);
+                mObstacleDetector.setLevel(mLevel);
         	}
         	else if (searchMode==1 || searchMode==2 || searchMode==3) {
                 mLevel = mLevel - 1;
                 if (mLevel<0) mLevel = 0;
                 mRoadDetector.setLevel(mLevel);
-                mLineDetector.setLevel(mLevel);
+                mObstacleDetector.setLevel(mLevel);
         	}
         	else {
                 //minArea = (double)Math.round((minArea - 0.1)*100)/100;
@@ -975,9 +990,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 if (limit1<0) limit1 = 0;
                 limit2 = limit1 + 10;
                 mRoadDetector.setLimits(limit1,limit2);
-                mLineDetector.setLimits(limit1,limit2);
+                mObstacleDetector.setLimits(limit1,limit2);
         	}
-            if (mColor2==BLUE) mColor2 = YELLOW; else mColor2 = BLUE;
+            //if (mColor2==BLUE) mColor2 = YELLOW; else mColor2 = BLUE;
         	mColor2 = RED;
     	    return false;
         }
@@ -1038,19 +1053,26 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         
         if (inputMode<1 && (searchMode==1 || searchMode==2)) {
         	// targetAzimuth for RR
-        	mTargetAzimuth = (int)azimuthOK;
+        	//mTargetAzimuth = (int)azimuthOK;
+        	//azimuth_calib = pathAzimuth - azimuthOK;
+        	azimuth_calib += pathAzimuth - azimuthOK;
         	//if (searchMode==1) return false;
+	    	out[0] = 'n'; // new azimuth
+      	    if (!stopped) {
+         	    writeCommand();
+        	    tellCommand((char)out[0]);
+            }
         }
         
         if (inputMode<2) return false;
 
         Rect touchedRect = new Rect();
 
-        touchedRect.x = (x>4) ? x-4 : 0;
-        touchedRect.y = (y>4) ? y-4 : 0;
+        touchedRect.x = (x>1) ? x-1 : 0;
+        touchedRect.y = (y>1) ? y-1 : 0;
 
-        touchedRect.width = (x+4 < cols) ? x + 4 - touchedRect.x : cols - touchedRect.x;
-        touchedRect.height = (y+4 < rows) ? y + 4 - touchedRect.y : rows - touchedRect.y;
+        touchedRect.width = (x+1 < cols) ? x + 1 - touchedRect.x : cols - touchedRect.x;
+        touchedRect.height = (y+1 < rows) ? y + 1 - touchedRect.y : rows - touchedRect.y;
 
         Mat touchedRegionRgba = mRgba.submat(touchedRect);
 
@@ -1128,7 +1150,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         mRgba = inputFrame.rgba();
       	if (stopped) return mRgba;
     	mRoadDetector.setSearchMode(searchMode);
-    	mLineDetector.setSearchMode(searchMode);
+    	mObstacleDetector.setSearchMode(searchMode);
     	mColorDetector.setSearchMode(searchMode);
 
     	// searchmode:
@@ -1136,9 +1158,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	// 1 = RobotemRovne (road search, straight road, azimuth, odometry, crossing roads)
     	// 2 = RoboOrienteering (orange blob search, waypoints, payload drop)
     	// 3 = RoboTour (road search, waypoints, payload drop)
-    	// 4 = Blob Avoid (blob color is set by touch, initial is green, waypoints, payload drop)
-    	// 5 = Blob Follow (color blob follow, initial is orange, waypoints, payload drop)
-    	// 6 = Line Detector (lines detection, waypoints, payload drop)
+    	// 4 = Road Assistance (not implemented yet)
+    	// 5 = Puck Collect (not implemented yet)
+    	// 6 = Line Follower (not implemented yet)
     	// 7 = Ketchup House (not implemented yet)
     	// 8 = Bear Rescue (not implemented yet)
     	// 9 = Robo Carts (not implemented yet)
@@ -1149,7 +1171,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         mod2 = mLevel % 2;
         //mod4 = mLevel % 4;
         mod6 = mLevel % 6;
-
+        
     	if (inputMode<1 && !stopped) {
             if (searchMode==0) {
             	// Manual Control
@@ -1261,27 +1283,20 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             } else if (searchMode==1) {
             	// Road detection (for RobotemRovne) ... direction from moments or topPoint
-            	if (blobSearch>0 || directionNum%2==0) {
-                	mColorDetector.process(mRgba);
-                    mRgba = mColorDetector.getResultMat();
-                	blobDirection = mColorDetector.getDirection();
-                	mBoundingRectangle = mColorDetector.getBoundingRectangle();
-                	//direction = blobDirection;
-                	//topDirection = blobDirection;
-                	//topHeight = 9;
-                	//mLeftOK = 1;
-                	//mRightOK = 1;
+            	if (blobSearch>=0 && directionNum%2==0) {
+                    mRoadDetector.process(mRgba);
+                    mContours = mRoadDetector.getContours();
+                    //mTemp = mRoadDetector.getResultMat();
+                	direction = mRoadDetector.getDirection();
+                	centPoint = mRoadDetector.getCentPoint();
+                	topPoint = mRoadDetector.getTopPoint();
+                	topDirection = mRoadDetector.getTopDirection();
+                	topHeight = mRoadDetector.getTopHeight();
+                	mLeftOK = mRoadDetector.getLeftOK();
+                	mRightOK = mRoadDetector.getRightOK();
+                	mCenterOK = mRoadDetector.getCenterOK();
             	}
-                mRoadDetector.process(mRgba);
-                mRgba = mRoadDetector.getResultMat();
-                //mTemp.release();
-            	direction = mRoadDetector.getDirection();
-            	topDirection = mRoadDetector.getTopDirection();
-            	topHeight = mRoadDetector.getTopHeight();
-            	mLeftOK = mRoadDetector.getLeftOK();
-            	mRightOK = mRoadDetector.getRightOK();
-            	mCenterOK = mRoadDetector.getCenterOK();
-            	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
+            	//if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
             	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
@@ -1290,106 +1305,80 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	// color blob and road detection (for RoboOrienteering)
             	//blobSearch = 0; // *** for tests only ***
             	//roadSearch = 1; // *** for tests only ***
-            	if (blobSearch>0 || directionNum%2==0) {
+            	if (blobSearch>=0 && directionNum%3==0) {
+        	    	mColorDetector.setHsvColor(mBlobColorHsv2);
                 	mColorDetector.process(mRgba);
-                    mRgba = mColorDetector.getResultMat();
+                    //mTemp = mColorDetector.getResultMat();
                 	blobDirection = mColorDetector.getDirection();
                 	mBoundingRectangle = mColorDetector.getBoundingRectangle();
-                	//direction = blobDirection;
-                	//topDirection = blobDirection;
-                	//topHeight = 9;
-                	//mLeftOK = 1;
-                	//mRightOK = 1;
-            	}
-            	if (roadSearch>=0) {
+               	}
+    	    	Scalar mColorx = new Scalar(0,255,0); // green
+    			//if (blobDirection<-limit1 || blobDirection>limit1) mColorx = new Scalar(0,0,255); // blue
+    			//if (blobDirection<-limit2 || blobDirection>limit2) mColorx = new Scalar(255,0,0); // red
+//    	    	Core.line(mRgba, centerPoint, endPoint, mColorx, 3);
+            	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
+            	if (mBoundingRectangle.height>=(h/200)) Core.rectangle(mRgba, mBoundingRectangle.tl(), mBoundingRectangle.br(), mColorx, 4);
+            	if (roadSearch>=0 && directionNum%3==1) {
                     mRoadDetector.process(mRgba);
-                    mRgba = mRoadDetector.getResultMat();
+                    mContours = mRoadDetector.getContours();
+                    //mTemp = mRoadDetector.getResultMat();
                 	direction = mRoadDetector.getDirection();
+                	centPoint = mRoadDetector.getCentPoint();
+                	topPoint = mRoadDetector.getTopPoint();
                 	topDirection = mRoadDetector.getTopDirection();
                 	topHeight = mRoadDetector.getTopHeight();
                 	mLeftOK = mRoadDetector.getLeftOK();
                 	mRightOK = mRoadDetector.getRightOK();
                 	mCenterOK = mRoadDetector.getCenterOK();
             	}
-            	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
+            	if (roadSearch>=0 && directionNum%3==2) {
+                    mObstacleDetector.process(mRgba);
+                    mObstacles = mObstacleDetector.getObstacles();
+            	}
             	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             } else if (searchMode==3) {
             	// Road detection (for RoboTour) ... direction from topPoint or moments (merging)
-            	if (blobSearch>9 && directionNum%2==0) {
-                	mColorDetector.process(mRgba);
-                    mRgba = mColorDetector.getResultMat();
-                	blobDirection = mColorDetector.getDirection();
-                	mBoundingRectangle = mColorDetector.getBoundingRectangle();
-                	//direction = blobDirection;
-                	//topDirection = blobDirection;
-                	//topHeight = 9;
-                	//mLeftOK = 1;
-                	//mRightOK = 1;
-            	}
-            	if (roadSearch>=0 || directionNum%2!=0) {
+            	if (roadSearch>=0 && directionNum%3==0) {
                     mRoadDetector.process(mRgba);
-                    mRgba = mRoadDetector.getResultMat();
-                    //int channel = (int)Math.floor(mLevel - (int)Math.floor(mLevel/8)*8);
+                    mContours = mRoadDetector.getContours();
+                    //mTemp = mRoadDetector.getResultMat();
                 	direction = mRoadDetector.getDirection();
+                	centPoint = mRoadDetector.getCentPoint();
+                	topPoint = mRoadDetector.getTopPoint();
                 	topDirection = mRoadDetector.getTopDirection();
                 	topHeight = mRoadDetector.getTopHeight();
                 	mLeftOK = mRoadDetector.getLeftOK();
                 	mRightOK = mRoadDetector.getRightOK();
                 	mCenterOK = mRoadDetector.getCenterOK();
             	}
-            	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
+            	//if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
             	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+channel, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
     			// merging
             	//direction = topDirection + direction/2; // merging disabled
+            } else if (searchMode==4) {
+            	// Road Assistance (track good features)
+            } else if (searchMode==5) {
+            	// Puck Collect (track good features and color blobs)
             } else if (searchMode==6) {
-            	// Line detection (maybe universal) ... direction from topPoint only
-            	if (blobSearch>0 || directionNum%2==0) {
-                	mColorDetector.process(mRgba);
-                    mRgba = mColorDetector.getResultMat();
-                	blobDirection = mColorDetector.getDirection();
-                	mBoundingRectangle = mColorDetector.getBoundingRectangle();
-                	//direction = blobDirection;
-                	//topDirection = blobDirection;
-                	//topHeight = 9;
-                	//mLeftOK = 1;
-                	//mRightOK = 1;
-            	}
-                mLineDetector.process(mRgba);
-                mRgba = mLineDetector.getResultMat();
-                //mTemp.release();
-            	direction = mLineDetector.getDirection();
-            	topDirection = direction;
-            	topHeight = mLineDetector.getTopHeight();
-            	mLeftOK = 1;
-            	mRightOK = 1;
-            	mCenterOK = 1;
-            	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	// Line Follower (track lines and avoid obstacles)
+            } else if (searchMode==7) {
+            	// Ketchup House (track good features)
+            } else if (searchMode==8) {
+            	// Bear Rescue (track good features and color blob)
             } else {
-            	// Color Blob Detection
-            	// 4 = Blob Avoid (blob color is set by touch)
-            	// 5 = Blob Follow (color blob follow)
-            	mColorDetector.process(mRgba);
-                mRgba = mColorDetector.getResultMat();
-            	direction = mColorDetector.getDirection();
-            	blobDirection = mColorDetector.getDirection();
-            	mBoundingRectangle = mColorDetector.getBoundingRectangle();
-            	//direction = blobDirection;
-            	//topDirection = mColorDetector.getTopDirection();
-            	//topHeight = mColorDetector.getTopHeight();
-            	//Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+minArea+"/"+limit1+"/"+limit2+"/"+direction+"/"+x+"/"+y+color, new Point(4,(7*h/8)), 1, siz, new Scalar(255,255,150), wi);
-            	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+minArea+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(7*h/8)), 1, siz, new Scalar(255,255,150), wi);
-            	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	// Robo Carts (categorize and track good features)
             }
+        }
+        if (inputMode!=1) {
+            Scalar mBlobColorRgba2 = converScalarHsv2Rgba(mBlobColorHsv2);
+        	Mat colorLabel = mRgba.submat(0, corner, 0, corner);
+        	colorLabel.setTo(mBlobColorRgba2);
         }
     	if (inputMode==1) {
         	// inputMode>0 => path defining (black background)
@@ -1397,26 +1386,46 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         }
     	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
         if (searchMode!=0 && !stopped) {
-        	//Core.line(mRgba, new Point(mBoundingRectangle.x, mBoundingRectangle.y), new Point(w/2,h), new Scalar(255,255,50), 2);
-        	if (mBoundingRectangle.height>9) Core.rectangle(mRgba, mBoundingRectangle.br(), mBoundingRectangle.tl(), new Scalar(255,255,50), 2);
-        	// add main information to mRgba
+//        	//Core.line(mRgba, new Point(mBoundingRectangle.x, mBoundingRectangle.y), new Point(w/2,h), new Scalar(255,255,50), 2);
+//        	if (mBoundingRectangle.height>9) Core.rectangle(mRgba, mBoundingRectangle.br(), mBoundingRectangle.tl(), new Scalar(255,255,50), 2);
+//        	// add main information to mRgba
         	double tmpx = 0;
         	double tmpy = 0;
         	int[] edge = {0,0,0,0};
         	if (inputMode<1) {
+        		//mRgba = mTemp;
+                //Vector<Mat> channels = new Vector<Mat>();
+                //Core.split(mTemp, channels);
+                //channels.set(0,mTemp);
+                //channels.set(1,mTemp);
+                //channels.set(2,mTemp);
+                //channels.set(0,new Mat(h, w, 0, new Scalar(0)));
+                //channels.set(0,mTemp);
+                //channels.set(1,mTemp);
+                //channels.set(2,mTemp);
+            	//Core.add(mRgba, mTemp, mRgba);
+                //Core.add(mRgba, new Scalar(100), mRgba);
+                //Core.add(mRgba, channels.get(0), mRgba);
+                //Core.merge(channels, mRgba);
+                try {
+                	Imgproc.drawContours(mRgba, mContours, 0, new Scalar(255,0,0), 4);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            	//if (mRgba!=null && mContours!=null && mContours.size()>0) Imgproc.drawContours(mRgba, mContours, 0, new Scalar(255,0,0), 4);
             	//if (debugMode>=0) Core.putText(mRgba, ""+mLevel+" "+cameraDirection+" "+" "+Math.round(drivingSignal)+" "+mod4, new Point(w/6,h-h/6), 1, siz*2, new Scalar(255,255,50), wi*3);
             	mTxt1 = ""+String.format("%4d", (int)azimuthOK);
             	mTxt2 = ""+String.format("%4d", (int)mTargetAzimuth);
             	mTxt3 = ""+String.format("%4d", (int)compassAzimuth);
             	//mTxt3 = ""+String.format("%4d/%4d/%4d", (int)azimDiffOK, (int)azimDiff, (int)turnAngleToNextWaypoint);
             	mTxt4 = ""+String.format("%4d/%4d/%4d", (int)drivingSignal, (int)mBoundingRectangle.height, (int)blobDirection);
-            	mTxt5 = " "+(char)(out1[0] & 0xFF)+"/"+mLeftOK+"/"+mRightOK;
-            	//mTxt5 = ""+String.format("%4d", (int)commandsMap.size());
+            	//mTxt5 = " "+(char)(out1[0] & 0xFF)+"/"+mLeftOK+"/"+mRightOK;
+            	mTxt5 = ""+String.format("%4d", (int)commandsMap.size());
             	//mTxt5 = ""+String.format("%4d", (int)azimLimit);
             	//mTxt5 = ""+String.format("%4d", (int)pathAzimuth);
             	//mTxt6 = ""+String.format("%4d", (int)azimuthToNextWaypoint);
-            	//mTxt6 = ""+String.format("%4d", (int)goals.size());
-            	mTxt6 = ""+String.format("%4d", (int)blobDirection);
+            	mTxt6 = ""+String.format("%4d", (int)goals.size());
+            	//mTxt6 = ""+String.format("%4d", (int)blobDirection);
             	mTxt7 = ""+String.format("%4d", (int)mod6);
             	//mTxt5 = "a:"+String.format("%4d", (int)azimuthOK);
             	if (searchMode==2) {
@@ -1425,35 +1434,44 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	//mTxt4 = ""+String.format("%4d", (int)mBoundingRectangle.height);
             	}
             	mTxt1 = mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7;
-            	mTxt1 = "a:"+(int)azimuthOK;
-            	mTxt1 += " p:"+(int)pathAzimuth;
-            	mTxt1 += " w:"+(int)azimuthToNextWaypoint;
+            	mTxt1 = "a:"+(int)azimuthOK+"/"+mObstacles.size();
+            	//mTxt1 += " p:"+(int)pathAzimuth;
+            	//mTxt1 += " w:"+(int)azimuthToNextWaypoint;
             	//mTxt1 += " c:"+(int)compassAzimuth;
-            	mTxt1 += " d:"+(int)drivingSignal;
-            	mTxt1 += " "+(int)turnAngleToNextWaypoint+"/"+(int)turnAngleToStayOnRoad+"/"+(int)turnAngleToAvoidObstacle;
-            	mTxt1 += " "+mLeftOK+"/"+mCenterOK+"/"+mRightOK;
+            	//mTxt1 += " d:"+(int)drivingSignal;
+            	//mTxt1 += " "+(int)turnAngleToNextWaypoint+"/"+(int)turnAngleToStayOnRoad+"/"+(int)turnAngleToAvoidObstacle;
+            	//mTxt1 += " "+mLeftOK+"/"+mCenterOK+"/"+mRightOK;
+            	//mTxt1 = ""+mBlobColorHsv2.toString();
             	//mTxt1 += " "+btRngLeftL+" "+btRngLeft+" "+btRngLeftR+" "+btRngL+" "+btRng+" "+btRngR+" "+btRngRightL+" "+btRngRight+" "+btRngRightR;
+            	mTxt1 = ""+(int)azimuthOK+" / "+(int)pathAzimuth+" / "+(int)azimuthToNextWaypoint+" / "+(int)azimDiff;
                	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	//if (debugMode>=0) Core.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
-            	if (debugMode>=0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
-            	if (debugMode>=0) Core.putText(mRgba, ""+state+" "+mText+" "+txtCommand, new Point(w/3,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
+            	if (debugMode>=0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+            	mTxt1 = ""+state+" "+mText+" "+txtCommand;
+               	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
+            	if (debugMode>=0) Core.putText(mRgba, mTxt1, new Point((w-textSize.width)/2,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
+    			Core.circle(mRgba, topPoint, h/50, new Scalar(255,0,0), -1);
+    			Core.circle(mRgba, centPoint, h/50, new Scalar(0,0,255), -1);
             	int ok = 0;
             	Scalar tmpColor = new Scalar(200,200,200);
+    	    	Scalar mColorx = new Scalar(0,255,0); // green
+    			if (drivingSignal<-limit1 || drivingSignal>limit1) mColorx = new Scalar(0,0,255); // blue
+    			if (drivingSignal<-limit2 || drivingSignal>limit2) mColorx = new Scalar(255,0,0); // red
             	// show command graphically
             	if (mOrientation==2) {
         			// landscape 
             		tmpy = h*(0.75-0.6*Math.cos(drivingSignal/36));
             		tmpx = 0.5*w+0.6*h*Math.sin(drivingSignal/36);
-        			Core.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), tmpColor, 5);
+        			Core.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), mColorx, 8);
         			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,0,0), -1);
-            		tmpy = h*(0.75-0.5*Math.cos(turnAngleToStayOnRoad/36));
-            		tmpx = 0.5*w+0.5*h*Math.sin(turnAngleToStayOnRoad/36);
-        			Core.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
-        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
-            		tmpy = h*(0.75-0.4*Math.cos(turnAngleToNextWaypoint/36));
-            		tmpx = 0.5*w+0.4*h*Math.sin(turnAngleToNextWaypoint/36);
-        			Core.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
-        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
+//            		tmpy = h*(0.75-0.5*Math.cos(turnAngleToStayOnRoad/36));
+//            		tmpx = 0.5*w+0.5*h*Math.sin(turnAngleToStayOnRoad/36);
+//        			Core.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
+//        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
+//            		tmpy = h*(0.75-0.4*Math.cos(turnAngleToNextWaypoint/36));
+//            		tmpx = 0.5*w+0.4*h*Math.sin(turnAngleToNextWaypoint/36);
+//        			Core.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
+//        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
                 	if (txtCommand=="xleft") {ok = 1; tmpx = w/4; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="xright") {ok = 1; tmpx = 3*w/4; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="forward") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(0,255,0);}
@@ -1466,16 +1484,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         			// portrait
             		tmpx = h*(0.75-0.6*Math.cos(drivingSignal/36));
             		tmpy = 0.5*w+0.6*h*Math.sin(drivingSignal/36);
-        			Core.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), tmpColor, 5);
+        			Core.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), mColorx, 5);
         			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,0,0), -1);
-            		tmpx = h*(0.75-0.5*Math.cos(turnAngleToStayOnRoad/36));
-            		tmpy = 0.5*w+0.5*h*Math.sin(turnAngleToStayOnRoad/36);
-        			Core.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
-        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
-            		tmpx = h*(0.75-0.4*Math.cos(turnAngleToNextWaypoint/36));
-            		tmpy = 0.5*w+0.4*h*Math.sin(turnAngleToNextWaypoint/36);
-        			Core.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
-        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
+//            		tmpx = h*(0.75-0.5*Math.cos(turnAngleToStayOnRoad/36));
+//            		tmpy = 0.5*w+0.5*h*Math.sin(turnAngleToStayOnRoad/36);
+//        			Core.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
+//        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
+//            		tmpx = h*(0.75-0.4*Math.cos(turnAngleToNextWaypoint/36));
+//            		tmpy = 0.5*w+0.4*h*Math.sin(turnAngleToNextWaypoint/36);
+//        			Core.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
+//        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
         			//Core.line(mRgba, new Point(topPoint.x,topPoint.y), new Point(w-2*lin,h/2), new Scalar(0), 1);
                 	if (txtCommand=="xleft") {ok = 1; tmpx = w/2; tmpy = 3*h/4; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="xright") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(255,0,0);}
@@ -1548,7 +1566,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	else if (wpModes.get(i)[0]==2) Core.circle(mRgba, new Point(tmpx-3,tmpy-0), 6, new Scalar(255,0,0),-1);
             	else Core.circle(mRgba, new Point(tmpx-3,tmpy-0), 4, new Scalar(0,255,0),-1);
         		if (i>0) {
-        			if (i==wp) Core.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,255,0),8);
+        			if (i==wp) Core.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(255,165,0),4);
         			else Core.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,255,0),1);
         		}
         		tmpx0 = tmpx;
@@ -1568,19 +1586,20 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	Core.rectangle(mRgba, new Point(0,0), new Point(corner,corner), mColor, 1);
         	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
         	Core.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
+        	mColor1 = BLUE;
+        	if (mod6==1 || mod6==3 || mod6==5) mColor1 = GREEN;
+        	mColor2 = BLUE;
+        	if (mod6>=2) mColor2 = GREEN;
+        	if (mod6>=4) mColor2 = BLACK;
         	Core.rectangle(mRgba, pt5, pt6, mColor1, -1);
         	Core.rectangle(mRgba, pt7, pt8, mColor2, -1);
         	if (mod2>0) {
-        		mColor1 = BLUE;
+        		//mColor1 = BLUE;
         		azimLimit = 30;
         	} else {
-        		mColor1 = BLACK;
+        		//mColor1 = BLACK;
         		azimLimit = 20;
         	}
-        	if (mod6<=1) mColor2 = BLACK;
-        	else if (mod6<=3) mColor2 = BLUE;
-        	else if (mod6<=5) mColor2 = GREEN;
-        	else mColor2 = YELLOW;
         	tx = "+";
         	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
         	Core.putText(mRgba, tx, new Point(w-corner/2-textSize.width/2+1,h/2-corner2-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(255,0,0), 2*wi);
@@ -1782,6 +1801,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
           		// countdown
           		now.setToNow();
           		long tmpTime = now.toMillis(false);
+      			long runTime = (tmpTime - firstTime)/1000;
+          		if (searchMode==1 && runTime<10) {
+                	//azimuth_calib += pathAzimuth - azimuthOK;
+          		}
       			tmpSec = (startTimeMilis - tmpTime)/1000;
           		if (runMode<1) {
           			// countdown active
@@ -1833,8 +1856,18 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	// new log structure (4.9.2015)
                 //appendLog("date_time;mCommand;searchMode;direction;topDirection;cameraDirection;directionNum;azimuth;azimuthValid;btPwm;btRng;btRngLeft;btRngRight;btRngBack;btDst;btSpd;limit1;limit2;mLevel;azimuthLimit;mArea;minArea;btLat;btLon;stav;lat;lon;bearing;accuracy;wp;wpLat;wpLon;wpMode;wpDist;pathAzimuth;wpDist1;azimuthToNextWaypoint;azimuth;actualDist;lastDist;");
                 appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+direction+";"+topDirection+";"+cameraDirection+";"+azimuth+";"+azimuthValid+";"+btPwm+";"+btRng+";"+btRngLeft+";"+btRngRight+";"+btRngBack+";"+btDst+";"+btSpd+";"+limit1+";"+limit2+";"+mLevel+";"+azimuthLimit+";"+mArea+";"+minArea+";"+Math.round(100000*btLat)+";"+Math.round(100000*btLon)+";"+stav+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+Math.round(accuracy)+";"+wp+";"+Math.round(100000*wpLat)+";"+Math.round(100000*wpLon)+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(wpDist1)+";"+Math.round(azimuthToNextWaypoint)+";"+azimuth+";"+Math.round(azimDiff)+";"+Math.round(turnAngleToNextWaypoint)+";"+Math.round(actualDist)+";"+Math.round(lastDist)+";");
-                directionTrend = -direction/2;
-                topPointTrend = -topDirection/2;
+                //directionTrend = -direction/2;
+                //topPointTrend = -topDirection/2;
+             	if (mPrevCommand=='l' || mPrevCommand=='r') {
+                    directionTrend = -directionTrend;
+                    topPointTrend = -topPointTrend;
+             	} else if (mPrevCommand=='h' || mPrevCommand=='k') {
+                        directionTrend = -directionTrend/2;
+                        topPointTrend = -topPointTrend/2;
+                } else {
+                    directionTrend = 0;
+                    topPointTrend = 0;
+             	}
                 directionNum = 0;
           	}
           }
@@ -1862,6 +1895,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	else if (command=='p') txtCommand = "drop";
     	else if (command=='t') txtCommand = "turn";
     	else if (command=='$') txtCommand = "finish";
+    	else if (command=='n') txtCommand = "new azimuth";
     	else if (command>='0' && command<='9') txtCommand = ""+command;
     	if (txtCommand!="") {
     		if (searchMode<1 || searchMode>3 || mCommand!='w' || mPrevCommand!=mCommand) {
@@ -2265,6 +2299,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	azimuthOK = pathAzimuth;
     		azimuthValid = 1;
     	}
+    	azimuthOK += azimuth_calib;
     	if (azimuthOK>180) azimuthOK -= 360;
     }
     
@@ -2316,7 +2351,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		Location.distanceBetween(latOK, lonOK, wpLat, wpLon, results);
 		distanceToNextWaypoint = results[0];
 		azimuthToNextWaypoint = results[1];
-    	if (latOK<33f) {
+    	if (latOK<33f && searchMode!=1) {
     		distanceToNextWaypoint = 999;
     		wpDist1 = 999;
     		pathAzimuth = azimuthOK;
@@ -2388,8 +2423,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
   				return;
   			}
   			else if (state=="back") {
-  				state = "back2";
-  				mCommand = 'b';
+  				//state = "back2";
+  				//mCommand = 'b';
+  				state = "back3";
+  				mCommand = 's';
   				return;
   			}
   			else if (state=="back2") {
@@ -2530,7 +2567,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		distanceToNextWaypoint = results[0];
 		wpDist1 = distanceToNextWaypoint;
 		azimuthToNextWaypoint = results[1];
-    	if (latOK<33f) {
+    	if (latOK<33f && searchMode!=1) {
     		distanceToNextWaypoint = 999;
     		wpDist1 = 999;
     		pathAzimuth = azimuthOK;
@@ -2575,7 +2612,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 //		}
 		// probabilistic road navigation
 		if ((searchMode>=1 || mBoundingRectangle.height<10) && roadSearch>=0) {
-	  		if (directionNum>0) {
+	  		if (directionNum>=0) {
 	  			direction = averageDirection;
 	  			topDirection = averageTopPoint;
 	  		}
@@ -2590,16 +2627,20 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		if (topHeight<2) cameraProbability = 0; // blob is too close, camera is not reliable
 	  		azimDiffOK = (int)(-azimuthValid * azimDiff);
 	  		if (searchMode==1 || searchMode==2) mCommand = '-'; // delete previously computed command (set default command to none for RR)
-			if (mod6==0 || mod6==2 || mod6==3) {
+			if (mod6==2 || mod6==3 || mod6==5) {
+  			    // HSV saturation mode only
+  				mText += "S";
+			}
+			if (mod6==0 || mod6==2 || mod6==4) {
   			    // navigation by topDirection
 				//drivingSignal = cameraDirection;
 				directionOK = topDirection;
-  				mText += "top";
-			} else if (mod6==1 || mod6==4 || mod6==5) {
+  				mText += "t";
+			} else if (mod6==1 || mod6==3 || mod6==5) {
   			    // navigation by camera direction
 				directionOK = cameraDirection;
 				//drivingSignal = topDirection;
-  				mText += "cam";
+  				mText += "ca";
 			} else {
 				// navigation by camera and compass
   				mText += "mix";
@@ -2617,6 +2658,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  			}
 	  			else directionOK = (int)Math.round(cameraProbability * cameraDirection * 0.01);
 			}
+  	    	//if (searchMode==1 && mod6<6) {
+  	    	//	turnAngleToStayOnRoad += azimDiff/1;
+  	    	//}
   			turnAngleToStayOnRoad = directionOK;
 		}
     }
@@ -2634,7 +2678,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 				//mCommand = 'l';
 	    		//turnAngleToAvoidObstacle = -40.0;
 			}
-			if (btRng<4 || btRngL<4 || btRngR<4) {
+			if (searchMode!=1 && (btRng<4 || btRngL<4 || btRngR<4)) {
 				// front obstacle
 				if (avoiding<1) {
 		    		mCommand = 's'; // stop
@@ -2665,7 +2709,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	// since 2016-09-01
     	
     	// 1. stay on road
-  		if (mod6<=3) {
+  		if (mod6<3 && searchMode!=1) {
 			// PD navigation by computed driving signal
 			drivingSignal = directionOK - 0.2 * (directionOK - lastDirectionOK);
 			lastDirectionOK = directionOK;
@@ -2678,9 +2722,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
   		// 2. set drivingSignal by turnAngleToNextWaypoint
   		if ((turnAngleToNextWaypoint>limit2 && drivingSignal>-limit2 && mRightOK>0) || (turnAngleToNextWaypoint<-limit2 && drivingSignal<limit2 && mLeftOK>0)) {
-  	    	drivingSignal = turnAngleToNextWaypoint/4;
+  	    	if (searchMode!=1) drivingSignal = turnAngleToNextWaypoint/4;
   		}
     	
+    	if (searchMode==1 && mod6>=4) {
+    		drivingSignal += azimDiff/2;
+			mText += "C";
+    	}
+
     	// 3. avoid obstacle
   		if (avoiding>0 || Math.abs(turnAngleToAvoidObstacle)>1.0) {
 			// avoiding, so drive by turnAngleToAvoidObstacle
@@ -2702,13 +2751,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		}
 
   		// 4. sanitize command (restrictions and stabilization)
-		if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
- 		if (mod6!=1 && mod6!=4) {
+ 		if (searchMode>1 && (mod6==1 || mod6==5)) {
  			// check L/R sonars
 			mText += "S";
  	    	if (" lh".indexOf(""+mCommand)>0 && btRngLeft<10) mCommand = 'w'; // can't turn left
  	    	else if (" kr".indexOf(""+mCommand)>0 && btRngRight<10) mCommand = 'w'; // can't turn right
-// 			if (btValid>0) {
+ 			if (btValid>0 && searchMode!=1) {
  				if (btRngLeft<14 || btRngLeftR<14 || btRngL<14) {
  					// left obstacle
  					mText += "lo";
@@ -2719,15 +2767,17 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
  					mText += "ro";
  					if (" rkw".indexOf(""+mCommand)>0 && btValid>0) mCommand = 'h';
  				}
-// 			} 
+ 			} 
  		}
+		if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
 		else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
-  		if (" wlhkr-".indexOf(mCommand)>0 && (topHeight<2 || mCenterOK<1)) {
+		if (searchMode>1 && (mod6==2 || mod6==5)) {
+			mText += "U";
+	  		if (" wlhkr-".indexOf(mCommand)>0 && (topHeight<2 || mCenterOK<1)) {
 				// road border seems too close, rather stop and step back (not for RR)
-  			if (searchMode>9) {
     			state = "unknown";
     			mCommand = 's'; // stop
-  			}
+	  		}
   		}
 		if (mPrevCommand=='b' && mCommand!='b') {mCommand = 's'; state="stop";}	
     	if (mCommand=='b' && mPrevCommand!='b' && mPrevCommand!='s') mCommand = 's';
@@ -2741,10 +2791,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			numCleanCommands++;
 			if (mCommand!='w') {
 				// stabilize only few times and only if course is almost OK
-				if (numCleanCommands<3 && Math.abs(turnAngleToNextWaypoint)<30.0) mCommand = 'w';
+				//if (numCleanCommands<3 && Math.abs(turnAngleToNextWaypoint)<30.0) mCommand = 'w';
+				if (numCleanCommands<3 && Math.abs(azimDiff)<30.0) mCommand = 'w';
 			    else {
 			    	numCleanCommands = 0;
-			    	if (btSpd>160 || searchMode>=1 ) numCleanCommands = 1;
+			    	if (btSpd>160 || searchMode>1 ) numCleanCommands = 1;
 			    }
 				
 			}

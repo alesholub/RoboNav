@@ -2,8 +2,8 @@
 <resources>
     
     <string name="app_name">RoboNav</string>
-    <string name="app_version">1.9.4</string>
-    <string name="app_date">- 14.9.2016 (RTv1.14path)</string>
+    <string name="app_version">1.9.5</string>
+    <string name="app_date">- 11.5.2017 (new azimuth)</string>
     
 	<string name="alert_dialog_no_bt">Cannot use this application without bluetooth.</string>
 	<string name="alert_dialog_yes">Yes</string>
