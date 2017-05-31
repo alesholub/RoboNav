@@ -2,8 +2,8 @@
 <resources>
     
     <string name="app_name">RoboNav</string>
-    <string name="app_version">1.9.5</string>
-    <string name="app_date">- 11.5.2017 (new azimuth)</string>
+    <string name="app_version">1.9.6</string>
+    <string name="app_date">- 31.5.2017 (ro2017a)</string>
     
 	<string name="alert_dialog_no_bt">Cannot use this application without bluetooth.</string>
 	<string name="alert_dialog_yes">Yes</string>
@@ -118,7 +118,7 @@
     <string name="summary_voice_output_preference">Enable or disable voice output</string>
     <string name="dialog_title_voice_output_preference">Voice output</string>
     
-    <string name="title_commands_preference">Commands for lrswfbhkpt</string>
+    <string name="title_commands_preference">Commands for lrswfbhkptn</string>
     <string name="summary_commands_preference">Commands translate table</string>
     <string name="dialog_title_commands_preference">Voice output</string>
     

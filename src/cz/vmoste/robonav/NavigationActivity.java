@@ -275,6 +275,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
 	private static long lastGPStime = -1;
 	private static long lastNETtime = -1;
+
+	private static int fileNumber = 0;
+	private String fileName = "";
 	
 	private static Rect mBoundingRectangle = null;
 	//private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
@@ -648,12 +651,19 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	mColorDetector.setOrientation(mOrientation);
         mColorDetector.setMinContourArea(minArea);
         mColorDetector.setMinArea(mArea);
+        mColorDetector.setColorRadius(new Scalar(mArea/2,mArea,mArea,mArea));
     	mObstacleDetector.setLevel(mLevel);
     	mObstacleDetector.setLimits(limit1,limit2);
     	mObstacleDetector.setOrientation(mOrientation);
-    	readMap("RoboNavMap.txt");
-    	goals = readPoints("RoboNavGoals.txt");
-    	path = readPoints("RoboNavPath.txt");
+    	fileName = "RoboNavMap";
+    	if (fileNumber>0) fileName += ""+fileNumber;
+    	readMap(fileName+".txt");
+    	fileName = "RoboNavGoals";
+    	if (fileNumber>0) fileName += ""+fileNumber;
+    	goals = readPoints(fileName+".txt");
+    	fileName = "RoboNavPath";
+    	if (fileNumber>0) fileName += ""+fileNumber;
+    	path = readPoints(fileName+".txt");
     	//goals = path;
     	computeNextWaypoint(1);
     	now.setToNow();
@@ -873,7 +883,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	// inputMode corner (top left)
     	    if (inputMode>1) {
     	    	inputMode = 0;
-    	    	path = readPoints("RoboNavPath.txt");
+    	    	fileName = "RoboNavMap";
+    	    	if (fileNumber>0) fileName += ""+fileNumber;
+    	    	readMap(fileName+".txt");
+    	    	fileName = "RoboNavGoals";
+    	    	if (fileNumber>0) fileName += ""+fileNumber;
+    	    	goals = readPoints(fileName+".txt");
+    	    	fileName = "RoboNavPath";
+    	    	if (fileNumber>0) fileName += ""+fileNumber;
+    	    	path = readPoints(fileName+".txt");
+    	    	//path = readPoints("RoboNavPath.txt");
     	    	wp = 0;
     	    	runMode = 0; // run mode (0=wait_for_start, 1=run, 2=finish)
     	    	goalReached = 0; // we should be at start now
@@ -885,8 +904,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	    }
     	    else {
     	    	inputMode = 1;
-    	    	path.clear();
-    	    	wpModes.clear();
+    	    	//path.clear();
+    	    	//wpModes.clear();
     	    }
         	if (voiceOutput>0) say("input mode "+inputMode);
         	buttonTouched = 3;
@@ -920,7 +939,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             for (int i=0; i<path.size(); i++) {
             	pathText += ""+i+" "+path.get(i).y+" "+path.get(i).x+" "+wpModes.get(i)[0]+"\n";
             }
-        	writeToFile("RoboNavPath.txt",pathText);
+	    	fileName = "RoboNavPath";
+	    	if (fileNumber>0) fileName += ""+fileNumber;
+        	writeToFile(fileName+".txt",pathText);
         	buttonTouched = 5;
     	    return false;
         }
@@ -929,22 +950,43 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	buttonTouched = 6;
         	if (voiceOutput>0) say("plus");
         	if (inputMode==1) {
+        		// increase fileNumber
+                fileNumber += 1;
+                if (fileNumber>99) fileNumber = 99;
+    	    	//inputMode = 0;
+    	    	fileName = "RoboNavMap";
+    	    	if (fileNumber>0) fileName += ""+fileNumber;
+    	    	readMap(fileName+".txt");
+    	    	fileName = "RoboNavGoals";
+    	    	if (fileNumber>0) fileName += ""+fileNumber;
+    	    	goals = readPoints(fileName+".txt");
+    	    	fileName = "RoboNavPath";
+    	    	if (fileNumber>0) fileName += ""+fileNumber;
+    	    	path = readPoints(fileName+".txt");
+    	    	//path = readPoints("RoboNavPath.txt");
+    	    	wp = 0;
+    	    	runMode = 0; // run mode (0=wait_for_start, 1=run, 2=finish)
+    	    	goalReached = 0; // we should be at start now
+    	    	state = "normal";
+    	    	computeNextWaypoint(1);
+        		return false;
+        	}
+        	if (inputMode==2) {
         		// increase startTime
         		startTimeMilis += 5000;
         		setStartTime();
         		return false;
         	}
-        	if (searchMode==6) {
+        	if (searchMode!=2) {
                 mLevel = mLevel + 10;
                 if (mLevel>255) mLevel = 255;
                 mRoadDetector.setLevel(mLevel);
                 mObstacleDetector.setLevel(mLevel);
         	}
-        	else if (searchMode==1 || searchMode==2 || searchMode==3) {
-                mLevel = mLevel + 1;
-                if (mLevel>255) mLevel = 255;
-                mRoadDetector.setLevel(mLevel);
-                mObstacleDetector.setLevel(mLevel);
+        	else if (searchMode==2) {
+                mArea = mArea + 1;
+                if (mArea>255) mArea = 255;
+                mColorDetector.setColorRadius(new Scalar(mArea/2,mArea,mArea,mArea));
         	}
         	else {
                 //minArea = (double)Math.round((minArea + 0.1)*100)/100;
@@ -965,6 +1007,28 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	buttonTouched = 7;
         	if (voiceOutput>0) say("minus");
         	if (inputMode==1) {
+        		// decrease fileNumber
+                fileNumber -= 1;
+                if (fileNumber<0) fileNumber = 0;
+    	    	//inputMode = 0;
+    	    	fileName = "RoboNavMap";
+    	    	if (fileNumber>0) fileName += ""+fileNumber;
+    	    	readMap(fileName+".txt");
+    	    	fileName = "RoboNavGoals";
+    	    	if (fileNumber>0) fileName += ""+fileNumber;
+    	    	goals = readPoints(fileName+".txt");
+    	    	fileName = "RoboNavPath";
+    	    	if (fileNumber>0) fileName += ""+fileNumber;
+    	    	path = readPoints(fileName+".txt");
+    	    	//path = readPoints("RoboNavPath.txt");
+    	    	wp = 0;
+    	    	runMode = 0; // run mode (0=wait_for_start, 1=run, 2=finish)
+    	    	goalReached = 0; // we should be at start now
+    	    	state = "normal";
+    	    	computeNextWaypoint(1);
+        		return false;
+        	}
+        	if (inputMode==2) {
         		// decrease startTime
         		startTimeMilis -= 5000;
         		setStartTime();
@@ -976,11 +1040,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 mRoadDetector.setLevel(mLevel);
                 mObstacleDetector.setLevel(mLevel);
         	}
-        	else if (searchMode==1 || searchMode==2 || searchMode==3) {
+        	else if (searchMode==1 || searchMode==3) {
                 mLevel = mLevel - 1;
                 if (mLevel<0) mLevel = 0;
                 mRoadDetector.setLevel(mLevel);
                 mObstacleDetector.setLevel(mLevel);
+        	}
+        	else if (searchMode==2) {
+                mArea = mArea - 1;
+                if (mArea<0) mArea = 0;
+                mColorDetector.setColorRadius(new Scalar(mArea/2,mArea,mArea,mArea));
         	}
         	else {
                 //minArea = (double)Math.round((minArea - 0.1)*100)/100;
@@ -1302,23 +1371,36 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             } else if (searchMode==2) {
-            	// color blob and road detection (for RoboOrienteering)
+            	// color blob detection (for RoboOrienteering)
             	//blobSearch = 0; // *** for tests only ***
             	//roadSearch = 1; // *** for tests only ***
-            	if (blobSearch>=0 && directionNum%3==0) {
+            	if (blobSearch>=0 && directionNum%3>=0) {
         	    	mColorDetector.setHsvColor(mBlobColorHsv2);
                 	mColorDetector.process(mRgba);
                     //mTemp = mColorDetector.getResultMat();
                 	blobDirection = mColorDetector.getDirection();
                 	mBoundingRectangle = mColorDetector.getBoundingRectangle();
+                	// since 2017-05-21
+                    mContours = null;
+                	direction = 0;
+                	centPoint = new Point(w/2,h/w);
+                	topPoint = new Point(w/2,0);
+                	topDirection = 0;
+                	topHeight = 3;
+                	mLeftOK = 1;
+                	mRightOK = 1;
+                	mCenterOK = 1;
                	}
-    	    	Scalar mColorx = new Scalar(0,255,0); // green
+    	    	//Scalar mColorx = new Scalar(0,255,0); // green
+    	    	//Scalar mColorx = converScalarHsv2Rgba(mBlobColorHsv2); // blob color
+    	    	Scalar mColorx = new Scalar(255,0,255); // violet
     			//if (blobDirection<-limit1 || blobDirection>limit1) mColorx = new Scalar(0,0,255); // blue
     			//if (blobDirection<-limit2 || blobDirection>limit2) mColorx = new Scalar(255,0,0); // red
 //    	    	Core.line(mRgba, centerPoint, endPoint, mColorx, 3);
             	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
             	if (mBoundingRectangle.height>=(h/200)) Core.rectangle(mRgba, mBoundingRectangle.tl(), mBoundingRectangle.br(), mColorx, 4);
-            	if (roadSearch>=0 && directionNum%3==1) {
+            	if (roadSearch>=2 && directionNum%3==1) {
+            		// road search disabled since 2017-05-21
                     mRoadDetector.process(mRgba);
                     mContours = mRoadDetector.getContours();
                     //mTemp = mRoadDetector.getResultMat();
@@ -1375,9 +1457,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	// Robo Carts (categorize and track good features)
             }
         }
-        if (inputMode!=1) {
+        if (inputMode!=1 && searchMode>0) {
             Scalar mBlobColorRgba2 = converScalarHsv2Rgba(mBlobColorHsv2);
-        	Mat colorLabel = mRgba.submat(0, corner, 0, corner);
+        	Mat colorLabel = mRgba.submat(0, corner-1, 0, corner-1);
         	colorLabel.setTo(mBlobColorRgba2);
         }
     	if (inputMode==1) {
@@ -1443,7 +1525,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	//mTxt1 += " "+mLeftOK+"/"+mCenterOK+"/"+mRightOK;
             	//mTxt1 = ""+mBlobColorHsv2.toString();
             	//mTxt1 += " "+btRngLeftL+" "+btRngLeft+" "+btRngLeftR+" "+btRngL+" "+btRng+" "+btRngR+" "+btRngRightL+" "+btRngRight+" "+btRngRightR;
-            	mTxt1 = ""+(int)azimuthOK+" / "+(int)pathAzimuth+" / "+(int)azimuthToNextWaypoint+" / "+(int)azimDiff;
+            	mTxt1 = ""+(int)azimuthOK+"/"+(int)pathAzimuth+"/"+(int)azimuthToNextWaypoint+"/"+(int)azimDiff+"/"+(int)blobDirection;;
+            	//if (searchMode==2) mTxt1 = "" + mBlobColorHsv2.toString() + "/" + (int)mArea + " # " + mTxt1;
+            	if (searchMode==2) mTxt1 = "" + (int)mArea + "#" + mTxt1;
                	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	//if (debugMode>=0) Core.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
             	if (debugMode>=0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
@@ -1578,12 +1662,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	tmpy = (centLat - latOK)*multLat+h/2;
         		Core.circle(mRgba, new Point(tmpx,tmpy), 6, new Scalar(255,0,0),-1);
             }
-        	mColor = RED; tx = "I";
-        	if (inputMode>0) {mColor = GREEN; tx = "I";}
-        	if (searchMode!=4) {
-        		Core.rectangle(mRgba, new Point(0,0), new Point(corner,corner), converScalarHsv2Rgba(mBlobColorHsv2), -1);
+        	mColor = RED; tx = "I"+fileNumber;
+        	if (inputMode==1) {mColor = GREEN;}
+        	else if (inputMode>1) {mColor = BLUE;}
+        	if (searchMode!=0) {
+        		Core.rectangle(mRgba, new Point(1,1), new Point(corner-1,corner-1), converScalarHsv2Rgba(mBlobColorHsv2), -1);
         	}
-        	Core.rectangle(mRgba, new Point(0,0), new Point(corner,corner), mColor, 1);
+        	Core.rectangle(mRgba, new Point(0,0), new Point(corner,corner), mColor, 2);
         	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
         	Core.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
         	mColor1 = BLUE;
@@ -1914,13 +1999,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
     	SharedPreferences.Editor editor = mPrefs.edit();
     	editor.putString(SEARCHMODE_KEY, Integer.toString(searchMode));
+    	editor.putString(THRESHOLDLIMIT_KEY, Integer.toString(mLevel));
     	editor.putString("btdevice", address);
     	editor.putString("btdevice2", address2);
     	editor.putString("limit1", ""+limit1);
-    	//editor.putString("minarea", ""+mArea);
-    	if (searchMode==4) editor.putString("hsv1", mHSV1);
-    	else if  (searchMode!=4) editor.putString("hsv2", mHSV2);
-    	else editor.putString(THRESHOLDLIMIT_KEY, Integer.toString(mLevel));
+    	editor.putString("minarea", ""+mArea);
+    	editor.putString("hsv1", ""+fileNumber);
+    	editor.putString("hsv2", mHSV2);
     	editor.commit();
     }
 
@@ -1931,8 +2016,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		azimuthLimit = readIntPref("azimlimit", azimuthLimit, 25);
 		mArea = readIntPref("minarea", mArea, 9999);
 		//if (mArea>10) minArea = mArea/100; 
-		mHSV1 = mPrefs.getString("hsv1", mHSV1);
+		fileNumber = readIntPref("hsv1", fileNumber, 99);
 		mHSV2 = mPrefs.getString("hsv2", mHSV2);
+		mHSV1 = mHSV2;
 		mBlobColorHsv1 = setColorFromString(mHSV1,mBlobColorHsv1);
 		mBlobColorHsv2 = setColorFromString(mHSV2,mBlobColorHsv2);
 		address = mPrefs.getString("btdevice", address);
@@ -2208,6 +2294,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         try {
             File sdcard = Environment.getExternalStorageDirectory();
             File file = new File(sdcard,fil);
+            if (!file.exists()) {
+                file = new File(sdcard,"RoboNavMap.txt");
+            }
             BufferedReader br = new BufferedReader(new FileReader(file));  
             String line;
             points.clear();
@@ -2277,7 +2366,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			azimuthValid = 1;
 	    }
     	if (btValid>0) {
-        	if (searchMode!=2 || azimuthValid<1) {
+        	if (searchMode!=22 || azimuthValid<1) {
         		azimuthOK = azimuth;
     			azimuthValid = 1;
         	}
@@ -2442,7 +2531,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		// waypoint navigation
 	  		if (wpDist>0 && wpDist<999 && searchMode>1 && state!="end") {
 	  			// if orange cone is close (at RO), then drop payload (waypoint is reached)
-	  			if (searchMode==2 && wpMode>0 && distanceToNextWaypoint<15 && state!="drop" && mBoundingRectangle.height>140) {
+	  			if (searchMode==2 && wpMode>0 && distanceToNextWaypoint<15 && state!="drop" && mBoundingRectangle.height>h/3) {
 	  				state = "drop";
 	  				tmpSec0 = 0;
 	  				say("cone");
@@ -2487,7 +2576,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		    			state = "drop";
 		  		    		mCommand = 'p'; // payload drop
 		  		    		return;
-	  		    		} else if (searchMode==3) {
+	  		    		//} else if (searchMode==3) {
+	  		    		} else if (((tmpSec0-tmpSec))==2) {
 	  		    			// RoboTour => stop
 	  		    			state = "drop";
 		  		    		mCommand = 's'; // stop
@@ -2495,15 +2585,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		    		} else if (((tmpSec0-tmpSec))==3) {
 	  		    			state = "drop";
 		  		    		mCommand = 'r'; // right
-		  		    		if (blobDirection>0) mCommand = 'l';
+		  		    		//if (blobDirection>30) mCommand = 'l';
 		  		    		return;
 	  		    		} else if (((tmpSec0-tmpSec))==4) {
 	  		    			state = "drop";
 		  		    		mCommand = 'r'; // right
-		  		    		if (blobDirection>0) mCommand = 'l';
+		  		    		//if (blobDirection>30) mCommand = 'l';
 		  		    		return;
 	  		    		} else if (((tmpSec0-tmpSec))==5) {
 	  		    			state = "drop";
+		  		    		//mCommand = 'r'; // right
 		  		    		mCommand = 'w'; // forward
 		  		    		return;
 	  		    		} else if (((tmpSec0-tmpSec))==6) {
@@ -2748,6 +2839,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			    if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
 			    else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
 		    }
+		}
+
+   	    // navigation to orange cone
+		if (wpMode>0 && searchMode==2 && distanceToNextWaypoint<18 && state!="drop" && mBoundingRectangle.height>(h/100)) {
+			if (blobDirection<-30) mCommand = 'l';
+			else if (blobDirection<-10) mCommand = 'h';
+			else if (blobDirection>30) mCommand = 'r';
+			else if (blobDirection>10) mCommand = 'k';
+			else mCommand = 'w';
+			mText += "cone";
 		}
 
   		// 4. sanitize command (restrictions and stabilization)
