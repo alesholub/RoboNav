@@ -23,7 +23,7 @@ RoboNav is Android application for visual navigation of mobile robots (OpenCV + 
 - bottom right corner = search mode switch (incremental)
  - 0 = manual control (buttons for commands)
  - 1 = RobotemRovne (go straight, stay on the road, avoid obstacles)
- - 2 = RoboOrienteering (follow waypoints, detect and approach orange targets, drop payload)
+ - 2 = RoboOrienteering (follow waypoints, detect and approach orange cones, drop payload)
  - 3 = RoboTour (follow waypoints, stay on the road, avoid obstacles, drop payload)
  - 4 = Road Assistance (planned feature)
  - 5 = Puck Collect (planned feature)
@@ -45,7 +45,7 @@ RoboNav is Android application for visual navigation of mobile robots (OpenCV + 
 
 **RoboNav screenshot (example)**  
 ![RoboNav screenshot (example)](RoboNav.png)  
-Search mode is 3 (RoboTour). Debug is off. Input mode is 0 (run). Voice output is muted. Blue dots and lines are part of map. Green dots in the map are defined waypoints. Grey outlined dot is actual (next) waypoint, orange line is actual section of the path. Red contour indicates detected road. Sloping blue line indicates navigation recommendation (turn slightly left). Red point indicates top point of detected road. Yellow numbers at right center shows actual time and configured start time (in brackets).
+Search mode is 3 (RoboTour). Debug is off. Input mode is 0 (run). Voice output is muted. Blue dots and lines are part of map. Green dots in the map are defined waypoints. Orange line is an actual section of the defined path. Grey outlined orange dot is actual (next) waypoint. Red line is actual azimuth (course). Red contour indicates detected road. Sloping blue line indicates navigation recommendation (turn left). Big blue circle is sign of the actual command (left). Top red point indicates top point of detected road. Yellow numbers at top center shows actual time and configured start time (in brackets). Yellow and violet numbers and characters at bottom center shows current state information (parameters, angles, mode, command).
 
 **Supported serial/bluetooth commands for robot:**
 - s = stop
