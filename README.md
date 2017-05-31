@@ -28,7 +28,7 @@ RoboNav is Android application for visual navigation of mobile robots (OpenCV + 
  - 4 = Road Assistance (planned feature)
  - 5 = Puck Collect (planned feature)
  - 6 = Line Follower (planned feature)
- - 7 = Kethup House (planned feature)
+ - 7 = Ketchup House (planned feature)
  - 8 = Bear Rescue (planned feature)
  - 9 = Robo Carts (planned feature)
 - "minus" and "plus" (center right) = set parameters (and show detection mode by colors, see below)
