@@ -25,12 +25,12 @@ RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email
 - bottom right corner = search mode switch (incremental)
  - 0 = manual control (buttons for commands)
  - 1 = RobotemRovne (go straight, stay on the road, avoid obstacles)
- - 2 = RoboOrienteering (follow waypoints, detect and approach orange targets, drop payload)
+ - 2 = RoboOrienteering (follow waypoints, detect and approach orange cones, drop payload)
  - 3 = RoboTour (follow waypoints, stay on the road, avoid obstacles, drop payload)
  - 4 = Road Assistance (planned feature)
  - 5 = Puck Collect (planned feature)
  - 6 = Line Follower (planned feature)
- - 7 = Kethup House (planned feature)
+ - 7 = Ketchup House (planned feature)
  - 8 = Bear Rescue (planned feature)
  - 9 = Robo Carts (planned feature)
 - "minus" and "plus" (center right) = set parameters (and show detection mode by colors, see below)
@@ -45,6 +45,20 @@ RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email
 
 - more preferences are available at bluetooth terminal (after quitting of visual navigation by standard "back" button in Android)
 
+**Supported serial/bluetooth commands for robot:**
+- s = stop
+- f or w = forward
+- b or x = backward
+- l or a = left
+- r or d = right
+- y = straight
+- h = slightly left
+- k = slightly right
+- p = payload drop
+- 0 - 9 = speed (0 - 9 [max])
+- t = turn (reverse course)
+- n = new target azimuth (actual)
+
 ```
 Required map format (for RoboNavMap.txt) [example]:
 0 49.3092137 14.1513494 0
@@ -58,19 +72,6 @@ Required map format (for RoboNavMap.txt) [example]:
 3 4
 (first few linas are in format "id latitude longitude 0" => nodes)
 (last/shorter lines are in format "id1 id2" => edges)
-
-Supported serial/bluetooth commands for robot:
-s = stop
-f or w = forward
-b or x = backward
-l or a = left
-r or d = right
-y = straight
-h = slightly left
-k = slightly right
-p = payload drop
-0 - 9 = speed (0 - 9 [max])
-t = turn (reverse course)
 
 Expected serial/bluetooth telemetry from robot (about once per second):
 -------------------------------------------------------------------------
@@ -112,6 +113,10 @@ V1.9.5.?? 2017-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.5.?? 2017-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.5.?? 2017-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.5.?? 2017-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.6.04 2017-06-07 functional payload drop at wpMode=2   
+V1.9.6.03 2017-06-06 comparing blob Y parameter  
+V1.9.6.02 2017-06-04 map names (maps) 
+V1.9.6.01 2017-06-01 wpMode=1 => navigate to cone, but do not drop payload, compass_calib after long touch only (+ Toast) 
 V1.9.6 2017-05-31 version for Roboorienteering 2017, parameters tuning 
 V1.9.5.09 2017-05-29 better payload drop procedure, support for more RoboNavMaps files 
 V1.9.5.08 2017-05-27 navigation to the cone (and new computation of the blobDirection) 
