@@ -2576,7 +2576,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  				say("cone");
 	  				mText += "cone";
 	  			}
-	  			if ((actualDist>(wpDist+20) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<4 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<14 && Math.abs(turnAngleToNextWaypoint)>100) || state=="drop") {
+	  			if ((actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<4 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<11 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
 	  				// waypoint reached
 	  				mText += "WP"+wp;
 	  				if (state!="drop") say("point "+wp);
@@ -2688,14 +2688,6 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     }
 
     public void getAngleToNextWaypoint() {
-//		// long range obstacle avoiding (not for RR & RO)
-//		if (btValid>0 && searchMode>2) {
-//			if (btRng>19 && btRngLeft<12 && btRngRight>12) {
-//				mCommand = 'k'; // slightly right
-//			} else if (btRng>19 && btRngLeft>15 && btRngRight<15) {
-//				mCommand = 'h'; // slightly left
-//			}
-//		}
 		// navigation to the next waypoint
 		Location.distanceBetween(latOK, lonOK, wpLat, wpLon, results);
 		distanceToNextWaypoint = results[0];
@@ -2840,7 +2832,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	// - turnAngleToStayOnRoad
     	// - avoiding, turnAngleToAvoidObstacle
 
-    	// since 2016-09-01
+    	// since 2017-06-20
     	
     	// 1. stay on road
   		if (mod6<3 && searchMode!=1) {
@@ -2855,7 +2847,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
   		}
 
   		// 2. set drivingSignal by turnAngleToNextWaypoint
-  		if ((turnAngleToNextWaypoint>limit2 && drivingSignal>-limit2 && mRightOK>0) || (turnAngleToNextWaypoint<-limit2 && drivingSignal<limit2 && mLeftOK>0)) {
+  		if (searchMode==2) drivingSignal = turnAngleToNextWaypoint;
+  		else if ((turnAngleToNextWaypoint>limit2 && drivingSignal>-limit2 && mRightOK>0) || (turnAngleToNextWaypoint<-limit2 && drivingSignal<limit2 && mLeftOK>0)) {
   	    	if (searchMode!=1) drivingSignal = turnAngleToNextWaypoint/4;
   		}
     	
@@ -2878,6 +2871,19 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
 			else if (drivingSignal>limit2) mCommand = 'r'; // extra right
 			else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
+
+            // long range obstacle avoiding (for RR, RO and RT)
+    		if (searchMode>=1 && (mod6==1 || mod6==5)) {
+    			mText += "S";
+    			if (btValid>0 && btRng>18 && btRngLeft<18 && btRngRight>18) {
+    				//mCommand = 'k'; // slightly right
+    				mCommand = 'r'; // right
+    			} else if (btValid>0 && btRng>18 && btRngLeft>18 && btRngRight<18) {
+    				//mCommand = 'h'; // slightly left
+    				mCommand = 'l'; // left
+    			}
+    		}
+        	
 			if (mGrass<0 && mCenterOK>0) {
 			    if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
 			    else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
@@ -2897,19 +2903,19 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
   		// 4. sanitize command (restrictions and stabilization)
  		if (searchMode>1 && (mod6==1 || mod6==5)) {
  			// check L/R sonars
-			mText += "S";
+			//mText += "S";
  	    	if (" lh".indexOf(""+mCommand)>0 && btRngLeft<10) mCommand = 'w'; // can't turn left
  	    	else if (" kr".indexOf(""+mCommand)>0 && btRngRight<10) mCommand = 'w'; // can't turn right
  			if (btValid>0 && searchMode!=1) {
  				if (btRngLeft<14 || btRngLeftR<14 || btRngL<14) {
  					// left obstacle
  					mText += "lo";
- 					if (" lhw".indexOf(""+mCommand)>0 && btValid>0) mCommand = 'k';
+ 					if (" lhw".indexOf(""+mCommand)>0 && btValid>0) mCommand = 'r';
  				}
  				if (btRngRight<14 || btRngRightL<14 || btRngR<14) {
  					// right obstacle
  					mText += "ro";
- 					if (" rkw".indexOf(""+mCommand)>0 && btValid>0) mCommand = 'h';
+ 					if (" rkw".indexOf(""+mCommand)>0 && btValid>0) mCommand = 'l';
  				}
  			} 
  		}

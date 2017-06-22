@@ -113,6 +113,8 @@ V1.9.5.?? 2017-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.5.?? 2017-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.5.?? 2017-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.5.?? 2017-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.6.06 2017-06-20 long range obstacle avoiding by sonars at modes 1 and 5   
+V1.9.6.05 2017-06-17 narrowed limits for missed waypoint (try to reach waypoint more aggresive), navigate by turnAngleToNextWaypoint in RO mode   
 V1.9.6.04 2017-06-07 functional payload drop at wpMode=2   
 V1.9.6.03 2017-06-06 comparing blob Y parameter  
 V1.9.6.02 2017-06-04 map names (maps) 
