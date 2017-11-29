@@ -363,7 +363,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	mOpenCvCameraView.offsetTopAndBottom(0);
     	init();
     	stopped = false;
-        appendLog("date_time;mCommand;searchMode;direction;topDirection;cameraDirection;azimuth;azimuthValid;btPwm;btRng;btRngLeft;btRngRight;btRngBack;btDst;btSpd;limit1;limit2;mLevel;azimuthLimit;mArea;minArea;btLat;btLon;stav;lat;lon;bearing;accuracy;wp;wpLat;wpLon;wpMode;wpDist;pathAzimuth;wpDist1;azimuthToNextWaypoint;azimuth;azimDiff;turnAngleToNextWaypoint;actualDist;lastDist;");
+        //appendLog("date_time;mCommand;searchMode;direction;topDirection;cameraDirection;azimuth;azimuthValid;btPwm;btRng;btRngLeft;btRngRight;btRngBack;btDst;btSpd;limit1;limit2;mLevel;azimuthLimit;mArea;minArea;btLat;btLon;stav;lat;lon;bearing;accuracy;wp;wpLat;wpLon;wpMode;wpDist;pathAzimuth;wpDist1;azimuthToNextWaypoint;azimuth;azimDiff;turnAngleToNextWaypoint;actualDist;lastDist;");
+    	// new log structure (27.11.2017)
+        appendLog("date_time;mCommand;searchMode;azimuthValid;btDst;btSpd;lat;lon;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;");
+        //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+btDst+";"+btSpd+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
         sendCommand(); // start timer
     }
 
@@ -1565,8 +1568,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	if (searchMode==2) mTxt1 = ""+(int)mArea+"#"+(int)azimuthToNextWaypoint+"/"+(int)azimDiff+"#"+(int)blobDirection+"/"+(int)mBoundingRectangle.y+"#"+wpMode+"/"+(int)distanceToNextWaypoint;
                	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	//if (debugMode>=0) Core.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
-            	if (debugMode>=0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
-            	mTxt1 = ""+state+" "+mText+" "+txtCommand;
+            	if (debugMode>0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+            	//mTxt1 = ""+state+" "+mText+" "+txtCommand;
+            	mTxt1 = ""+txtCommand;
                	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	if (debugMode>=0) Core.putText(mRgba, mTxt1, new Point((w-textSize.width)/2,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
     			Core.circle(mRgba, topPoint, h/50, new Scalar(255,0,0), -1);
@@ -1979,7 +1983,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+direction+";"+topDirection+";"+averageDirection+";"+averageTopPoint+";"+directionNum+";"+azimuth+";"+initialAzimuth+";"+azimuthDifference+";"+azimuthValid+";"+btPwm+";"+btRng+";"+btDst+";"+btSpd+";"+limit1+";"+limit2+";"+mLevel+";"+azimuthLimit+";"+mArea+";"+minArea+";"+btLat+";"+btLon+";"+btRngLeft+";"+btRngRight+";"+btRngBack+";");
             	// new log structure (4.9.2015)
                 //appendLog("date_time;mCommand;searchMode;direction;topDirection;cameraDirection;directionNum;azimuth;azimuthValid;btPwm;btRng;btRngLeft;btRngRight;btRngBack;btDst;btSpd;limit1;limit2;mLevel;azimuthLimit;mArea;minArea;btLat;btLon;stav;lat;lon;bearing;accuracy;wp;wpLat;wpLon;wpMode;wpDist;pathAzimuth;wpDist1;azimuthToNextWaypoint;azimuth;actualDist;lastDist;");
-                appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+direction+";"+topDirection+";"+cameraDirection+";"+azimuth+";"+azimuthValid+";"+btPwm+";"+btRng+";"+btRngLeft+";"+btRngRight+";"+btRngBack+";"+btDst+";"+btSpd+";"+limit1+";"+limit2+";"+mLevel+";"+azimuthLimit+";"+mArea+";"+minArea+";"+Math.round(100000*btLat)+";"+Math.round(100000*btLon)+";"+stav+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+Math.round(accuracy)+";"+wp+";"+Math.round(100000*wpLat)+";"+Math.round(100000*wpLon)+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(wpDist1)+";"+Math.round(azimuthToNextWaypoint)+";"+azimuth+";"+Math.round(azimDiff)+";"+Math.round(turnAngleToNextWaypoint)+";"+Math.round(actualDist)+";"+Math.round(lastDist)+";");
+                //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+direction+";"+topDirection+";"+cameraDirection+";"+azimuth+";"+azimuthValid+";"+btPwm+";"+btRng+";"+btRngLeft+";"+btRngRight+";"+btRngBack+";"+btDst+";"+btSpd+";"+limit1+";"+limit2+";"+mLevel+";"+azimuthLimit+";"+mArea+";"+minArea+";"+Math.round(100000*btLat)+";"+Math.round(100000*btLon)+";"+stav+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+Math.round(accuracy)+";"+wp+";"+Math.round(100000*wpLat)+";"+Math.round(100000*wpLon)+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(wpDist1)+";"+Math.round(azimuthToNextWaypoint)+";"+azimuth+";"+Math.round(azimDiff)+";"+Math.round(turnAngleToNextWaypoint)+";"+Math.round(actualDist)+";"+Math.round(lastDist)+";");
+            	// simplified log structure (26.11.2017)
+                //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
+            	// another log structure (27.11.2017)
+                appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+btDst+";"+btSpd+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
                 //directionTrend = -direction/2;
                 //topPointTrend = -topDirection/2;
              	if (mPrevCommand=='l' || mPrevCommand=='r') {
