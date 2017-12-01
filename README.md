@@ -109,6 +109,7 @@ pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 - probability and artificial intelligence
 
 **Changelog:**
+- V1.9.7 2017-11-26 version for Robotour Marathon 2017/2018 (simplified log and screen layout)   
 - V1.9.6 2017-05-31 version for Roboorienteering 2017 (parameters tuning, navigation to cone, maps, paths)
 - V1.9.5 2017-05-08 version for Robotem Rovne 2017 (parameters tuning)
 - V1.9.4 2016-07-19 version for RoboTour 2016 (safer navigation)

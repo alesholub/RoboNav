@@ -2584,7 +2584,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  				say("cone");
 	  				mText += "cone";
 	  			}
-	  			if ((actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<4 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<11 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
+	  			if ((actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<6 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<11 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
 	  				// waypoint reached
 	  				mText += "WP"+wp;
 	  				if (state!="drop") say("point "+wp);
