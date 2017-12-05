@@ -106,13 +106,15 @@ To-do:
 - probability and artificial intelligence
 
 Changelog:
-V1.9.5.?? 2017-??-?? 
-V1.9.5.?? 2017-??-?? A* algorithm for path planning (according to map)
-V1.9.5.?? 2017-??-?? optimized user interface (buttons, HUD)
-V1.9.5.?? 2017-??-?? extra layer for user interface (or extra Mat and mask for buttons)
-V1.9.5.?? 2017-??-?? using AI principles (neural network, decision tree, regression) 
-V1.9.5.?? 2017-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
-V1.9.5.?? 2017-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.?.?? 201?-??-?? 
+V1.9.?.?? 201?-??-?? A* algorithm for path planning (according to map)
+V1.9.?.?? 201?-??-?? optimized user interface (buttons, HUD)
+V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for buttons)
+V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
+V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
+V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.7.02 2017-12-05 small changes in the log, state machine for Robotour Marathon, load command 'o' (tell only)   
+V1.9.7.01 2017-12-01 parameters tuning
 V1.9.7.00 2017-11-26 simplified log and screen layout, preparation for Robotour Marathon   
 V1.9.6.06 2017-06-20 long range obstacle avoiding by sonars at modes 1 and 5   
 V1.9.6.05 2017-06-17 narrowed limits for missed waypoint (try to reach waypoint more aggresive), navigate by turnAngleToNextWaypoint in RO mode   

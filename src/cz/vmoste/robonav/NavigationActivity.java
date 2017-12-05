@@ -364,9 +364,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	init();
     	stopped = false;
         //appendLog("date_time;mCommand;searchMode;direction;topDirection;cameraDirection;azimuth;azimuthValid;btPwm;btRng;btRngLeft;btRngRight;btRngBack;btDst;btSpd;limit1;limit2;mLevel;azimuthLimit;mArea;minArea;btLat;btLon;stav;lat;lon;bearing;accuracy;wp;wpLat;wpLon;wpMode;wpDist;pathAzimuth;wpDist1;azimuthToNextWaypoint;azimuth;azimDiff;turnAngleToNextWaypoint;actualDist;lastDist;");
-    	// new log structure (27.11.2017)
-        appendLog("date_time;mCommand;searchMode;azimuthValid;btDst;btSpd;lat;lon;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;");
         //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+btDst+";"+btSpd+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
+    	// new log structure (27.11.2017)
+        // appendLog("date_time;mCommand;searchMode;azimuthValid;btDst;btSpd;lat;lon;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;");
+    	// new log structure (5.12.2017)
+        appendLog("date_time;mCommand;searchMode;azimuthOK;btDst;btSpd;latOK;lonOK;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;drivingSignal;");
         sendCommand(); // start timer
     }
 
@@ -1569,7 +1571,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	//if (debugMode>=0) Core.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
             	if (debugMode>0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
-            	//mTxt1 = ""+state+" "+mText+" "+txtCommand;
+            	mTxt1 = ""+state+" "+mText+" "+txtCommand;
             	mTxt1 = ""+txtCommand;
                	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	if (debugMode>=0) Core.putText(mRgba, mTxt1, new Point((w-textSize.width)/2,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
@@ -1987,7 +1989,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	// simplified log structure (26.11.2017)
                 //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
             	// another log structure (27.11.2017)
-                appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+btDst+";"+btSpd+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
+                //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+btDst+";"+btSpd+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
+            	// another log structure (5.12.2017)
+                appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthOK+";"+btDst+";"+btSpd+";"+Math.round(100000*latOK)+";"+Math.round(100000*lonOK)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";"+Math.round(drivingSignal)+";");
                 //directionTrend = -direction/2;
                 //topPointTrend = -topDirection/2;
              	if (mPrevCommand=='l' || mPrevCommand=='r') {
@@ -2008,10 +2012,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     
     private void writeCommand() {
   		out1[0] = out[0];
-  		if ((char)out[0]>='a') {
+  		if ((char)out[0]>='a' && (char)out[0]!='o') {
   	  	    out1[0] = (byte)(commandsMap.get((char)out[0]) & 0xFF);
   		}
-     	MainActivity.mSerialService.write(out1);
+  		if ((char)out1[0]!='o') {
+  	     	MainActivity.mSerialService.write(out1);
+  		}
     }
     
     private void tellCommand(char command) {
@@ -2025,6 +2031,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	else if (command=='b') txtCommand = "back";
     	else if (command=='w') txtCommand = "forward";
     	else if (command=='p') txtCommand = "drop";
+    	else if (command=='o') txtCommand = "load";
     	else if (command=='t') txtCommand = "turn";
     	else if (command=='$') txtCommand = "finish";
     	else if (command=='n') txtCommand = "new azimuth";
@@ -2619,6 +2626,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		    			tmpSec0 = 0;
 		  		    		mCommand = 'w'; // forward
 		  		    		return;
+		  		    	} else if (searchMode==3) {
+		  		    		// Robotour
+	  		    			state = "drop";
+	  		    			if (wpMode0>1) {
+			  		    		mCommand = 'p'; // payload drop
+	  		    			} else {
+			  		    		mCommand = 'o'; // payload load
+			  		    		//mCommand = 's'; // stop
+	  		    			}
+		  		    		return;
 	  		    		} else if (((tmpSec0-tmpSec))<=1) {
 	  		    			state = "drop";
 	  		    			if (wpMode0>1) {
@@ -2627,7 +2644,6 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			  		    		mCommand = 's'; // stop
 	  		    			}
 		  		    		return;
-	  		    		//} else if (searchMode==3) {
 	  		    		} else if (((tmpSec0-tmpSec))<=2) {
 	  		    			// RoboTour => stop
 	  		    			state = "drop";
