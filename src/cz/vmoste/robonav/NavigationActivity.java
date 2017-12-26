@@ -193,6 +193,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static List<int[]> edges = new ArrayList<int[]>(); // map edges (point1, point2, dist, azim)
 	private static List<int[]> wpModes = new ArrayList<int[]>(); // waypoint modes (mode)
 	private static List<int[]> goalPoints = new ArrayList<int[]>(); // goal points
+	private static List<String> robots = new ArrayList<String>(); // robots (from RoboNavRobots.txt)
 	private static double minLat = 999.0;
 	private static double minLon = 999.0;
 	private static double maxLat = -999.0;
@@ -280,6 +281,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
 	private static int fileNumber = 0;
 	private String fileName = "";
+	private String shortTxt = "";
 	String[] maps = {"t0","t1","t2","t3","0A","1A","1B","1C","1D","1E","1F","2A","2B","2C","2D","2E","2F","3A","3B","3C","3D","3E","3F"};	
 	
 	private static Rect mBoundingRectangle = null;
@@ -672,6 +674,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	fileName = "RoboNavPath";
     	if (fileNumber>0) fileName += ""+fileNumber;
     	path = readPoints(fileName+".txt");
+    	robots = readRobots("RoboNavRobots.txt");
     	//goals = path;
     	computeNextWaypoint(1);
     	now.setToNow();
@@ -774,13 +777,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             if (inputMode==0 && move==0 && buttonTouched==0 && (event.getEventTime()-lastDownTime)>=0 && (event.getEventTime()-lastUpTime)>=0) {
     			touchTime = event.getEventTime() - lastDownTime;
             	if (touchTime>1050 && searchMode>1) {
-                	azimuth_calib += pathAzimuth - azimuthOK;
+            		if (Math.abs(azimuth_calib)>1.0) azimuth_calib = 0.0;
+            		else azimuth_calib = pathAzimuth - azimuthOK;
                 	//if (searchMode==1) return false;
         	    	out[0] = 'n'; // new azimuth
               	    if (!stopped) {
                  	    writeCommand();
                 	    tellCommand((char)out[0]);
-                		Toast.makeText(getApplicationContext(), "azimCalib: "+azimuth_calib, Toast.LENGTH_SHORT).show();
+                		Toast.makeText(getApplicationContext(), "azCalib: "+Math.round(azimuth_calib)+"/"+Math.round(pathAzimuth), Toast.LENGTH_SHORT).show();
                     }
                 	return false;
             	}
@@ -1005,11 +1009,19 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		setStartTime();
         		return false;
         	}
-        	if (searchMode!=2) {
+        	if (searchMode==6) {
                 mLevel = mLevel + 10;
                 if (mLevel>255) mLevel = 255;
                 mRoadDetector.setLevel(mLevel);
                 mObstacleDetector.setLevel(mLevel);
+                shortTxt = "level: "+mLevel;
+        	}
+        	if (searchMode!=2) {
+                mLevel = mLevel + 1;
+                if (mLevel>255) mLevel = 255;
+                mRoadDetector.setLevel(mLevel);
+                mObstacleDetector.setLevel(mLevel);
+                shortTxt = "level: "+mLevel;
         	}
         	else if (searchMode==2) {
                 mArea = mArea + 1;
@@ -1067,12 +1079,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 if (mLevel<0) mLevel = 0;
                 mRoadDetector.setLevel(mLevel);
                 mObstacleDetector.setLevel(mLevel);
+                shortTxt = "level: "+mLevel;
         	}
         	else if (searchMode==1 || searchMode==3) {
                 mLevel = mLevel - 1;
                 if (mLevel<0) mLevel = 0;
                 mRoadDetector.setLevel(mLevel);
                 mObstacleDetector.setLevel(mLevel);
+                shortTxt = "level: "+mLevel;
         	}
         	else if (searchMode==2) {
                 mArea = mArea - 1;
@@ -1152,7 +1166,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	// targetAzimuth for RR
         	//mTargetAzimuth = (int)azimuthOK;
         	//azimuth_calib = pathAzimuth - azimuthOK;
-        	azimuth_calib += pathAzimuth - azimuthOK;
+        	azimuth_calib = pathAzimuth - azimuthOK;
         	//if (searchMode==1) return false;
 	    	out[0] = 'n'; // new azimuth
       	    if (!stopped) {
@@ -1571,10 +1585,22 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	//if (debugMode>=0) Core.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
             	if (debugMode>0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+            	else if (shortTxt!="") {
+                   	textSize = Core.getTextSize(shortTxt, 1, 1.4*siz, 14*wi/10, baseline);
+                	Core.putText(mRgba, ""+shortTxt, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+                	shortTxt = "";
+            	}
             	mTxt1 = ""+state+" "+mText+" "+txtCommand;
             	mTxt1 = ""+txtCommand;
                	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	if (debugMode>=0) Core.putText(mRgba, mTxt1, new Point((w-textSize.width)/2,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
+            	mTxt1 = ""+mText;
+               	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
+            	if (debugMode>=0) Core.putText(mRgba, mTxt1, new Point(w/5,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
+            	mTxt1 = "BT";
+               	//textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
+            	if (debugMode>=0 && btValid>0) Core.putText(mRgba, mTxt1, new Point(2*w/3,h-h/60), 1, siz*1.5, new Scalar(0,255,0), 3*wi/2);
+            	else Core.putText(mRgba, mTxt1, new Point(2*w/3,h-h/60), 1, siz*1.5, new Scalar(255,0,0), 3*wi/2);
     			Core.circle(mRgba, topPoint, h/50, new Scalar(255,0,0), -1);
     			Core.circle(mRgba, centPoint, h/50, new Scalar(0,0,255), -1);
             	int ok = 0;
@@ -2409,6 +2435,28 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         //Toast.makeText(getApplicationContext(), ""+centLat+" "+centLon+" "+minLat+" "+minLon+" "+maxLat+" "+maxLon, Toast.LENGTH_LONG).show();
     }
 
+    public List<String> readRobots(String fil)
+    {
+    	List<String> ret = new ArrayList<String>();
+		robots.clear();
+        try {
+            File sdcard = Environment.getExternalStorageDirectory();
+            File file = new File(sdcard,fil);
+            BufferedReader br = new BufferedReader(new FileReader(file));  
+            String line;
+            while ((line = br.readLine()) != null) {
+            	if (line.length()>10) {
+                	ret.add(line);
+            	}
+            }
+            br.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();                    
+        }
+        return ret;
+    }
+
     public void computePosition()
     {
     	compassAzimuth = compass.getAzimuth();
@@ -2494,7 +2542,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		Location.distanceBetween(latOK, lonOK, wpLat, wpLon, results);
 		distanceToNextWaypoint = results[0];
 		azimuthToNextWaypoint = results[1];
-    	if (latOK<33f && searchMode!=1) {
+    	if (latOK<33f && searchMode!=1 && runMode==1) {
     		distanceToNextWaypoint = 999;
     		wpDist1 = 999;
     		pathAzimuth = azimuthOK;
@@ -2591,7 +2639,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  				say("cone");
 	  				mText += "cone";
 	  			}
-	  			if ((actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<6 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<11 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
+	  			if ((actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<7 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<51 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
 	  				// waypoint reached
 	  				mText += "WP"+wp;
 	  				if (state!="drop") say("point "+wp);
@@ -2629,12 +2677,15 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		  		    	} else if (searchMode==3) {
 		  		    		// Robotour
 	  		    			state = "drop";
-	  		    			if (wpMode0>1) {
-			  		    		mCommand = 'p'; // payload drop
-	  		    			} else {
-			  		    		mCommand = 'o'; // payload load
-			  		    		//mCommand = 's'; // stop
-	  		    			}
+  		  		    		mCommand = 's'; // stop
+		  				    if ((tmpSec0-tmpSec)%4==1) {
+		  		  		    	if (wpMode0>1) {
+		  		  		    		mCommand = 'p'; // payload drop
+		  		  		    	} else {
+		  		  		    		mCommand = 'o'; // payload load
+		  		  		    		//mCommand = 's'; // stop
+		  		  		    	}
+		  				    }
 		  		    		return;
 	  		    		} else if (((tmpSec0-tmpSec))<=1) {
 	  		    			state = "drop";
@@ -2717,7 +2768,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		distanceToNextWaypoint = results[0];
 		wpDist1 = distanceToNextWaypoint;
 		azimuthToNextWaypoint = results[1];
-    	if (latOK<33f && searchMode!=1) {
+    	if (latOK<33f && searchMode!=1 && runMode==1) {
     		distanceToNextWaypoint = 999;
     		wpDist1 = 999;
     		pathAzimuth = azimuthOK;
@@ -2873,7 +2924,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
   		// 2. set drivingSignal by turnAngleToNextWaypoint
   		if (searchMode==2) drivingSignal = turnAngleToNextWaypoint;
   		else if ((turnAngleToNextWaypoint>limit2 && drivingSignal>-limit2 && mRightOK>0) || (turnAngleToNextWaypoint<-limit2 && drivingSignal<limit2 && mLeftOK>0)) {
-  	    	if (searchMode!=1) drivingSignal = turnAngleToNextWaypoint/4;
+  	    	if (searchMode!=1) drivingSignal = turnAngleToNextWaypoint/2;
   		}
     	
     	if (searchMode==1 && mod6>=4) {

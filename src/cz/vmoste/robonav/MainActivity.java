@@ -113,6 +113,8 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.7.04 2017-12-26 preparations for the RoboNavRobots.txt file (connected robots parameters)   
+V1.9.7.03 2017-12-09 manual compass calibration, simpler state machine for Robotour Marathon   
 V1.9.7.02 2017-12-05 small changes in the log, state machine for Robotour Marathon, load command 'o' (tell only)   
 V1.9.7.01 2017-12-01 parameters tuning
 V1.9.7.00 2017-11-26 simplified log and screen layout, preparation for Robotour Marathon   
