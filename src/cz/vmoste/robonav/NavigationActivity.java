@@ -134,8 +134,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static String mHSV2 = "";
     private static String address = "00:00:00:00:00:00";
     private static String address2 = "00:00:00:00:00:00";
+    private static String connectedAddress = "";
 	private static String commandsTable0 = "lrswfbhkptn";
 	private static String commandsTable = "lrswfbhkptn";
+	private static String telemetryTable = "";
 	private static Map<Character, Character> commandsMap = new HashMap<Character, Character>();
 	private SharedPreferences mPrefs;
 	private int direction = 0;
@@ -282,6 +284,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static int fileNumber = 0;
 	private String fileName = "";
 	private String shortTxt = "";
+   	private int shortNum = 0;
+	private static String robotName = "robot";
 	String[] maps = {"t0","t1","t2","t3","0A","1A","1B","1C","1D","1E","1F","2A","2B","2C","2D","2E","2F","3A","3B","3C","3D","3E","3F"};	
 	
 	private static Rect mBoundingRectangle = null;
@@ -674,7 +678,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	fileName = "RoboNavPath";
     	if (fileNumber>0) fileName += ""+fileNumber;
     	path = readPoints(fileName+".txt");
-    	robots = readRobots("RoboNavRobots.txt");
+    	//robots = readRobots("RoboNavRobots.txt");
     	//goals = path;
     	computeNextWaypoint(1);
     	now.setToNow();
@@ -1586,9 +1590,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	//if (debugMode>=0) Core.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
             	if (debugMode>0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
             	else if (shortTxt!="") {
+            		shortNum++;
                    	textSize = Core.getTextSize(shortTxt, 1, 1.4*siz, 14*wi/10, baseline);
                 	Core.putText(mRgba, ""+shortTxt, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
-                	shortTxt = "";
+                	if (shortNum>2) {
+                		shortTxt = "";
+                		shortNum = 0;
+                	}
             	}
             	mTxt1 = ""+state+" "+mText+" "+txtCommand;
             	mTxt1 = ""+txtCommand;
@@ -1929,6 +1937,37 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	address2 = sAddress2;
     }
     
+    static void setConnectedAddress(String sAddress) {
+    	connectedAddress = sAddress;
+        //Toast.makeText(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT).show();
+    	robots = readRobots("RoboNavRobots.txt");
+		for (int x=0; x<robots.size(); x++) {
+	    	String[] parts = robots.get(x).split(";");
+	    	if (connectedAddress==parts[0].trim()) {
+	    		robotName = parts[1];
+	            //Toast.makeText(getApplicationContext(), "obot: "+robotName, Toast.LENGTH_SHORT).show();
+	    		if (parts[2].length()>=commandsTable0.length()) {
+		    		commandsTable = parts[2];
+		    		commandsMap.clear();
+		    		for (int ix=0; ix<commandsTable0.length(); ix++) {
+		    			commandsMap.put(commandsTable0.charAt(ix), commandsTable.charAt(ix));
+		    		}
+	    		}
+	    		if (parts[3].trim().length()>0) {
+		    		telemetryTable = parts[3].trim();
+		    		for (int ix=0; ix<telemetryTable.length(); ix++) {
+		    			//telemetryMap.put(commandsTable0.charAt(ix), commandsTable.charAt(ix));
+		    		}
+	    		}
+	    		break;
+	    	}
+		}
+    }
+
+    static String getRobotName() {
+    	return robotName;
+    }
+
     static void setStartTime() {
     	now.set(startTimeMilis);
     	startTime = now.format("%H:%M:%S");
@@ -2435,7 +2474,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         //Toast.makeText(getApplicationContext(), ""+centLat+" "+centLon+" "+minLat+" "+minLon+" "+maxLat+" "+maxLon, Toast.LENGTH_LONG).show();
     }
 
-    public List<String> readRobots(String fil)
+    static public List<String> readRobots(String fil)
     {
     	List<String> ret = new ArrayList<String>();
 		robots.clear();
@@ -2446,7 +2485,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             String line;
             while ((line = br.readLine()) != null) {
             	if (line.length()>10) {
-                	ret.add(line);
+                	ret.add(line.trim());
+    	            //Toast.makeText(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT).show();
+        	    	String[] parts = line.trim().split(";");
+        	    	if (connectedAddress.equalsIgnoreCase(parts[0].trim())) {
+        	    		robotName = parts[1];
+        	            //Toast.makeText(getApplicationContext(), "robot: "+robotName, Toast.LENGTH_SHORT).show();
+        	    	}
             	}
             }
             br.close();

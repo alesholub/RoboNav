@@ -113,6 +113,7 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.7.05 2017-12-27 using of the RoboNavRobots.txt file (name of connected robot)   
 V1.9.7.04 2017-12-26 preparations for the RoboNavRobots.txt file (connected robots parameters)   
 V1.9.7.03 2017-12-09 manual compass calibration, simpler state machine for Robotour Marathon   
 V1.9.7.02 2017-12-05 small changes in the log, state machine for Robotour Marathon, load command 'o' (tell only)   
@@ -374,7 +375,32 @@ public class MainActivity extends Activity {
         	    		mBluetoothAdapter.cancelDiscovery();
         	    	}
         	    	address = device.getAddress();
-        	    	Toast.makeText(getApplicationContext(), "Connect to: "+address, Toast.LENGTH_SHORT).show();
+        	    	NavigationActivity.setConnectedAddress(address);
+        	    	String robotName = NavigationActivity.getRobotName();
+//        	    	List<String> ret = new ArrayList<String>();
+//        	    	String fil = "RoboNavRobots.txt";
+//        	        try {
+//        	            File sdcard = Environment.getExternalStorageDirectory();
+//        	            File file = new File(sdcard,fil);
+//        	            BufferedReader br = new BufferedReader(new FileReader(file));  
+//        	            String line;
+//        	            while ((line = br.readLine()) != null) {
+//        	            	if (line.length()>10) {
+//        	                	ret.add(line.trim());
+//        	    	            //Toast.makeText(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT).show();
+//        	        	    	String[] parts = line.trim().split(";");
+//        	        	    	if (address.equalsIgnoreCase(parts[0].trim())) {
+//        	        	    		robotName = parts[1];
+//        	        	            //Toast.makeText(getApplicationContext(), "robot: "+robotName, Toast.LENGTH_SHORT).show();
+//        	        	    	}
+//        	            	}
+//        	            }
+//        	            br.close();
+//        	        }
+//        	        catch (Exception e) {
+//        	            e.printStackTrace();                    
+//        	        }
+        	    	Toast.makeText(getApplicationContext(), "Connect to: "+address+" ("+robotName+")", Toast.LENGTH_SHORT).show();
         	    	// Get the BLuetoothDevice object
         	    	//BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         	    	// Attempt to connect to the device
