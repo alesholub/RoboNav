@@ -137,7 +137,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     private static String connectedAddress = "";
 	private static String commandsTable0 = "lrswfbhkptn";
 	private static String commandsTable = "lrswfbhkptn";
-	private static String telemetryTable = "";
+	private static String telemetryTable = "   ... hhh ...  ... ... fff ddd sss ... aaaaaaaa oooooooo lll rrr bbb www";
 	private static Map<Character, Character> commandsMap = new HashMap<Character, Character>();
 	private SharedPreferences mPrefs;
 	private int direction = 0;
@@ -169,6 +169,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static int btRngLeftR = 99; // left sonar range from bluetooth
 	private static int btRngRightR = 99; // right sonar range from bluetooth
 	private static int btRngBack = 99; // IR range from bluetooth
+	private static int btPayload = 0; // actual number of payloads
     private boolean  stopped = false;
     private static double lat = 0.0;
     private static double lon = 0.0;
@@ -281,9 +282,33 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static long lastGPStime = -1;
 	private static long lastNETtime = -1;
 
+	private static int fromHeading = 0;
+	private static int toHeading = 0;
+	private static int fromSpeed = 0;
+	private static int toSpeed = 0;
+	private static int fromDistance = 0;
+	private static int toDistance = 0;
+	private static int fromPwm = 0;
+	private static int toPwm = 0;
+	private static int fromLat = 0;
+	private static int toLat = 0;
+	private static int fromLon = 0;
+	private static int toLon = 0;
+	private static int fromFront = 0;
+	private static int toFront = 0;
+	private static int fromLeft = 0;
+	private static int toLeft = 0;
+	private static int fromRight = 0;
+	private static int toRight = 0;
+	private static int fromBack = 0;
+	private static int toBack = 0;
+	private static int fromPayload = 0;
+	private static int toPayload = 0;
+
 	private static int fileNumber = 0;
 	private String fileName = "";
 	private String shortTxt = "";
+	private static String testTxt = "";
    	private int shortNum = 0;
 	private static String robotName = "robot";
 	String[] maps = {"t0","t1","t2","t3","0A","1A","1B","1C","1D","1E","1F","2A","2B","2C","2D","2E","2F","3A","3B","3C","3D","3E","3F"};	
@@ -1395,7 +1420,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 //h = mTmp;
             	//if (debugMode>0) Core.putText(mRgba, "o: "+xOffset+" / "+yOffset+" / "+w+" / "+h+" / "+x+" / "+y+" / "+ex+" / "+ey+" / "+vw+" / "+vh, new Point(4,(pos-100)), 1, siz, new Scalar(255,255,150), wi);
             	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             } else if (searchMode==1) {
             	// Road detection (for RobotemRovne) ... direction from moments or topPoint
             	if (blobSearch>=0 && directionNum%2==0) {
@@ -1415,7 +1440,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             } else if (searchMode==2) {
             	// color blob detection (for RoboOrienteering)
             	//blobSearch = 0; // *** for tests only ***
@@ -1466,7 +1491,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             } else if (searchMode==3) {
             	// Road detection (for RoboTour) ... direction from topPoint or moments (merging)
             	if (roadSearch>=0 && directionNum%3==0) {
@@ -1486,7 +1511,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+channel, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
     			// merging
             	//direction = topDirection + direction/2; // merging disabled
             } else if (searchMode==4) {
@@ -1824,22 +1849,22 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	if (tmpText.indexOf("\n")>0) {
             try {
             	toRgba = tmpText.substring(0, tmpText.indexOf("\n")-1);
-            	if (toRgba.length()>33) {
-            		int tmp = Integer.parseInt(toRgba.substring(10,15).trim());
-                	//if (tmp>0) initialAzimuth = tmp;
-                	tmp = Integer.parseInt(toRgba.substring(6,10).trim());
+//            	if (toRgba.length()>=telemetryTable.length()) {
+              	if (toRgba.length()>=3) {
+            		btValid = 1;
+            		int tmp = 0;
+            		tmp = Integer.parseInt(toRgba.substring(fromHeading,toHeading).trim());
                 	if (tmp>0) {
                 		azimuth = tmp;
                 		now.setToNow();
                 		azimuthValidTime = now.toMillis(false) + 3000;
                 		azimuthValid = 1;
-                		btValid = 1;
                     	//azimuthDifference = azimuth - initialAzimuth;
                     	azimuthDifference = (int)(azimuth - azimuthToNextWaypoint);
                     	if (azimuthDifference<-180) azimuthDifference += 360;
                     	else if (azimuthDifference>180) azimuthDifference -= 360;
-                    	btPwm = Integer.parseInt(toRgba.substring(15,19).trim());
-                    	btRng = Integer.parseInt(toRgba.substring(23,27).trim());
+                    	if (toPwm>0 && toPwm<=toRgba.length()) btPwm = Integer.parseInt(toRgba.substring(fromPwm,toPwm).trim());
+                    	if (toFront>0 && toFront<=toRgba.length()) btRng = Integer.parseInt(toRgba.substring(fromFront,toFront).trim());
                     	if (btRng>100) {
                         	//btRngL = 4*Integer.parseInt(toRgba.substring(24,24).trim());
                         	//btRng = 4*Integer.parseInt(toRgba.substring(25,25).trim());
@@ -1848,14 +1873,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                         	btRngR = 4*((int)btRng % 10);
                         	btRng = 4*(int)Math.floor((btRng % 100)/10);
                     	}
-                    	btDst = Integer.parseInt(toRgba.substring(27,31).trim());
-                    	btSpd = Integer.parseInt(toRgba.substring(31,35).trim());
-                	}
-            		//String[] tmpStr = tmpText.split("\t| ");
-                	if (toRgba.length()>54) {
-                		btLat = Float.parseFloat(toRgba.substring(39,48).trim());
-                		btLon = Float.parseFloat(toRgba.substring(48,57).trim());
-                		btRngLeft = Integer.parseInt(toRgba.substring(57,61).trim());
+                    	if (toDistance>0 && toDistance<=toRgba.length()) btDst = Integer.parseInt(toRgba.substring(fromDistance,toDistance).trim());
+                    	if (toSpeed>0 && toSpeed<=toRgba.length()) btSpd = Integer.parseInt(toRgba.substring(fromSpeed,toSpeed).trim());
+                		if (toLat>0 && toLat<=toRgba.length()) btLat = Float.parseFloat(toRgba.substring(fromLat,toLat).trim());
+                		if (toLon>0 && toLon<=toRgba.length()) btLon = Float.parseFloat(toRgba.substring(fromLon,toLon).trim());
+                		if (toLeft>0 && toLeft<=toRgba.length()) btRngLeft = Integer.parseInt(toRgba.substring(fromLeft,toLeft).trim());
                     	if (btRngLeft>100) {
                         	//btRngLeftL = 4*Integer.parseInt(toRgba.substring(58,58).trim());
                         	//btRngLeft = 4*Integer.parseInt(toRgba.substring(59,59).trim());
@@ -1867,7 +1889,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                         	btRngLeftL = btRngLeft;
                         	btRngLeftR = btRngLeft;
                     	}
-                		btRngRight = Integer.parseInt(toRgba.substring(61,65).trim());
+                    	if (toRight>0 && toRight<=toRgba.length()) btRngRight = Integer.parseInt(toRgba.substring(fromRight,toRight).trim());
                     	if (btRngRight>100) {
                         	//btRngRightL = 4*Integer.parseInt(toRgba.substring(62,62).trim());
                         	//btRngRight = 4*Integer.parseInt(toRgba.substring(63,63).trim());
@@ -1879,8 +1901,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                         	btRngRightL = btRngRight;
                         	btRngRightR = btRngRight;
                     	}
-                		btRngBack = Integer.parseInt(toRgba.substring(65,69).trim());
-                    	btPwm = Integer.parseInt(toRgba.substring(69,73).trim());
+                    	if (toBack>0 && toBack<=toRgba.length()) btRngBack = Integer.parseInt(toRgba.substring(fromBack,toBack).trim());
+                		if (toPwm>0 && toPwm<=toRgba.length()) btPwm = Integer.parseInt(toRgba.substring(fromPwm,toPwm).trim());
+                    	if (toPayload>0 && toPayload<=toRgba.length()) btPayload = Integer.parseInt(toRgba.substring(fromPayload,toPayload).trim());
                 		//btLat = Float.parseFloat(tmpStr[9].trim());
                 		//btLon = Float.parseFloat(tmpStr[10].trim());
                 		//btRngLeft = Integer.parseInt(tmpStr[11].trim());
@@ -1939,33 +1962,60 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     
     static void setConnectedAddress(String sAddress) {
     	connectedAddress = sAddress;
+		//testTxt += "a";
         //Toast.makeText(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT).show();
     	robots = readRobots("RoboNavRobots.txt");
-		for (int x=0; x<robots.size(); x++) {
-	    	String[] parts = robots.get(x).split(";");
-	    	if (connectedAddress==parts[0].trim()) {
-	    		robotName = parts[1];
-	            //Toast.makeText(getApplicationContext(), "obot: "+robotName, Toast.LENGTH_SHORT).show();
-	    		if (parts[2].length()>=commandsTable0.length()) {
-		    		commandsTable = parts[2];
-		    		commandsMap.clear();
-		    		for (int ix=0; ix<commandsTable0.length(); ix++) {
-		    			commandsMap.put(commandsTable0.charAt(ix), commandsTable.charAt(ix));
-		    		}
-	    		}
-	    		if (parts[3].trim().length()>0) {
-		    		telemetryTable = parts[3].trim();
-		    		for (int ix=0; ix<telemetryTable.length(); ix++) {
-		    			//telemetryMap.put(commandsTable0.charAt(ix), commandsTable.charAt(ix));
-		    		}
-	    		}
-	    		break;
-	    	}
-		}
+//		for (int x=0; x<robots.size(); x++) {
+//	    	String[] parts = robots.get(x).split(";");
+//	    	if (connectedAddress.equalsIgnoreCase(parts[0].trim())) {
+//	    		testTxt += "f";
+//	    		robotName = parts[1];
+//	            //Toast.makeText(getApplicationContext(), "obot: "+robotName, Toast.LENGTH_SHORT).show();
+//	    		if (parts[2].length()>=commandsTable0.length()) {
+//		    		commandsTable = parts[2];
+//		    		commandsMap.clear();
+//		    		for (int ix=0; ix<commandsTable0.length(); ix++) {
+//		    			commandsMap.put(commandsTable0.charAt(ix), commandsTable.charAt(ix));
+//		    		}
+//	    		}
+//	    		if (parts[3].length()>0) {
+//		    		telemetryTable = ""+parts[3];
+//		    		testTxt += ":"+telemetryTable.length();
+//		    		parseTelemetryTable();
+//	    		}
+//	    		break;
+//	    	}
+//		}
     }
 
     static String getRobotName() {
     	return robotName;
+    }
+
+    static void parseTelemetryTable() {
+		//testTxt += "p";
+    	fromHeading = telemetryTable.indexOf("h");
+    	toHeading = telemetryTable.lastIndexOf("h")+1;
+    	fromSpeed = telemetryTable.indexOf("s");
+    	toSpeed = telemetryTable.lastIndexOf("s")+1;
+    	fromDistance = telemetryTable.indexOf("d");
+    	toDistance = telemetryTable.lastIndexOf("d")+1;
+    	fromPwm = telemetryTable.indexOf("w");
+    	toPwm = telemetryTable.lastIndexOf("w")+1;
+    	fromLat = telemetryTable.indexOf("a");
+    	toLat = telemetryTable.lastIndexOf("a")+1;
+    	fromLon = telemetryTable.indexOf("o");
+    	toLon = telemetryTable.lastIndexOf("o")+1;
+    	fromFront = telemetryTable.indexOf("f");
+    	toFront = telemetryTable.lastIndexOf("f")+1;
+    	fromLeft = telemetryTable.indexOf("l");
+    	toLeft = telemetryTable.lastIndexOf("l")+1;
+    	fromRight = telemetryTable.indexOf("r");
+    	toRight = telemetryTable.lastIndexOf("r")+1;
+    	fromBack = telemetryTable.indexOf("b");
+    	toBack = telemetryTable.lastIndexOf("b")+1;
+    	fromPayload = telemetryTable.indexOf("p");
+    	toPayload = telemetryTable.lastIndexOf("p")+1;
     }
 
     static void setStartTime() {
@@ -2491,6 +2541,19 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	    	if (connectedAddress.equalsIgnoreCase(parts[0].trim())) {
         	    		robotName = parts[1];
         	            //Toast.makeText(getApplicationContext(), "robot: "+robotName, Toast.LENGTH_SHORT).show();
+        	    		if (parts[2].length()>=commandsTable0.length()) {
+        		    		commandsTable = parts[2];
+        		    		commandsMap.clear();
+        		    		for (int ix=0; ix<commandsTable0.length(); ix++) {
+        		    			commandsMap.put(commandsTable0.charAt(ix), commandsTable.charAt(ix));
+        		    		}
+        	    		}
+        	    		if (parts[3].length()>0) {
+        		    		//testTxt += ":"+parts[3];
+        		    		telemetryTable = parts[3];
+        		    		//testTxt += ":"+telemetryTable.length();
+        		    		parseTelemetryTable();
+        	    		}
         	    	}
             	}
             }
@@ -2565,6 +2628,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	runMode = 0; // run mode (0=wait_for_start, 1=run, 2=finish)
     	goalReached = 0; // we should be at start now
     	state = "normal";
+    	parseTelemetryTable();
         appendLog("init");
 }
 

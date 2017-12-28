@@ -57,6 +57,7 @@ Search mode is 3 (RoboTour). Debug is off. Input mode is 0 (run). Voice output i
 - h = slightly left
 - k = slightly right
 - p = payload drop
+- o = load payload (pick up)
 - 0 - 9 = speed (0 - 9 [max])
 - t = turn (reverse course)
 - n = new target azimuth (actual)
@@ -75,12 +76,11 @@ Required map format (for RoboNavMap.txt) [example]:
 (first few linas are in format "id latitude longitude 0" => nodes)
 (last/shorter lines are in format "id1 id2" => edges)
 
-Expected serial/bluetooth telemetry from robot (about once per second):
+Default serial/bluetooth telemetry from robot (about once per second):
 -------------------------------------------------------------------------
           111111111122222222223333333333444444444455555555556666666666777
 0123456789012345678901234567890123456789012345678901234567890123456789012
    cyc hea tgt  set dir rng dst spd ams      lat      lon lef rig bck pwm
-   cyc hea des  pwm dir rng dst spd hpa
 -------------------------------------------------------------------------
 cyc:  0 -  5 (cycles) [not used/recognized]
 hea:  7 -  9 (heading: 0 - 359) [used in the algorithm] (if available)
@@ -97,6 +97,22 @@ lef: 58 - 60 (left sonar range: 0 - 50) [dm] [used in the algorithm] (if availab
 rig: 62 - 64 (right sonar range: 0 - 50) [dm] [used in the algorithm] (if available)
 bck: 66 - 68 (back IR range: 0 - 255) [cm] [used in the algorithm] (if available)
 pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
+
+You can define your own telemetry table in the RoboNavRobots.txt:
+BTaddress1;robotName1;commandsTable1;telemetryTable1;
+BTaddress2;robotName2;commandsTable2;telemetryTable2;
+
+Default commandTable:
+lrswfbhkptn
+(extraLeft extraRight stop straight forward back left right payloadDrop turn newAzimuth)
+
+Default telemetryTable:
+   ... hhh ...  ... ... fff ddd sss ... aaaaaaaa oooooooo lll rrr bbb www
+
+Recognized characters:
+space or .=anything, h=heading, d=distance, s=speed, a=lattitude, o=longitude, 
+f=frontObstacleRange, l=leftObstacleRange, r=rightObstacleRange,
+b=backObstacleRange, p=payload, w=pwm
 ```
 
 **To-do:**
@@ -109,6 +125,7 @@ pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 - probability and artificial intelligence
 
 **Changelog:**
+- V1.9.8 2017-12-28 support for RoboNavRobots.txt and for telemetryTable   
 - V1.9.7 2017-11-26 version for Robotour Marathon 2017/2018 (simplified log and screen layout)   
 - V1.9.6 2017-05-31 version for Roboorienteering 2017 (parameters tuning, navigation to cone, maps, paths)
 - V1.9.5 2017-05-08 version for Robotem Rovne 2017 (parameters tuning)

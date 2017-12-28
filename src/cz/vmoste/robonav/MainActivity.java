@@ -55,6 +55,7 @@ RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email
 - h = slightly left
 - k = slightly right
 - p = payload drop
+- o = load payload (pick up)
 - 0 - 9 = speed (0 - 9 [max])
 - t = turn (reverse course)
 - n = new target azimuth (actual)
@@ -73,12 +74,11 @@ Required map format (for RoboNavMap.txt) [example]:
 (first few linas are in format "id latitude longitude 0" => nodes)
 (last/shorter lines are in format "id1 id2" => edges)
 
-Expected serial/bluetooth telemetry from robot (about once per second):
+Default serial/bluetooth telemetry from robot (about once per second):
 -------------------------------------------------------------------------
           111111111122222222223333333333444444444455555555556666666666777
 0123456789012345678901234567890123456789012345678901234567890123456789012
    cyc hea tgt  set dir rng dst spd ams      lat      lon lef rig bck pwm
-   cyc hea des  pwm dir rng dst spd hpa
 -------------------------------------------------------------------------
 cyc:  0 -  5 (cycles) [not used/recognized]
 hea:  7 -  9 (heading: 0 - 359) [used in the algorithm] (if available)
@@ -96,7 +96,24 @@ rig: 62 - 64 (right sonar range: 0 - 50) [dm] [used in the algorithm] (if availa
 bck: 66 - 68 (back IR range: 0 - 255) [cm] [used in the algorithm] (if available)
 pwm: 70 - 72 (driving PWM: 0 - 255) [not used/recognized]
 
-To-do:
+You can define your own telemetry table in the RoboNavRobots.txt:
+BTaddress1;robotName1;commandsTable1;telemetryTable1;
+BTaddress2;robotName2;commandsTable2;telemetryTable2;
+
+Default commandTable:
+lrswfbhkptn
+(extraLeft extraRight stop straight forward back left right payloadDrop turn newAzimuth)
+
+Default telemetryTable:
+   ... hhh ...  ... ... fff ddd sss ... aaaaaaaa oooooooo lll rrr bbb www
+
+Recognized characters:
+space or .=anything, h=heading, d=distance, s=speed, a=lattitude, o=longitude, 
+f=frontObstacleRange, l=leftObstacleRange, r=rightObstacleRange,
+b=backObstacleRange, p=payload, w=pwm
+```
+
+**To-do:**
 - automatic routing (find optimal path in the map)
 - navigation through the crossroads
 - GPS odometry
@@ -105,7 +122,7 @@ To-do:
 - wifi telemetry and video streaming
 - probability and artificial intelligence
 
-Changelog:
+**Changelog:**
 V1.9.?.?? 201?-??-?? 
 V1.9.?.?? 201?-??-?? A* algorithm for path planning (according to map)
 V1.9.?.?? 201?-??-?? optimized user interface (buttons, HUD)
@@ -113,6 +130,7 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.8.00 2017-12-28 full support for RoboNavRobots.txt and for telemetryTable
 V1.9.7.05 2017-12-27 using of the RoboNavRobots.txt file (name of connected robot)   
 V1.9.7.04 2017-12-26 preparations for the RoboNavRobots.txt file (connected robots parameters)   
 V1.9.7.03 2017-12-09 manual compass calibration, simpler state machine for Robotour Marathon   
