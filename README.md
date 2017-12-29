@@ -107,7 +107,7 @@ lrswfbhkptn
 (extraLeft extraRight stop straight forward back left right payloadDrop turn newAzimuth)
 
 Default telemetryTable:
-   ... hhh ...  ... ... fff ddd sss ... aaaaaaaa oooooooo lll rrr bbb www
+...... hhh ...  ... ... fff ddd sss ... aaaaaaaa oooooooo lll rrr bbb www
 
 Recognized characters:
 space or .=anything, h=heading, d=distance, s=speed, a=lattitude, o=longitude, 

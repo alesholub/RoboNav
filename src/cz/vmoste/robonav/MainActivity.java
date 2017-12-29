@@ -105,7 +105,7 @@ lrswfbhkptn
 (extraLeft extraRight stop straight forward back left right payloadDrop turn newAzimuth)
 
 Default telemetryTable:
-   ... hhh ...  ... ... fff ddd sss ... aaaaaaaa oooooooo lll rrr bbb www
+...... hhh ...  ... ... fff ddd sss ... aaaaaaaa oooooooo lll rrr bbb www
 
 Recognized characters:
 space or .=anything, h=heading, d=distance, s=speed, a=lattitude, o=longitude, 
@@ -130,6 +130,7 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.8.00 2017-12-29 allowed BT addresses taken also from RoboNavRobots.txt
 V1.9.8.00 2017-12-28 full support for RoboNavRobots.txt and for telemetryTable
 V1.9.7.05 2017-12-27 using of the RoboNavRobots.txt file (name of connected robot)   
 V1.9.7.04 2017-12-26 preparations for the RoboNavRobots.txt file (connected robots parameters)   
@@ -495,7 +496,8 @@ public class MainActivity extends Activity {
             for (BluetoothDevice device : devices) {  
               btBonded += " " + device.getAddress();  
             }
-            btAllowed = " "+address1+" "+address2;
+            btAllowed = NavigationActivity.getAllowedAddresses();
+            if (btAllowed.length()<10) btAllowed = " "+address1+" "+address2;
             btAllowed = btAllowed.replace("00:00:00:00:00:00","");
             if (btAllowed.length()<10) btAllowed = btBonded;
             

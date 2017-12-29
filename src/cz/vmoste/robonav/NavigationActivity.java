@@ -134,6 +134,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static String mHSV2 = "";
     private static String address = "00:00:00:00:00:00";
     private static String address2 = "00:00:00:00:00:00";
+    private static String allowedAddresses = "";
     private static String connectedAddress = "";
 	private static String commandsTable0 = "lrswfbhkptn";
 	private static String commandsTable = "lrswfbhkptn";
@@ -1988,6 +1989,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 //		}
     }
 
+    static String getAllowedAddresses() {
+    	robots = readRobots("RoboNavRobots.txt");
+    	return allowedAddresses;
+    }
+
     static String getRobotName() {
     	return robotName;
     }
@@ -2527,6 +2533,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     static public List<String> readRobots(String fil)
     {
     	List<String> ret = new ArrayList<String>();
+    	allowedAddresses = "";
 		robots.clear();
         try {
             File sdcard = Environment.getExternalStorageDirectory();
@@ -2538,6 +2545,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	ret.add(line.trim());
     	            //Toast.makeText(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT).show();
         	    	String[] parts = line.trim().split(";");
+        	    	allowedAddresses += " "+parts[0].trim();
         	    	if (connectedAddress.equalsIgnoreCase(parts[0].trim())) {
         	    		robotName = parts[1];
         	            //Toast.makeText(getApplicationContext(), "robot: "+robotName, Toast.LENGTH_SHORT).show();
