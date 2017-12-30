@@ -130,7 +130,8 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
-V1.9.8.00 2017-12-29 allowed BT addresses taken also from RoboNavRobots.txt
+V1.9.8.02 2017-12-30 simpler navigation algorithm for RoboTour
+V1.9.8.01 2017-12-29 allowed BT addresses taken also from RoboNavRobots.txt
 V1.9.8.00 2017-12-28 full support for RoboNavRobots.txt and for telemetryTable
 V1.9.7.05 2017-12-27 using of the RoboNavRobots.txt file (name of connected robot)   
 V1.9.7.04 2017-12-26 preparations for the RoboNavRobots.txt file (connected robots parameters)   

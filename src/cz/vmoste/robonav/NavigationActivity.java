@@ -2643,7 +2643,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     public void computeCommand()
     {
     	// main navigation algorithm (finite automata and fuzzy logic)
-    	whatToDo();
+    	whatToDo(); // get current state
     	if (state=="normal") {
         	getAngleToNextWaypoint();
         	getAngleToStayOnRoad();
@@ -3021,298 +3021,160 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     public void turnByDrivingSignals() {
     	// driving signals:
     	// - distanceToNextWaypoint, turnAngleToNextWaypoint
-    	// - turnAngleToStayOnRoad
+    	// - turnAngleToStayOnRoad, direction, topDirection, directionOK
     	// - avoiding, turnAngleToAvoidObstacle
 
-    	// since 2017-06-20
-    	
-    	// 1. stay on road
-  		if (mod6<3 && searchMode!=1) {
-			// PD navigation by computed driving signal
-			drivingSignal = directionOK - 0.2 * (directionOK - lastDirectionOK);
-			lastDirectionOK = directionOK;
-			mText += "PD";
-		} else {
-			// direct navigation
-			drivingSignal = turnAngleToStayOnRoad;
-			mText += "D";
-  		}
-
-  		// 2. set drivingSignal by turnAngleToNextWaypoint
-  		if (searchMode==2) drivingSignal = turnAngleToNextWaypoint;
-  		else if ((turnAngleToNextWaypoint>limit2 && drivingSignal>-limit2 && mRightOK>0) || (turnAngleToNextWaypoint<-limit2 && drivingSignal<limit2 && mLeftOK>0)) {
-  	    	if (searchMode!=1) drivingSignal = turnAngleToNextWaypoint/2;
-  		}
-    	
-    	if (searchMode==1 && mod6>=4) {
-    		drivingSignal += azimDiff/2;
-			mText += "C";
-    	}
-
-    	// 3. avoid obstacle
-  		if (avoiding>0 || Math.abs(turnAngleToAvoidObstacle)>1.0) {
-			// avoiding, so drive by turnAngleToAvoidObstacle
-			mText += "avo";
-            if (turnAngleToAvoidObstacle<-170.0) mCommand = 's';
-			else if (turnAngleToAvoidObstacle>170.0) mCommand = 'b';
-			else if (turnAngleToAvoidObstacle>30.0) mCommand = 'r';
-			else if (turnAngleToAvoidObstacle<-30.0) mCommand = 'l';
-		} else {
-			// not avoiding, so drive by drivingSignal
+    	if (searchMode==3) {
+    		// RoboTour (simple algorithm since 2017-12-30)
+			mText += "RT";
+    		// drive to waypoint
+            if (turnAngleToNextWaypoint<-limit2) mCommand = 'l'; // extra left
+			else if (turnAngleToNextWaypoint<=-limit1) mCommand = 'h'; // slightly left
+			else if (turnAngleToNextWaypoint>limit2) mCommand = 'r'; // extra right
+			else if (turnAngleToNextWaypoint>=limit1) mCommand = 'k'; // slightly right
+            // stay on road
+            drivingSignal = directionOK;
+			if (mod6<=1) {
+	            // by direction to blob centroid
+	            drivingSignal = direction;
+  				mText += "c";
+			} else if (mod6<=3) {
+	            // by topDirection
+	            drivingSignal = topDirection;
+  				mText += "t";
+			}
             if (drivingSignal<-limit2) mCommand = 'l'; // extra left
 			else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
 			else if (drivingSignal>limit2) mCommand = 'r'; // extra right
 			else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
+            // avoid obstacle
+      		if (avoiding>0 || Math.abs(turnAngleToAvoidObstacle)>1.0) {
+    			// avoiding, so drive by turnAngleToAvoidObstacle
+    			mText += "avo";
+                if (turnAngleToAvoidObstacle<-170.0) mCommand = 's';
+    			else if (turnAngleToAvoidObstacle>170.0) mCommand = 'b';
+    			else if (turnAngleToAvoidObstacle>30.0) mCommand = 'r';
+    			else if (turnAngleToAvoidObstacle<-30.0) mCommand = 'l';
+            }
+    	} else {
+        	// since 2017-06-20
+        	// 1. stay on road
+      		if (mod6<3 && searchMode!=1) {
+    			// PD navigation by computed driving signal
+    			drivingSignal = directionOK - 0.2 * (directionOK - lastDirectionOK);
+    			lastDirectionOK = directionOK;
+    			mText += "PD";
+    		} else {
+    			// direct navigation
+    			drivingSignal = turnAngleToStayOnRoad;
+    			mText += "D";
+      		}
 
-            // long range obstacle avoiding (for RR, RO and RT)
-    		if (searchMode>=1 && (mod6==1 || mod6==5)) {
-    			mText += "S";
-    			if (btValid>0 && btRng>18 && btRngLeft<18 && btRngRight>18) {
-    				//mCommand = 'k'; // slightly right
-    				mCommand = 'r'; // right
-    			} else if (btValid>0 && btRng>18 && btRngLeft>18 && btRngRight<18) {
-    				//mCommand = 'h'; // slightly left
-    				mCommand = 'l'; // left
+      		// 2. set drivingSignal by turnAngleToNextWaypoint
+      		if (searchMode==2) drivingSignal = turnAngleToNextWaypoint;
+      		else if ((turnAngleToNextWaypoint>limit2 && drivingSignal>-limit2 && mRightOK>0) || (turnAngleToNextWaypoint<-limit2 && drivingSignal<limit2 && mLeftOK>0)) {
+      	    	if (searchMode!=1) drivingSignal = turnAngleToNextWaypoint/2;
+      		}
+        	
+        	if (searchMode==1 && mod6>=4) {
+        		drivingSignal += azimDiff/2;
+    			mText += "C";
+        	}
+
+        	// 3. avoid obstacle
+      		if (avoiding>0 || Math.abs(turnAngleToAvoidObstacle)>1.0) {
+    			// avoiding, so drive by turnAngleToAvoidObstacle
+    			mText += "avo";
+                if (turnAngleToAvoidObstacle<-170.0) mCommand = 's';
+    			else if (turnAngleToAvoidObstacle>170.0) mCommand = 'b';
+    			else if (turnAngleToAvoidObstacle>30.0) mCommand = 'r';
+    			else if (turnAngleToAvoidObstacle<-30.0) mCommand = 'l';
+    		} else {
+    			// not avoiding, so drive by drivingSignal
+                if (drivingSignal<-limit2) mCommand = 'l'; // extra left
+    			else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
+    			else if (drivingSignal>limit2) mCommand = 'r'; // extra right
+    			else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
+
+                // long range obstacle avoiding (for RR, RO and RT)
+        		if (searchMode>=1 && (mod6==1 || mod6==5)) {
+        			mText += "S";
+        			if (btValid>0 && btRng>18 && btRngLeft<18 && btRngRight>18) {
+        				//mCommand = 'k'; // slightly right
+        				mCommand = 'r'; // right
+        			} else if (btValid>0 && btRng>18 && btRngLeft>18 && btRngRight<18) {
+        				//mCommand = 'h'; // slightly left
+        				mCommand = 'l'; // left
+        			}
+        		}
+            	
+    			if (mGrass<0 && mCenterOK>0) {
+    			    if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
+    			    else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
+    		    }
+    		}
+
+       	    // navigation to orange cone
+    		if (wpMode>0 && searchMode==2 && distanceToNextWaypoint<19 && state!="drop" && mBoundingRectangle.height>(h/100)) {
+    			if (blobDirection<-30) mCommand = 'l';
+    			else if (blobDirection<-10) mCommand = 'h';
+    			else if (blobDirection>30) mCommand = 'r';
+    			else if (blobDirection>10) mCommand = 'k';
+    			else mCommand = 'w';
+    			mText += "cone";
+    		}
+
+      		// 4. sanitize command (restrictions and stabilization)
+     		if (searchMode>1 && (mod6==1 || mod6==5)) {
+     			// check L/R sonars
+    			//mText += "S";
+     	    	if (" lh".indexOf(""+mCommand)>0 && btRngLeft<10) mCommand = 'w'; // can't turn left
+     	    	else if (" kr".indexOf(""+mCommand)>0 && btRngRight<10) mCommand = 'w'; // can't turn right
+     			if (btValid>0 && searchMode!=1) {
+     				if (btRngLeft<14 || btRngLeftR<14 || btRngL<14) {
+     					// left obstacle
+     					mText += "lo";
+     					if (" lhw".indexOf(""+mCommand)>0 && btValid>0) mCommand = 'r';
+     				}
+     				if (btRngRight<14 || btRngRightL<14 || btRngR<14) {
+     					// right obstacle
+     					mText += "ro";
+     					if (" rkw".indexOf(""+mCommand)>0 && btValid>0) mCommand = 'l';
+     				}
+     			} 
+     		}
+    		if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
+    		else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
+    		if (searchMode>1 && (mod6==2 || mod6==5)) {
+    			mText += "U";
+    	  		if (" wlhkr-".indexOf(mCommand)>0 && (topHeight<2 || mCenterOK<1)) {
+    				// road border seems too close, rather stop and step back (not for RR)
+        			state = "unknown";
+        			mCommand = 's'; // stop
+    	  		}
+      		}
+    		if (mPrevCommand=='b' && mCommand!='b') {mCommand = 's'; state="stop";}	
+        	if (mCommand=='b' && mPrevCommand!='b' && mPrevCommand!='s') mCommand = 's';
+        	//if (mCommand=='b' && mPrevCommand=='s') mCommand = 'f';
+    		if ((searchMode==1 || searchMode>=2) && mCommand=='-') mCommand = 'w'; // normal mCommand for RR & RO is "forward"
+        	//if ((" lhkr-".indexOf(""+mCommand)>0 && (state=="normal" && mPrevCommand=='s')) || state=="stop") mCommand = 'f'; // straight
+        	if (" lhkr-".indexOf(""+mCommand)>0 && state=="normal" && btSpd<1 && btValid>0) mCommand = 'w'; // forward (if speed is 0)
+        	if (mCommand=='w' && state=="stop") state = "normal";
+    		if (searchMode>=1) {
+    			// stabilization
+    			numCleanCommands++;
+    			if (mCommand!='w') {
+    				// stabilize only few times and only if course is almost OK
+    				//if (numCleanCommands<3 && Math.abs(turnAngleToNextWaypoint)<30.0) mCommand = 'w';
+    				if (numCleanCommands<3 && Math.abs(azimDiff)<30.0) mCommand = 'w';
+    			    else {
+    			    	numCleanCommands = 0;
+    			    	if (btSpd>160 || searchMode>1 ) numCleanCommands = 1;
+    			    }
+    				
     			}
     		}
-        	
-			if (mGrass<0 && mCenterOK>0) {
-			    if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
-			    else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
-		    }
-		}
-
-   	    // navigation to orange cone
-		if (wpMode>0 && searchMode==2 && distanceToNextWaypoint<19 && state!="drop" && mBoundingRectangle.height>(h/100)) {
-			if (blobDirection<-30) mCommand = 'l';
-			else if (blobDirection<-10) mCommand = 'h';
-			else if (blobDirection>30) mCommand = 'r';
-			else if (blobDirection>10) mCommand = 'k';
-			else mCommand = 'w';
-			mText += "cone";
-		}
-
-  		// 4. sanitize command (restrictions and stabilization)
- 		if (searchMode>1 && (mod6==1 || mod6==5)) {
- 			// check L/R sonars
-			//mText += "S";
- 	    	if (" lh".indexOf(""+mCommand)>0 && btRngLeft<10) mCommand = 'w'; // can't turn left
- 	    	else if (" kr".indexOf(""+mCommand)>0 && btRngRight<10) mCommand = 'w'; // can't turn right
- 			if (btValid>0 && searchMode!=1) {
- 				if (btRngLeft<14 || btRngLeftR<14 || btRngL<14) {
- 					// left obstacle
- 					mText += "lo";
- 					if (" lhw".indexOf(""+mCommand)>0 && btValid>0) mCommand = 'r';
- 				}
- 				if (btRngRight<14 || btRngRightL<14 || btRngR<14) {
- 					// right obstacle
- 					mText += "ro";
- 					if (" rkw".indexOf(""+mCommand)>0 && btValid>0) mCommand = 'l';
- 				}
- 			} 
- 		}
-		if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
-		else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
-		if (searchMode>1 && (mod6==2 || mod6==5)) {
-			mText += "U";
-	  		if (" wlhkr-".indexOf(mCommand)>0 && (topHeight<2 || mCenterOK<1)) {
-				// road border seems too close, rather stop and step back (not for RR)
-    			state = "unknown";
-    			mCommand = 's'; // stop
-	  		}
-  		}
-		if (mPrevCommand=='b' && mCommand!='b') {mCommand = 's'; state="stop";}	
-    	if (mCommand=='b' && mPrevCommand!='b' && mPrevCommand!='s') mCommand = 's';
-    	//if (mCommand=='b' && mPrevCommand=='s') mCommand = 'f';
-		if ((searchMode==1 || searchMode>=2) && mCommand=='-') mCommand = 'w'; // normal mCommand for RR & RO is "forward"
-    	//if ((" lhkr-".indexOf(""+mCommand)>0 && (state=="normal" && mPrevCommand=='s')) || state=="stop") mCommand = 'f'; // straight
-    	if (" lhkr-".indexOf(""+mCommand)>0 && state=="normal" && btSpd<1 && btValid>0) mCommand = 'w'; // forward (if speed is 0)
-    	if (mCommand=='w' && state=="stop") state = "normal";
-		if (searchMode>=1) {
-			// stabilization
-			numCleanCommands++;
-			if (mCommand!='w') {
-				// stabilize only few times and only if course is almost OK
-				//if (numCleanCommands<3 && Math.abs(turnAngleToNextWaypoint)<30.0) mCommand = 'w';
-				if (numCleanCommands<3 && Math.abs(azimDiff)<30.0) mCommand = 'w';
-			    else {
-			    	numCleanCommands = 0;
-			    	if (btSpd>160 || searchMode>1 ) numCleanCommands = 1;
-			    }
-				
-			}
-		}
-  		
-  		
-//      old procedure (until 2016-08-24)
-//
-//    	if (searchMode>1) {
-//    		// navigate by azimuth
-//	    	if (distanceToNextWaypoint<2) {
-//	    		// next waypoint is close
-//		    	// drive to waypoint (by azimuth of current defined path)
-//	        	if (azimuthValid>0) {
-//	      			if (azimDiff>azimuthLimit) mCommand = 'r';
-//	      			if (azimDiff<-azimuthLimit) mCommand = 'l';
-//	        	}
-//	    	} else {
-//	    		// next waypoint is far away
-//		    	// drive to waypoint (by azimuth from current position to next waypoint)
-//	        	if (azimuthValid>0) {
-//	      			if (turnAngleToNextWaypoint>azimuthLimit) mCommand = 'r';
-//	      			if (turnAngleToNextWaypoint<-azimuthLimit) mCommand = 'l';
-//	        	}
-//	    	}
-//    	}
-//    	if (distanceToNextWaypoint<11 && searchMode==2) {
-//    		// switch to blobSearch (for RO)
-//    		blobSearch = 1;
-//    		roadSearch = 1;
-//    	} else {
-//    		blobSearch = 1;
-//    		roadSearch = 1;
-//    	}
-//    	if (mGrass>0 && searchMode>=2) {
-//    		roadSearch = 0;
-//    	}
-//    	// navigation to orange cone
-//			if (blobSearch>0 && distanceToNextWaypoint<15 && searchMode==2 && state!="drop" && mBoundingRectangle.height>9) {
-//				if (blobDirection<-20) mCommand = 'l';
-//				else if (blobDirection>0) mCommand = 'r';
-//				else mCommand = 'w';
-//			}
-//  		// probabilistic road navigation
-//			if ((searchMode>=1 || mBoundingRectangle.height<10) && roadSearch>=0) {
-//		  		if (directionNum>0) {
-//		  			direction = averageDirection;
-//		  			topDirection = averageTopPoint;
-//		  		}
-//		  		if (btValid>0 && btDst<20 && searchMode<1) {
-//		  			// stabilization for RR
-//		  			direction /= 3-btDst/10;
-//		  			topDirection /= 3-btDst/10;
-//		  		}
-//		  		cameraDirection = (2*direction + 3*topDirection) / 5;
-//		  		cameraDiff = Math.abs(direction - 2*topDirection);
-//		  		cameraProbability = 100 - (2*cameraDiff);
-//		  		if (topHeight<2) cameraProbability = 0; // blob is too close, camera is not reliable
-//		  		azimDiffOK = (int)(-azimuthValid * azimDiff);
-//		  		if (searchMode==1 || searchMode==2) mCommand = '-'; // delete previously computed command (set default command to none for RR)
-//				if (mod6==0 || mod6==2 || mod6==3) {
-//	  			    // navigation by topDirection
-//					//drivingSignal = cameraDirection;
-//					directionOK = topDirection;
-//				} else if (mod6==1 || mod6==4 || mod6==5) {
-//	  			    // navigation by camera direction
-//					directionOK = cameraDirection;
-//					//drivingSignal = topDirection;
-//				} else {
-//					// navigation by camera and compass
-//		  			if (azimuthValid>0) {
-//		  				// traversibility check by compass
-//		  				if (Math.abs(azimDiffOK)<azimLimit) {
-//		  					directionOK = (int)Math.round(azimDiffOK * 0.2 + cameraProbability * cameraDirection * 0.008);
-//		  				}
-//		  				else if ((azimDiff>0 && cameraDirection>0) || (azimDiff<0 && cameraDirection<0)) {
-//		  					directionOK = (int)Math.round(azimDiffOK * 0.1 + cameraProbability * cameraDirection * 0.009);
-//		  				}
-//		  				else {
-//		  					directionOK = (int)Math.round(azimDiffOK * 0.8 + cameraProbability * cameraDirection * 0.002);
-//		  				}
-//		  			}
-//		  			else directionOK = (int)Math.round(cameraProbability * cameraDirection * 0.01);
-//				}
-//	  			turnAngleToStayOnRoad = directionOK;
-//		  		if (mod6<=3) {
-//		  			// PD navigation by computed driving signal
-//		  			drivingSignal = directionOK - 0.2 * (directionOK - lastDirectionOK);
-//		  			lastDirectionOK = directionOK;
-//		  		} else {
-//		  			// navigation by logic
-//		  			drivingSignal = directionOK;
-//			  		if (cameraProbability>20) {
-//			  			// steer to center of the road
-//			  		} else {
-//			  			drivingSignal = directionOK/4;
-//			  		}
-////		  			if (azimDiffOK>azimuthLimit && mRightOK>0) mCommand = 'r'; // extra right
-////		  			else if (azimDiffOK<-azimuthLimit && mLeftOK>0) mCommand = 'l'; // extra left
-//		  		}
-//		  		if (Math.abs(turnAngleToStayOnRoad)<limit1) drivingSignal = turnAngleToNextWaypoint;
-//		  		if (avoiding<1 && Math.abs(turnAngleToAvoidObstacle)<1.0) {
-//	                if (drivingSignal<-limit2) mCommand = 'h'; // extra left
-//		  			else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
-//		  			else if (drivingSignal>limit2) mCommand = 'k'; // extra right
-//		  			else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
-//		  		} else {
-//		  			// avoiding
-//	                if (turnAngleToAvoidObstacle<-170.0) mCommand = 's';
-//		  			else if (turnAngleToAvoidObstacle>170.0) mCommand = 'b';
-//		  			else if (turnAngleToAvoidObstacle>30.0) mCommand = 'r';
-//		  			else if (turnAngleToAvoidObstacle<-30.0) mCommand = 'l';
-//		  		}
-//	  			if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
-//	  			else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
-//		  		if (" wlhkr-".indexOf(mCommand)>0 && (topHeight<2 || mCenterOK<1)) {
-//	  				// road border seems too close, rather stop and step back (not for RR)
-//		  			if (searchMode>9) {
-//		    			state = "unknown";
-//		    			mCommand = 's'; // stop
-//		  			}
-//		  		}
-//				if (state=="normal") {
-//					if (drivingSignal<-limit2) mCommand = 'l'; // extra left
-//				    else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
-//					else if (drivingSignal>limit2) mCommand = 'r'; // extra right
-//					else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
-//					if (mGrass<0 && mCenterOK>0) {
-//						if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
-//						else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
-//					}
-//				}
-//
-//				if (mPrevCommand=='b' && mCommand!='b') {mCommand = 's'; state="stop";}	
-//		    	if (mCommand=='b' && mPrevCommand!='b' && mPrevCommand!='s') mCommand = 's';
-//		    	//if (mCommand=='b' && mPrevCommand=='s') mCommand = 'f';
-//				if ((searchMode==1 || searchMode>=2) && mCommand=='-') mCommand = 'w'; // normal mCommand for RR & RO is "forward"
-//		    	//if ((" lhkr-".indexOf(""+mCommand)>0 && (state=="normal" && mPrevCommand=='s')) || state=="stop") mCommand = 'f'; // straight
-//		    	if (" lhkr-".indexOf(""+mCommand)>0 && state=="normal" && btSpd<1 && btValid>0) mCommand = 'w'; // forward (if speed is 0)
-//		 		if (mod6!=1 && mod6!=4) {
-//		 			// check L/R sonars
-//		 	    	if (" lh".indexOf(""+mCommand)>0 && btRngLeft<10) mCommand = 'w'; // can't turn left
-//		 	    	else if (" kr".indexOf(""+mCommand)>0 && btRngRight<10) mCommand = 'w'; // can't turn right
-//		 		}
-//		    	if (mCommand=='w' && state=="stop") state = "normal";
-//				if (searchMode>=1) {
-//					// stabilization
-//					numCleanCommands++;
-//					if (mCommand!='w') {
-//						if (numCleanCommands<3) mCommand = 'w';
-//					    else {
-//					    	numCleanCommands = 0;
-//					    	if (btSpd>160 || searchMode>=1 ) numCleanCommands = 1;
-//					    }
-//						
-//					}
-//				}
-//			}
+    	}
+    	
     }
-
-//	@Override
-//	public void onConnected(Bundle arg0) {
-//		// TODO Auto-generated method stub
-//		
-//	}
-//
-//	@Override
-//	public void onConnectionSuspended(int arg0) {
-//		// TODO Auto-generated method stub
-//		
-//	}
-//
-//	@Override
-//	public void onConnectionFailed(ConnectionResult arg0) {
-//		// TODO Auto-generated method stub
-//		
-//	}
 }
