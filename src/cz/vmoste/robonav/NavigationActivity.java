@@ -1057,6 +1057,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 mArea = mArea + 1;
                 if (mArea>255) mArea = 255;
                 mColorDetector.setColorRadius(new Scalar(mArea/2,mArea,mArea,mArea));
+                shortTxt = "area: "+mArea;
         	}
         	else {
                 //minArea = (double)Math.round((minArea + 0.1)*100)/100;
@@ -1122,6 +1123,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 mArea = mArea - 1;
                 if (mArea<0) mArea = 0;
                 mColorDetector.setColorRadius(new Scalar(mArea/2,mArea,mArea,mArea));
+                shortTxt = "area: "+mArea;
         	}
         	else {
                 //minArea = (double)Math.round((minArea - 0.1)*100)/100;
