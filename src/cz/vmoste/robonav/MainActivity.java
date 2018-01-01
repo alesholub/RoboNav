@@ -184,6 +184,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Set;
 
+import org.opencv.android.OpenCVLoader;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -239,7 +241,12 @@ import cz.vmoste.robonav.R;
 
 public class MainActivity extends Activity {
     // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE = 1;
+	static {
+	    if (!OpenCVLoader.initDebug()) {
+	        // Handle initialization error
+	    }
+	}
+	private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     
 	public static final int ORIENTATION_SENSOR    = 0;
