@@ -125,7 +125,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     public void onResume()
     {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, mLoaderCallback);
         //if (screenWakeLock != null) {
         //	   if(screenWakeLock.isHeld())
         //	      screenWakeLock.release();
@@ -257,7 +257,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             	//( mo.get_m10()/mo.get_m00() , mo.get_m01()/mo.get_m00() );
                 x = (int) (mo.get_m10() / mo.get_m00());
                 y = (int) (mo.get_m01() / mo.get_m00());
-                Core.circle(mRgba, new org.opencv.core.Point(x, y), 4, new Scalar(255,49,0,255));
+                Imgproc.circle(mRgba, new org.opencv.core.Point(x, y), 4, new Scalar(255,49,0,255));
                 if (searchMode==0 || searchMode==2) {
                     if (x<p1) command = 'r';
                     if (x>p2) command = 'l';
@@ -266,8 +266,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                     if (x>p2) command = 'r';
                 } 
             }
-        	Core.putText(mRgba, "c: "+(char)command+" "+searchMode+"/"+x+"/"+y+color, new org.opencv.core.Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-        	Core.putText(mRgba, "s: "+toRgba, new org.opencv.core.Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            Imgproc.putText(mRgba, "c: "+(char)command+" "+searchMode+"/"+x+"/"+y+color, new org.opencv.core.Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
+            Imgproc.putText(mRgba, "s: "+toRgba, new org.opencv.core.Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
 
         }
 

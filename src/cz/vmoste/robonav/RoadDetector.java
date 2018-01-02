@@ -145,17 +145,17 @@ public class RoadDetector {
     	if (mOrientation==2) {
     		// landscape
         	//Core.line(mResultMat, new Point(0,linx/8), new Point(w,linx/8), new Scalar(0,0,0), linx/4);
-        	Core.line(mGreyMat, new Point(0,hh-linx/4), new Point(ww,hh-linx/4), new Scalar(0,0,0), linx/2);
-        	Core.line(mGreyMat, new Point(linx/8,0), new Point(linx/8,hh), new Scalar(0,0,0), linx/4);
-        	Core.line(mGreyMat, new Point(ww-linx/8,0), new Point(ww-linx/8,hh), new Scalar(0,0,0), linx/4);
-        	Core.line(mGreyMat, new Point(ww/6,0), new Point(0,hh/2), new Scalar(0,0,0), linx);
-        	Core.line(mGreyMat, new Point(ww-ww/6,0), new Point(ww,hh/2), new Scalar(0,0,0), linx);
+    		Imgproc.line(mGreyMat, new Point(0,hh-linx/4), new Point(ww,hh-linx/4), new Scalar(0,0,0), linx/2);
+    		Imgproc.line(mGreyMat, new Point(linx/8,0), new Point(linx/8,hh), new Scalar(0,0,0), linx/4);
+    		Imgproc.line(mGreyMat, new Point(ww-linx/8,0), new Point(ww-linx/8,hh), new Scalar(0,0,0), linx/4);
+    		Imgproc.line(mGreyMat, new Point(ww/6,0), new Point(0,hh/2), new Scalar(0,0,0), linx);
+    		Imgproc.line(mGreyMat, new Point(ww-ww/6,0), new Point(ww,hh/2), new Scalar(0,0,0), linx);
     	} else {
     		// portrait
-        	Core.line(mGreyMat, new Point(linx/2,0), new Point(linx/2,hh), new Scalar(0,0,0), linx);
-        	Core.line(mGreyMat, new Point(ww-linx,0), new Point(ww-linx,hh), new Scalar(0,0,0), 2*linx);
-        	Core.line(mGreyMat, new Point(0,linx), new Point(ww/2-linx,0), new Scalar(0,0,0), linx);
-        	Core.line(mGreyMat, new Point(0,hh-linx), new Point(ww/2-linx,hh), new Scalar(0,0,0), linx);
+    		Imgproc.line(mGreyMat, new Point(linx/2,0), new Point(linx/2,hh), new Scalar(0,0,0), linx);
+    		Imgproc.line(mGreyMat, new Point(ww-linx,0), new Point(ww-linx,hh), new Scalar(0,0,0), 2*linx);
+    		Imgproc.line(mGreyMat, new Point(0,linx), new Point(ww/2-linx,0), new Scalar(0,0,0), linx);
+    		Imgproc.line(mGreyMat, new Point(0,hh-linx), new Point(ww/2-linx,hh), new Scalar(0,0,0), linx);
     	}
     	//Imgproc.watershed(mResultMat, mResultMat);
     	if (mSearchMode<=9) {

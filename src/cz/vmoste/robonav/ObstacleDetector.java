@@ -20,7 +20,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.KeyPoint;
+//import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
@@ -35,7 +35,7 @@ public class ObstacleDetector {
     private Scalar mColorRadius = new Scalar(25,50,50,0);
     private Mat mSpectrum = new Mat();
     private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
-    private List<KeyPoint> mObstacles = new ArrayList<KeyPoint>();
+    private List<Point> mObstacles = new ArrayList<Point>();
     private int direction = 0;
     private int mTopDirection = 0;
     private int mTopHeight = 0;
@@ -158,7 +158,7 @@ public class ObstacleDetector {
         return mTopPoint;
     }
 
-    public List<KeyPoint> getObstacles() {
+    public List<Point> getObstacles() {
         return mObstacles;
     }
 

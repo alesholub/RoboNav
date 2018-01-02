@@ -33,7 +33,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.features2d.KeyPoint;
+//import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
 
 //import com.google.android.gms.common.ConnectionResult;
@@ -270,7 +270,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private int mGrass = 0;
 	private Point topPoint =  new Point(w/2,h/2);
 	private Point centPoint =  new Point(w/2,h/2);
-    private List<KeyPoint> mObstacles = new ArrayList<KeyPoint>();
+    //private List<KeyPoint> mObstacles = new ArrayList<KeyPoint>();
 	
 	private static int searchMode = 0;
 	private static int mArea = 50;
@@ -422,7 +422,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     public void onResume()
     {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, mLoaderCallback);
         //Toast.makeText(getApplicationContext(), "onResume", Toast.LENGTH_SHORT).show();
         tts = new TextToSpeech(getApplicationContext(), 
       	      new TextToSpeech.OnInitListener() {
@@ -1331,99 +1331,99 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		Point pta = new Point(cw-bw/2,ch-bh/2);
         		Point ptb = new Point(cw+bw/2,ch+bh/2);
         		mColor = new Scalar(64,64,64);
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "l";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	ch = h/6;
         		pta.x = cw-bw/2; pta.y = ch-bh/2;
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
         		mColor = new Scalar(64,64,64);
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "r";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	ch = h/2;
         		pta.x = cw-bw/2; pta.y = ch-bh/2;
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
         		mColor = new Scalar(64,64,64);
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "s";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	cw = 2*w/10;
             	ch = 1*h/6;
         		pta.x = cw-bw/4; pta.y = ch-bh/2;
             	ch = 5*h/6;
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
         		mColor = new Scalar(128,128,128);
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "0";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	ch = h/2;
             	tx = "5";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	ch = 1*h/6;
             	tx = "9";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	cw = 4*w/10;
             	ch = h/2;
         		pta.x = cw-bw/2; pta.y = ch-bh/2;
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
         		mColor = new Scalar(128,128,128);
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "f";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	ch = 5*h/6;
         		pta.x = cw-bw/2; pta.y = ch-bh/2;
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "h";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	ch = h/6;
         		pta.x = cw-bw/2; pta.y = ch-bh/2;
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "k";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	cw = 8*w/10;
             	ch = h/2;
         		pta.x = cw-bw/2; pta.y = ch-bh/2;
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
         		mColor = new Scalar(128,128,128);
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "b";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	ch = h/6;
         		pta.x = cw-bw/2; pta.y = ch-bh/2;
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
         		mColor = new Scalar(128,128,128);
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "p";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
             	cw = (int)(0.5*w)/10;
             	ch = 1*h/6;
         		pta.x = cw-bw/4; pta.y = ch-bh/2;
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
         		mColor = new Scalar(128,128,128);
-            	Core.rectangle(mRgba, pta, ptb, mColor, -1);
+            	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
             	tx = "t";
-            	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-            	Core.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
-                //Core.transpose(mRgba, mRgba);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+                //Imgproc.transpose(mRgba, mRgba);
                 //w = h;
                 //h = mTmp;
-            	//if (debugMode>0) Core.putText(mRgba, "o: "+xOffset+" / "+yOffset+" / "+w+" / "+h+" / "+x+" / "+y+" / "+ex+" / "+ey+" / "+vw+" / "+vh, new Point(4,(pos-100)), 1, siz, new Scalar(255,255,150), wi);
-            	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	//if (debugMode>0) Imgproc.putText(mRgba, "o: "+xOffset+" / "+yOffset+" / "+w+" / "+h+" / "+x+" / "+y+" / "+ex+" / "+ey+" / "+vw+" / "+vh, new Point(4,(pos-100)), 1, siz, new Scalar(255,255,150), wi);
+            	if (debugMode>0) Imgproc.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
+            	if (debugMode>0) Imgproc.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             } else if (searchMode==1) {
             	// Road detection (for RobotemRovne) ... direction from moments or topPoint
             	if (blobSearch>=0 && directionNum%2==0) {
@@ -1440,10 +1440,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	mCenterOK = mRoadDetector.getCenterOK();
             	}
             	//if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
-            	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	//Imgproc.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
+            	if (debugMode>0) Imgproc.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
+            	//Imgproc.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	if (debugMode>0) Imgproc.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             } else if (searchMode==2) {
             	// color blob detection (for RoboOrienteering)
             	//blobSearch = 0; // *** for tests only ***
@@ -1470,9 +1470,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	    	Scalar mColorx = new Scalar(255,0,255); // violet
     			//if (blobDirection<-limit1 || blobDirection>limit1) mColorx = new Scalar(0,0,255); // blue
     			//if (blobDirection<-limit2 || blobDirection>limit2) mColorx = new Scalar(255,0,0); // red
-//    	    	Core.line(mRgba, centerPoint, endPoint, mColorx, 3);
+//    	    	Imgproc.line(mRgba, centerPoint, endPoint, mColorx, 3);
             	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
-            	if (mBoundingRectangle.height>=(h/200)) Core.rectangle(mRgba, mBoundingRectangle.tl(), mBoundingRectangle.br(), mColorx, 4);
+            	if (mBoundingRectangle.height>=(h/200)) Imgproc.rectangle(mRgba, mBoundingRectangle.tl(), mBoundingRectangle.br(), mColorx, 4);
             	if (roadSearch>=2 && directionNum%3==1) {
             		// road search disabled since 2017-05-21
                     mRoadDetector.process(mRgba);
@@ -1489,12 +1489,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	}
             	if (roadSearch>=0 && directionNum%3==2) {
                     mObstacleDetector.process(mRgba);
-                    mObstacles = mObstacleDetector.getObstacles();
+                    //mObstacles = mObstacleDetector.getObstacles();
             	}
-            	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	//Imgproc.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
+            	if (debugMode>0) Imgproc.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
+            	//Imgproc.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	if (debugMode>0) Imgproc.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
             } else if (searchMode==3) {
             	// Road detection (for RoboTour) ... direction from topPoint or moments (merging)
             	if (roadSearch>=0 && directionNum%3==0) {
@@ -1511,10 +1511,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	mCenterOK = mRoadDetector.getCenterOK();
             	}
             	//if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
-            	//Core.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+channel, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	if (debugMode>0) Core.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
-            	//Core.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
-            	if (debugMode>0) Core.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	//Imgproc.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+channel, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
+            	if (debugMode>0) Imgproc.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
+            	//Imgproc.putText(mRgba, "s: "+toRgba, new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
+            	if (debugMode>0) Imgproc.putText(mRgba, "s: "+azimuth+" "+btDst+" "+btSpd+" "+btRng+" "+btRngLeft+" "+btRngRight+" "+btRngBack+" "+btPwm+" "+btPayload+" t:"+telemetryTable.length()+testTxt+" "+Math.round(100000*btLat)+" "+Math.round(100000*btLon), new Point(4,pos), 1, siz, new Scalar(255,255,50), wi);
     			// merging
             	//direction = topDirection + direction/2; // merging disabled
             } else if (searchMode==4) {
@@ -1538,10 +1538,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	blobDirection = mColorDetector.getDirection();
         	mBoundingRectangle = mColorDetector.getBoundingRectangle();
         	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
-        	if (mBoundingRectangle.height>=(h/200)) Core.rectangle(mRgba, mBoundingRectangle.tl(), mBoundingRectangle.br(), VIOLET, 4);
+        	if (mBoundingRectangle.height>=(h/200)) Imgproc.rectangle(mRgba, mBoundingRectangle.tl(), mBoundingRectangle.br(), VIOLET, 4);
         	mTxt1 = "" + mBlobColorHsv2.toString();
-           	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
-        	if (debugMode>=0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+           	textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
+        	if (debugMode>=0) Imgproc.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
        	}
         if (inputMode!=1 && searchMode>0) {
             Scalar mBlobColorRgba2 = converScalarHsv2Rgba(mBlobColorHsv2);
@@ -1554,8 +1554,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         }
     	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
         if (searchMode!=0 && !stopped) {
-//        	//Core.line(mRgba, new Point(mBoundingRectangle.x, mBoundingRectangle.y), new Point(w/2,h), new Scalar(255,255,50), 2);
-//        	if (mBoundingRectangle.height>9) Core.rectangle(mRgba, mBoundingRectangle.br(), mBoundingRectangle.tl(), new Scalar(255,255,50), 2);
+//        	//Imgproc.line(mRgba, new Point(mBoundingRectangle.x, mBoundingRectangle.y), new Point(w/2,h), new Scalar(255,255,50), 2);
+//        	if (mBoundingRectangle.height>9) Imgproc.rectangle(mRgba, mBoundingRectangle.br(), mBoundingRectangle.tl(), new Scalar(255,255,50), 2);
 //        	// add main information to mRgba
         	double tmpx = 0;
         	double tmpy = 0;
@@ -1602,7 +1602,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	//mTxt4 = ""+String.format("%4d", (int)mBoundingRectangle.height);
             	}
             	mTxt1 = mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7;
-            	mTxt1 = "a:"+(int)azimuthOK+"/"+mObstacles.size();
+            	//mTxt1 = "a:"+(int)azimuthOK+"/"+mObstacles.size();
             	//mTxt1 += " p:"+(int)pathAzimuth;
             	//mTxt1 += " w:"+(int)azimuthToNextWaypoint;
             	//mTxt1 += " c:"+(int)compassAzimuth;
@@ -1614,13 +1614,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	mTxt1 = ""+(int)azimuthOK+"/"+(int)pathAzimuth+"/"+(int)azimuthToNextWaypoint+"/"+(int)azimDiff+"/"+(int)blobDirection;;
             	//if (searchMode==2) mTxt1 = "" + mBlobColorHsv2.toString() + "/" + (int)mArea + " # " + mTxt1;
             	if (searchMode==2) mTxt1 = ""+(int)mArea+"#"+(int)azimuthToNextWaypoint+"/"+(int)azimDiff+"#"+(int)blobDirection+"/"+(int)mBoundingRectangle.y+"#"+wpMode+"/"+(int)distanceToNextWaypoint;
-               	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
-            	//if (debugMode>=0) Core.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
-            	if (debugMode>0) Core.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+               	textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
+            	//if (debugMode>=0) Imgproc.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+            	if (debugMode>0) Imgproc.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
             	else if (shortTxt!="") {
             		shortNum++;
-                   	textSize = Core.getTextSize(shortTxt, 1, 1.4*siz, 14*wi/10, baseline);
-                	Core.putText(mRgba, ""+shortTxt, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+                   	textSize = Imgproc.getTextSize(shortTxt, 1, 1.4*siz, 14*wi/10, baseline);
+                	Imgproc.putText(mRgba, ""+shortTxt, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
                 	if (shortNum>2) {
                 		shortTxt = "";
                 		shortNum = 0;
@@ -1628,17 +1628,17 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	}
             	mTxt1 = ""+state+" "+mText+" "+txtCommand;
             	mTxt1 = ""+txtCommand;
-               	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
-            	if (debugMode>=0) Core.putText(mRgba, mTxt1, new Point((w-textSize.width)/2,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
+               	textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
+            	if (debugMode>=0) Imgproc.putText(mRgba, mTxt1, new Point((w-textSize.width)/2,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
             	mTxt1 = ""+mText;
-               	textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
-            	if (debugMode>=0) Core.putText(mRgba, mTxt1, new Point(w/5,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
+               	textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
+            	if (debugMode>=0) Imgproc.putText(mRgba, mTxt1, new Point(w/5,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
             	mTxt1 = "BT";
-               	//textSize = Core.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
-            	if (debugMode>=0 && btValid>0) Core.putText(mRgba, mTxt1, new Point(2*w/3,h-h/60), 1, siz*1.5, new Scalar(0,255,0), 3*wi/2);
-            	else Core.putText(mRgba, mTxt1, new Point(2*w/3,h-h/60), 1, siz*1.5, new Scalar(255,0,0), 3*wi/2);
-    			Core.circle(mRgba, topPoint, h/50, new Scalar(255,0,0), -1);
-    			Core.circle(mRgba, centPoint, h/50, new Scalar(0,0,255), -1);
+               	//textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
+            	if (debugMode>=0 && btValid>0) Imgproc.putText(mRgba, mTxt1, new Point(2*w/3,h-h/60), 1, siz*1.5, new Scalar(0,255,0), 3*wi/2);
+            	else Imgproc.putText(mRgba, mTxt1, new Point(2*w/3,h-h/60), 1, siz*1.5, new Scalar(255,0,0), 3*wi/2);
+    			Imgproc.circle(mRgba, topPoint, h/50, new Scalar(255,0,0), -1);
+    			Imgproc.circle(mRgba, centPoint, h/50, new Scalar(0,0,255), -1);
             	int ok = 0;
             	Scalar tmpColor = new Scalar(200,200,200);
     	    	Scalar mColorx = new Scalar(0,255,0); // green
@@ -1649,16 +1649,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         			// landscape 
             		tmpy = h*(0.75-0.6*Math.cos(drivingSignal/36));
             		tmpx = 0.5*w+0.6*h*Math.sin(drivingSignal/36);
-        			Core.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), mColorx, 8);
-        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,0,0), -1);
+        			Imgproc.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), mColorx, 8);
+        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,0,0), -1);
 //            		tmpy = h*(0.75-0.5*Math.cos(turnAngleToStayOnRoad/36));
 //            		tmpx = 0.5*w+0.5*h*Math.sin(turnAngleToStayOnRoad/36);
-//        			Core.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
-//        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
+//        			Imgproc.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
+//        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
 //            		tmpy = h*(0.75-0.4*Math.cos(turnAngleToNextWaypoint/36));
 //            		tmpx = 0.5*w+0.4*h*Math.sin(turnAngleToNextWaypoint/36);
-//        			Core.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
-//        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
+//        			Imgproc.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
+//        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
                 	if (txtCommand=="xleft") {ok = 1; tmpx = w/4; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="xright") {ok = 1; tmpx = 3*w/4; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="forward") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(0,255,0);}
@@ -1671,17 +1671,17 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         			// portrait
             		tmpx = h*(0.75-0.6*Math.cos(drivingSignal/36));
             		tmpy = 0.5*w+0.6*h*Math.sin(drivingSignal/36);
-        			Core.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), mColorx, 5);
-        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,0,0), -1);
+        			Imgproc.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), mColorx, 5);
+        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,0,0), -1);
 //            		tmpx = h*(0.75-0.5*Math.cos(turnAngleToStayOnRoad/36));
 //            		tmpy = 0.5*w+0.5*h*Math.sin(turnAngleToStayOnRoad/36);
-//        			Core.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
-//        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
+//        			Imgproc.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
+//        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
 //            		tmpx = h*(0.75-0.4*Math.cos(turnAngleToNextWaypoint/36));
 //            		tmpy = 0.5*w+0.4*h*Math.sin(turnAngleToNextWaypoint/36);
-//        			Core.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
-//        			Core.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
-        			//Core.line(mRgba, new Point(topPoint.x,topPoint.y), new Point(w-2*lin,h/2), new Scalar(0), 1);
+//        			Imgproc.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
+//        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
+        			//Imgproc.line(mRgba, new Point(topPoint.x,topPoint.y), new Point(w-2*lin,h/2), new Scalar(0), 1);
                 	if (txtCommand=="xleft") {ok = 1; tmpx = w/2; tmpy = 3*h/4; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="xright") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="forward") {ok = 1; tmpx = w/4; tmpy = h/2; tmpColor = new Scalar(0,255,0);}
@@ -1691,29 +1691,29 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	else if (txtCommand=="stop") {ok = 1; tmpx = w/2; tmpy = h/2; tmpColor = new Scalar(0,0,0);}
                 	else if (txtCommand=="back") {ok = 1; tmpx = 0.9*w; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
         		}
-        		if (ok>0) Core.circle(mRgba, new Point(tmpx,tmpy), h/20, tmpColor, -1);
+        		if (ok>0) Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/20, tmpColor, -1);
         		if (azimuthOK!=999) {
         			// add aimuthOK to mRgba
             		tmpx = w*0.5+h*0.2*Math.sin(Math.toRadians(azimuthOK));
             		tmpy = h*(0.5-0.2*Math.cos(Math.toRadians(azimuthOK)));
-        			Core.line(mRgba, new Point(0.5*w,0.5*h), new Point(tmpx,tmpy), RED, 6);
-        			//Core.circle(mRgba, new Point(tmpx,tmpy), h/50, RED, -1);
+        			Imgproc.line(mRgba, new Point(0.5*w,0.5*h), new Point(tmpx,tmpy), RED, 6);
+        			//Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/50, RED, -1);
         		}
             	getLocation();
-            	if (inputMode<1) if (debugMode>0) Core.putText(mRgba, "a: "+azimuth+"/"+azimuthValid+"/"+azimuthLimit+"/"+mArea+"/"+minArea, new Point(4,(h/4)), 1, siz, new Scalar(255,255,150), wi);
+            	if (inputMode<1) if (debugMode>0) Imgproc.putText(mRgba, "a: "+azimuth+"/"+azimuthValid+"/"+azimuthLimit+"/"+mArea+"/"+minArea, new Point(4,(h/4)), 1, siz, new Scalar(255,255,150), wi);
             	if (inputMode<1) if (debugMode>0) {
         		  	SimpleDateFormat format = new SimpleDateFormat("HHmmss",Locale.US);
         		  	String GPStime = format.format(new Date(lastGPStime));
         		  	String NETtime = format.format(new Date(lastNETtime));
-            		Core.putText(mRgba, "g: "+stav+"/"+Math.round(accuracy)+"/"+Math.round(bearing)+"/"+Math.round(100000*lat)+"/"+Math.round(100000*lon)+"/"+GPStime+"/"+NETtime, new Point(4,(3*h/8)), 1, siz, new Scalar(255,255,150), wi);
+            		Imgproc.putText(mRgba, "g: "+stav+"/"+Math.round(accuracy)+"/"+Math.round(bearing)+"/"+Math.round(100000*lat)+"/"+Math.round(100000*lon)+"/"+GPStime+"/"+NETtime, new Point(4,(3*h/8)), 1, siz, new Scalar(255,255,150), wi);
             	}
             	computePosition(); // compute actual position (estimation, latOK, lonOK, azimuthOK, distanceOK)
             	if (edges.size()>0)  edge = edges.get(0);
             	if (inputMode<1) {
-            		if (debugMode>0) Core.putText(mRgba, "p: "+path.size()+"/"+wp+"/"+wpMode+"/"+Math.round(wpDist)+"/"+Math.round(pathAzimuth)+"/"+Math.round(1000*wpLat)/1000+"/"+Math.round(1000*wpLon)/1000, new Point(corner,(h/2)), 1, siz, new Scalar(255,255,150), wi);
-                	if (goals.size()>1) if (debugMode>0) Core.putText(mRgba, "t: "+goals.size()+"/"+Math.round(1000*goals.get(0).x)/1000+"/"+Math.round(1000*goals.get(0).y)/1000+"/"+Math.round(1000*goals.get(1).x)/1000+"/"+Math.round(1000*goals.get(1).y)/1000+" "+edges.size()+"/"+edge[0]+"/"+edge[1]+"/"+edge[2]+"/"+edge[3], new Point(4,(5*h/8)+10), 1, siz, new Scalar(255,255,150), wi);
-                	else if (goals.size()>0) if (debugMode>0) Core.putText(mRgba, "t: "+goals.size()+"/"+Math.round(1000*goals.get(0).x)/1000+"/"+Math.round(1000*goals.get(0).y)/1000+" "+edges.size()+"/"+edge[0]+"/"+edge[1]+"/"+edge[2]+"/"+edge[3], new Point(4,(5*h/8)+10), 1, siz, new Scalar(255,255,150), wi);
-                	else if (debugMode>0) Core.putText(mRgba, "t: "+goals.size()+" "+edges.size()+"/"+edge[0]+"/"+edge[1]+"/"+edge[2]+"/"+edge[3], new Point(4,(5*h/8)+10), 1, siz, new Scalar(255,255,150), wi);
+            		if (debugMode>0) Imgproc.putText(mRgba, "p: "+path.size()+"/"+wp+"/"+wpMode+"/"+Math.round(wpDist)+"/"+Math.round(pathAzimuth)+"/"+Math.round(1000*wpLat)/1000+"/"+Math.round(1000*wpLon)/1000, new Point(corner,(h/2)), 1, siz, new Scalar(255,255,150), wi);
+                	if (goals.size()>1) if (debugMode>0) Imgproc.putText(mRgba, "t: "+goals.size()+"/"+Math.round(1000*goals.get(0).x)/1000+"/"+Math.round(1000*goals.get(0).y)/1000+"/"+Math.round(1000*goals.get(1).x)/1000+"/"+Math.round(1000*goals.get(1).y)/1000+" "+edges.size()+"/"+edge[0]+"/"+edge[1]+"/"+edge[2]+"/"+edge[3], new Point(4,(5*h/8)+10), 1, siz, new Scalar(255,255,150), wi);
+                	else if (goals.size()>0) if (debugMode>0) Imgproc.putText(mRgba, "t: "+goals.size()+"/"+Math.round(1000*goals.get(0).x)/1000+"/"+Math.round(1000*goals.get(0).y)/1000+" "+edges.size()+"/"+edge[0]+"/"+edge[1]+"/"+edge[2]+"/"+edge[3], new Point(4,(5*h/8)+10), 1, siz, new Scalar(255,255,150), wi);
+                	else if (debugMode>0) Imgproc.putText(mRgba, "t: "+goals.size()+" "+edges.size()+"/"+edge[0]+"/"+edge[1]+"/"+edge[2]+"/"+edge[3], new Point(4,(5*h/8)+10), 1, siz, new Scalar(255,255,150), wi);
             	}
         	}
         	double tmpx0 = 0;
@@ -1725,7 +1725,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 for (int i=0; i<points.size(); i++) {
                 	tmpx = (points.get(i).x - centLon)*multLon+w/2;
                 	tmpy = (centLat - points.get(i).y)*multLat+h/2;
-            		Core.circle(mRgba, new Point(tmpx,tmpy), 4, new Scalar(0,0,255),-1);
+            		Imgproc.circle(mRgba, new Point(tmpx,tmpy), 4, new Scalar(0,0,255),-1);
                 }
             	// add edges to mRgba
                 for (int i=0; i<edges.size(); i++) {
@@ -1736,26 +1736,26 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	tmpy0 = (centLat - points.get(p1).y)*multLat+h/2;
                 	tmpx = (points.get(p2).x - centLon)*multLon+w/2;
                 	tmpy = (centLat - points.get(p2).y)*multLat+h/2;
-            		Core.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,0,255),2);
+            		Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,0,255),2);
                 }
             	// add goals to mRgba
                 for (int i=0; i<goals.size(); i++) {
                 	tmpx = (goals.get(i).x - centLon)*multLon+w/2;
                 	tmpy = (centLat - goals.get(i).y)*multLat+h/2;
-            		Core.circle(mRgba, new Point(tmpx+3,tmpy+0), 4, new Scalar(255,0,0),-1);
-                	Core.putText(mRgba, ""+i+"/"+goalPoints.get(i)[0], new Point(tmpx,tmpy), 1, siz, new Scalar(255,255,255), wi);
+            		Imgproc.circle(mRgba, new Point(tmpx+3,tmpy+0), 4, new Scalar(255,0,0),-1);
+                	Imgproc.putText(mRgba, ""+i+"/"+goalPoints.get(i)[0], new Point(tmpx,tmpy), 1, siz, new Scalar(255,255,255), wi);
                 }
             	// add path to mRgba
                 for (int i=0; i<path.size(); i++) {
                 	tmpx = (path.get(i).x - centLon)*multLon+w/2+1;
                 	tmpy = (centLat - path.get(i).y)*multLat+h/2+1;
-                	if (i==wp) Core.circle(mRgba, new Point(tmpx-3,tmpy-0), 10, new Scalar(200,200,200),-1);
-                	if (wpModes.get(i)[0]==1) Core.circle(mRgba, new Point(tmpx-3,tmpy-0), 5, new Scalar(255,153,0),-1);
-                	else if (wpModes.get(i)[0]==2) Core.circle(mRgba, new Point(tmpx-3,tmpy-0), 6, new Scalar(255,0,0),-1);
-                	else Core.circle(mRgba, new Point(tmpx-3,tmpy-0), 4, new Scalar(0,255,0),-1);
+                	if (i==wp) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 10, new Scalar(200,200,200),-1);
+                	if (wpModes.get(i)[0]==1) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 5, new Scalar(255,153,0),-1);
+                	else if (wpModes.get(i)[0]==2) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 6, new Scalar(255,0,0),-1);
+                	else Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 4, new Scalar(0,255,0),-1);
             		if (i>0) {
-            			if (i==wp) Core.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(255,165,0),4);
-            			else Core.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,255,0),1);
+            			if (i==wp) Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(255,165,0),4);
+            			else Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,255,0),1);
             		}
             		tmpx0 = tmpx;
             		tmpy0 = tmpy;
@@ -1764,7 +1764,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 if (latOK>30f) {
                 	tmpx = (lonOK - centLon)*multLon+w/2;
                 	tmpy = (centLat - latOK)*multLat+h/2;
-            		Core.circle(mRgba, new Point(tmpx,tmpy), 6, new Scalar(255,0,0),-1);
+            		Imgproc.circle(mRgba, new Point(tmpx,tmpy), 6, new Scalar(255,0,0),-1);
                 }
         	}
         	mColor = RED;
@@ -1773,18 +1773,18 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	if (inputMode==1) {mColor = GREEN;}
         	else if (inputMode>1) {mColor = BLUE;}
         	if (searchMode!=0) {
-        		Core.rectangle(mRgba, new Point(1,1), new Point(corner-1,corner-1), converScalarHsv2Rgba(mBlobColorHsv2), -1);
+        		Imgproc.rectangle(mRgba, new Point(1,1), new Point(corner-1,corner-1), converScalarHsv2Rgba(mBlobColorHsv2), -1);
         	}
-        	Core.rectangle(mRgba, new Point(0,0), new Point(corner,corner), mColor, 2);
-        	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Core.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
+        	Imgproc.rectangle(mRgba, new Point(0,0), new Point(corner,corner), mColor, 2);
+        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+        	Imgproc.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
         	mColor1 = BLUE;
         	if (mod6==1 || mod6==3 || mod6==5) mColor1 = GREEN;
         	mColor2 = BLUE;
         	if (mod6>=2) mColor2 = GREEN;
         	if (mod6>=4) mColor2 = BLACK;
-        	Core.rectangle(mRgba, pt5, pt6, mColor1, -1);
-        	Core.rectangle(mRgba, pt7, pt8, mColor2, -1);
+        	Imgproc.rectangle(mRgba, pt5, pt6, mColor1, -1);
+        	Imgproc.rectangle(mRgba, pt7, pt8, mColor2, -1);
         	if (mod2>0) {
         		//mColor1 = BLUE;
         		azimLimit = 30;
@@ -1793,45 +1793,45 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		azimLimit = 20;
         	}
         	tx = "+";
-        	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Core.putText(mRgba, tx, new Point(w-corner/2-textSize.width/2+1,h/2-corner2-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(255,0,0), 2*wi);
+        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+        	Imgproc.putText(mRgba, tx, new Point(w-corner/2-textSize.width/2+1,h/2-corner2-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(255,0,0), 2*wi);
         	tx = "-";
-        	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Core.putText(mRgba, tx, new Point(w-corner/2-textSize.width/2+1,h/2+corner2+corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(255,0,0), 2*wi);
+        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+        	Imgproc.putText(mRgba, tx, new Point(w-corner/2-textSize.width/2+1,h/2+corner2+corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(255,0,0), 2*wi);
         	now.setToNow();
         	tx = now.format("%H:%M:%S");
         	tx += " ("+startTime+")";
-        	Core.putText(mRgba, tx, new Point(w/4,h/25+2), 1, siz, new Scalar(255,255,100), wi);
+        	Imgproc.putText(mRgba, tx, new Point(w/4,h/25+2), 1, siz, new Scalar(255,255,100), wi);
         }
         if (!stopped) {
         	mColor = RED; tx = "D";
         	if (debugMode>0) {mColor = GREEN; tx = "D";}
-        	Core.rectangle(mRgba, new Point(0,h), new Point(corner,h-corner), mColor, 1);
-        	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Core.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
+        	Imgproc.rectangle(mRgba, new Point(0,h), new Point(corner,h-corner), mColor, 1);
+        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+        	Imgproc.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
         	mColor = RED; tx = "N";
-        	Core.rectangle(mRgba, new Point(corner,h), new Point(2*corner,h-corner), mColor, 1);
-        	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Core.putText(mRgba, tx, new Point(3*corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
+        	Imgproc.rectangle(mRgba, new Point(corner,h), new Point(2*corner,h-corner), mColor, 1);
+        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+        	Imgproc.putText(mRgba, tx, new Point(3*corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
         	mColor = RED; tx = "M";
         	if (voiceOutput>0) {mColor = GREEN; tx = "V";}
-        	Core.rectangle(mRgba, pt1, pt2, mColor, -1);
-        	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Core.putText(mRgba, tx, new Point(w-corner/2-textSize.width/2+1,corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
+        	Imgproc.rectangle(mRgba, pt1, pt2, mColor, -1);
+        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+        	Imgproc.putText(mRgba, tx, new Point(w-corner/2-textSize.width/2+1,corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
         	mColor = WHITE;
         	if (searchMode>0) mColor = BLACK;
         	if (searchMode==1) mColor = BLUE;
         	else if (searchMode==2) mColor = YELLOW;
         	else if (searchMode==3) mColor = GREEN;
         	else if (searchMode==4) mColor = RED;
-        	if (inputMode<1) Core.rectangle(mRgba, pt3, pt4, mColor, -1);
+        	if (inputMode<1) Imgproc.rectangle(mRgba, pt3, pt4, mColor, -1);
         	tx = ""+searchMode+sm[searchMode];
-        	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Core.putText(mRgba, tx, new Point(w-corner-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(200,200,200), 2*wi);
-        	Core.rectangle(mRgba, new Point(0,h/2+corner/2), new Point(corner,h/2-corner/2), BLACK, -1);
+        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+        	Imgproc.putText(mRgba, tx, new Point(w-corner-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(200,200,200), 2*wi);
+        	Imgproc.rectangle(mRgba, new Point(0,h/2+corner/2), new Point(corner,h/2-corner/2), BLACK, -1);
         	tx = "S";
-        	textSize = Core.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Core.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,h/2+textSize.height/2+1), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+        	Imgproc.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,h/2+textSize.height/2+1), 1, 2*siz, new Scalar(255,255,255), 2*wi);
         	directionNum++;
             directionTrend += direction;
             topPointTrend += topDirection;

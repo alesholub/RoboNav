@@ -8,7 +8,7 @@ RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email
 - application sends bluetooth commands to robot (see below) [so you need a bluetooth enabled robot]
 - RoboNav.apk is targeted for Android 2.3.3 Gingerbread (API level 10) [it also runs in higher versions of Android]
 - RoboNav.apk requires OpenCV Manager installed on your Android system
-- development environment is Eclipse ADT and OpenCV 2.4.9
+- development environment is Eclipse ADT and OpenCV 3.4.0
 - for proper function, you have to put map file RoboNavMap.txt (see map format below) into SD card root
 - for conversion from OSM file to RoboNavMap.txt is my online tool at http://www.vmoste.cz/RoboNav/maps/index.php 
 - application at startup tries to connect to a paired and active bluetooth device nearby
@@ -130,6 +130,7 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.9.00 2018-01-02 OpenCV 3.4.0 and new default APK icon
 V1.9.8.02 2017-12-30 simpler navigation algorithm for RoboTour
 V1.9.8.01 2017-12-29 allowed BT addresses taken also from RoboNavRobots.txt
 V1.9.8.00 2017-12-28 full support for RoboNavRobots.txt and for telemetryTable
@@ -184,8 +185,6 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Set;
 
-import org.opencv.android.OpenCVLoader;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -236,16 +235,16 @@ import android.widget.Button;
 //import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
-import cz.vmoste.robonav.R;
 
 
 public class MainActivity extends Activity {
     // Intent request codes
-	static {
-	    if (!OpenCVLoader.initDebug()) {
-	        // Handle initialization error
-	    }
-	}
+//	static {
+//	    if (!OpenCVLoader.initDebug()) {
+//	        // Handle initialization error
+//	    }
+//	}
+//	System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     

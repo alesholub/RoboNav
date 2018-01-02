@@ -6,7 +6,7 @@ RoboNav is Android application for visual navigation of mobile robots (OpenCV + 
 - application sends bluetooth commands to robot (see below) [so you need a bluetooth enabled robot]
 - RoboNav.apk is targeted for Android 2.3.3 Gingerbread (API level 10) [but also runs in higher versions of Android]
 - RoboNav.apk requires OpenCV Manager installed on your Android system
-- development environment is Eclipse ADT and OpenCV 2.4.9
+- development environment is Eclipse ADT and OpenCV 3.4.0
 - for proper function, you have to put map file RoboNavMap.txt (see map format below) into SD card root
 - for conversion from OSM file to RoboNavMap.txt is available my online tool at http://www.vmoste.cz/RoboNav/maps/index.php 
 - application at startup tries to connect to a paired and active bluetooth device nearby
