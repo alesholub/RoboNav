@@ -335,6 +335,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 case LoaderCallbackInterface.SUCCESS:
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
+                    appendLog("NavigationActivity OpenCV loaded OK");
                     mOpenCvCameraView.enableView();
                     mOpenCvCameraView.setOnTouchListener(NavigationActivity.this);
                 } break;
@@ -348,6 +349,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     public NavigationActivity() {
         Log.i(TAG, "Instantiated new " + this.getClass());
+	  	SimpleDateFormat format = new SimpleDateFormat("yyMMdd_HHmmss",Locale.US);
+	  	String dateTimeString = format.format(new Date());
+        appendLog(""+dateTimeString+" *** NavigationActivity instantiated");
     }
 
     void setLevel() {
@@ -400,7 +404,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	// new log structure (27.11.2017)
         // appendLog("date_time;mCommand;searchMode;azimuthValid;btDst;btSpd;lat;lon;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;");
     	// new log structure (5.12.2017)
-        appendLog("date_time;mCommand;searchMode;azimuthOK;btDst;btSpd;latOK;lonOK;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;drivingSignal;");
+        //appendLog("date_time;mCommand;searchMode;azimuthOK;btDst;btSpd;latOK;lonOK;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;drivingSignal;");
         sendCommand(); // start timer
     }
 
@@ -422,7 +426,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     public void onResume()
     {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, mLoaderCallback);
+        String ocver = OpenCVLoader.OPENCV_VERSION_3_4_0;
+        OpenCVLoader.initAsync(ocver, this, mLoaderCallback);
+        appendLog("NavigationActivity OpenCV "+ocver+" loading initiated");
         //Toast.makeText(getApplicationContext(), "onResume", Toast.LENGTH_SHORT).show();
         tts = new TextToSpeech(getApplicationContext(), 
       	      new TextToSpeech.OnInitListener() {
@@ -642,6 +648,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         mColorDetector = new ColorBlobDetector();
         mRoadDetector = new RoadDetector();
         mObstacleDetector = new ObstacleDetector();
+        appendLog("cameraStart");
         // autotouch (green)
         //Toast.makeText(getApplicationContext(), "autotouch", Toast.LENGTH_SHORT).show();
         //mColorDetector.setColorRadius(new Scalar(25,50,50,0));
@@ -712,6 +719,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	startTimeMilis = (startTimeMilis/300000)*300000;
     	setStartTime();
     	runMode = 0; // wait for start time
+        appendLog("date_time;mCommand;searchMode;azimuthOK;btDst;btSpd;latOK;lonOK;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;drivingSignal;");
     }
 
     public void onCameraViewStopped() {
@@ -1314,7 +1322,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         mod2 = mLevel % 2;
         //mod4 = mLevel % 4;
         mod6 = mLevel % 6;
-        
+
     	if (inputMode<1 && !stopped) {
             if (searchMode==0) {
             	// Manual Control
@@ -2439,25 +2447,27 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         try {
             File sdcard = Environment.getExternalStorageDirectory();
             File file = new File(sdcard,fil);
-            BufferedReader br = new BufferedReader(new FileReader(file));  
-            String line;
-    		double xLat = 0.0;
-    		double xLon = 0.0;
-            while ((line = br.readLine()) != null) {
-            	if (line.length()>10) {
-            		String[] tmp = line.split("\t| ");
-            		xLat = Double.parseDouble(tmp[1]);
-            		xLon = Double.parseDouble(tmp[2]);
-            		int xMode0 = 0;
-            		if (tmp.length>3) if (tmp[3].length()>0) xMode0 = Integer.parseInt(tmp[3]);
-            		int[] xMode = {xMode0};
-            		if (fil.contains("Path")) wpModes.add(xMode);
-            		else if (fil.contains("Goal")) goalPoints.add(xMode);
-            		Point tmpPoint = new Point(xLon,xLat);
-                	ret.add(tmpPoint);
-            	}
+            if (file.exists()) {
+                BufferedReader br = new BufferedReader(new FileReader(file));  
+                String line;
+        		double xLat = 0.0;
+        		double xLon = 0.0;
+                while ((line = br.readLine()) != null) {
+                	if (line.length()>10) {
+                		String[] tmp = line.split("\t| ");
+                		xLat = Double.parseDouble(tmp[1]);
+                		xLon = Double.parseDouble(tmp[2]);
+                		int xMode0 = 0;
+                		if (tmp.length>3) if (tmp[3].length()>0) xMode0 = Integer.parseInt(tmp[3]);
+                		int[] xMode = {xMode0};
+                		if (fil.contains("Path")) wpModes.add(xMode);
+                		else if (fil.contains("Goal")) goalPoints.add(xMode);
+                		Point tmpPoint = new Point(xLon,xLat);
+                    	ret.add(tmpPoint);
+                	}
+                }
+                br.close();
             }
-            br.close();
         }
         catch (Exception e) {
             e.printStackTrace();                    
@@ -2474,49 +2484,51 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             if (!file.exists()) {
                 file = new File(sdcard,"RoboNavMap.txt");
             }
-            BufferedReader br = new BufferedReader(new FileReader(file));  
-            String line;
             points.clear();
             edges.clear();
         	minLat = 999.0;
         	minLon = 999.0;
         	maxLat = -999.0;
         	maxLon = -999.0;
-            double xLat = 0.0;
-    		double xLon = 0.0;
-            while ((line = br.readLine()) != null) {
-            	if (line.length()>2) {
-            		String[] tmp = line.split("\t| ");
-            		//test += "."+tmp.length;
-            		if (tmp.length>2) {
-            			// point
-                		xLat = Double.parseDouble(tmp[1]);
-                		xLon = Double.parseDouble(tmp[2]);
-                		//int xMode = Integer.parseInt(tmp[3]);
-                		Point tmpPoint = new Point(xLon,xLat);
-                    	points.add(tmpPoint);
-                    	if (xLat<minLat) minLat = xLat;
-                    	else if (xLat>maxLat) maxLat = xLat;
-                    	if (xLon<minLon) minLon = xLon;
-                    	else if (xLon>maxLon) maxLon = xLon;
-            		} else if (tmp.length==2) {
-            			// edge
-            			int p1 = Integer.parseInt(tmp[0]);
-            			int p2 = Integer.parseInt(tmp[1]);
-            			double lat0 = points.get(p1).y;
-            			double lon0 = points.get(p1).x;
-            			double lat1 = points.get(p2).y;
-            			double lon1 = points.get(p2).x;
-                		float[] results = new float[3];
-                		Location.distanceBetween(lat0, lon0, lat1, lon1, results);
-                		int dist = Math.round(results[0]);
-                		int azim = Math.round(results[1]);
-                		int[] edge = {p1,p2,dist,azim};
-            			edges.add(edge);
-            		}
-            	}
+            if (file.exists()) {
+                BufferedReader br = new BufferedReader(new FileReader(file));  
+                String line;
+                double xLat = 0.0;
+        		double xLon = 0.0;
+                while ((line = br.readLine()) != null) {
+                	if (line.length()>2) {
+                		String[] tmp = line.split("\t| ");
+                		//test += "."+tmp.length;
+                		if (tmp.length>2) {
+                			// point
+                    		xLat = Double.parseDouble(tmp[1]);
+                    		xLon = Double.parseDouble(tmp[2]);
+                    		//int xMode = Integer.parseInt(tmp[3]);
+                    		Point tmpPoint = new Point(xLon,xLat);
+                        	points.add(tmpPoint);
+                        	if (xLat<minLat) minLat = xLat;
+                        	else if (xLat>maxLat) maxLat = xLat;
+                        	if (xLon<minLon) minLon = xLon;
+                        	else if (xLon>maxLon) maxLon = xLon;
+                		} else if (tmp.length==2) {
+                			// edge
+                			int p1 = Integer.parseInt(tmp[0]);
+                			int p2 = Integer.parseInt(tmp[1]);
+                			double lat0 = points.get(p1).y;
+                			double lon0 = points.get(p1).x;
+                			double lat1 = points.get(p2).y;
+                			double lon1 = points.get(p2).x;
+                    		float[] results = new float[3];
+                    		Location.distanceBetween(lat0, lon0, lat1, lon1, results);
+                    		int dist = Math.round(results[0]);
+                    		int azim = Math.round(results[1]);
+                    		int[] edge = {p1,p2,dist,azim};
+                			edges.add(edge);
+                		}
+                	}
+                }
+                br.close();
             }
-            br.close();
             centLat = (maxLat + minLat)/2;
             centLon = (maxLon + minLon)/2;
             //multLat = h/0.0054;

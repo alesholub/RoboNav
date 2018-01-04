@@ -112,7 +112,8 @@ public class ColorBlobDetector {
     	// return central point of the area
     	// return bounding rectangle of the area
         
-    	Imgproc.pyrDown(mRgba, mPyrDownMat);
+    	mPyrDownMat = mRgba.clone();
+    	//Imgproc.pyrDown(mRgba, mPyrDownMat);
         //Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
 
         Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
@@ -157,7 +158,9 @@ public class ColorBlobDetector {
         mContours.clear();
         if (mContour0!=null) {
     		//Core.multiply(mContour0, new Scalar(4,4), mContour0);
-    		Core.multiply(mContour0, new Scalar(2,2), mContour0);
+    		//Core.multiply(mContour0, new Scalar(2,2), mContour0);
+    		//Imgproc.resize((Mat)mContour0,(Mat)mContour0, mRgba.size());
+        	//Imgproc.pyrUp(mContour0, mContour0);
     		mContours.add(mContour0);
         }
 

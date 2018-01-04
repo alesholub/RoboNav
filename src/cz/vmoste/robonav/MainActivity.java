@@ -130,7 +130,8 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
-V1.9.9.00 2018-01-02 OpenCV 3.4.0 and new default APK icon
+V1.9.9.01 2018-01-04 transition to OpenCV 3.4.0
+V1.9.9.00 2018-01-02 new default APK icon
 V1.9.8.02 2017-12-30 simpler navigation algorithm for RoboTour
 V1.9.8.01 2017-12-29 allowed BT addresses taken also from RoboNavRobots.txt
 V1.9.8.00 2017-12-28 full support for RoboNavRobots.txt and for telemetryTable
