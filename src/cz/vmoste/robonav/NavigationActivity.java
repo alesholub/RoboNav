@@ -335,7 +335,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 case LoaderCallbackInterface.SUCCESS:
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
-                    appendLog("NavigationActivity OpenCV loaded OK");
+                    appendLog("NavigationActivity OpenCV "+OpenCVLoader.OPENCV_VERSION+" loaded OK");
                     mOpenCvCameraView.enableView();
                     mOpenCvCameraView.setOnTouchListener(NavigationActivity.this);
                 } break;

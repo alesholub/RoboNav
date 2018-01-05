@@ -113,13 +113,14 @@ public class ColorBlobDetector {
     	// return bounding rectangle of the area
         
     	mPyrDownMat = mRgba.clone();
-    	//Imgproc.pyrDown(mRgba, mPyrDownMat);
+    	Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
         //Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
 
         Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
 
         Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
         Imgproc.dilate(mMask, mDilatedMask, new Mat());
+		Imgproc.resize(mDilatedMask,mDilatedMask,mRgba.size());
 
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 

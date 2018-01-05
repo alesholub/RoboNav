@@ -130,6 +130,7 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.9.02 2018-01-05 logging OpenCVLoader.OPENCV_VERSION
 V1.9.9.01 2018-01-04 transition to OpenCV 3.4.0
 V1.9.9.00 2018-01-02 new default APK icon
 V1.9.8.02 2017-12-30 simpler navigation algorithm for RoboTour
@@ -185,6 +186,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Set;
+
+//import org.opencv.android.OpenCVLoader;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
