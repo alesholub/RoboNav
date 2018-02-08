@@ -256,10 +256,15 @@ public class BluetoothSerialService {
             // given BluetoothDevice
             try {
             	if ( mAllowInsecureConnections ) {
-            		Method method;
-            		
-            		method = device.getClass().getMethod("createRfcommSocket", new Class[] { int.class } );
-                    tmp = (BluetoothSocket) method.invoke(device, 1);  
+            		if (device.getName().equalsIgnoreCase("Cyber Robot")) {
+                        UUID uuid = UUID.fromString("0000fff5-0000-1000-8000-00805f9b34fb");
+                        tmp = device.createRfcommSocketToServiceRecord(uuid);
+                        //tmp = device.createInsecureRfcommSocketToServiceRecord(uuid);
+            		} else {
+                		Method method;
+                		method = device.getClass().getMethod("createRfcommSocket", new Class[] { int.class } );
+                        tmp = (BluetoothSocket) method.invoke(device, 1);
+            		}
             	}
             	else {
             		tmp = device.createRfcommSocketToServiceRecord( SerialPortServiceClass_UUID );

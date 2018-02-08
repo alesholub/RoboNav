@@ -154,6 +154,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static long firstTime = now.toMillis(false);
 	private static long azimuthValidTime = 0;
 	private static int azimuthValid = 0;
+	private static int btConnected = 0;
 	private static int btValid = 0;
 	private static int btPwm = 0; // PWM from bluetooth
 	private static int btRng = 99; // center sonar range from bluetooth
@@ -305,6 +306,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static int toBack = 0;
 	private static int fromPayload = 0;
 	private static int toPayload = 0;
+	private static int repeatedCommand = 0;
+	private static long lastSay = 0;
+	private static long lastShow = 0;
+	private static String navMode = "on";
 
 	private static int fileNumber = 0;
 	private String fileName = "";
@@ -912,42 +917,52 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         }
         else if ((x<corner) && (y>(rows-corner))) {
         	// debugMode corner (bottom left)
-        	if (inputMode==1) {
-        		// remove last waypoint
+        	if (searchMode>0) {
+            	if (inputMode==1) {
+            		// remove last waypoint
+                	buttonTouched = 2;
+            		int lastIndex = path.size() - 1; 
+            		if (lastIndex>=0) {
+            			path.remove(lastIndex);
+            			wpModes.remove(lastIndex);
+            		}
+                	//if (voiceOutput>0) tts.speak("removed waypoint "+lastIndex, TextToSpeech.QUEUE_ADD, null);
+                	//else Toast.makeText(getApplicationContext(), "removed waypoint "+lastIndex, Toast.LENGTH_SHORT).show();
+            		return false;
+            	}
+        	    if (debugMode>0) {
+        	    	debugMode = 0;
+        	    }
+        	    else {
+        	    	debugMode = 1;
+        	    }
+            	if (voiceOutput>0) say("debug "+debugMode);
             	buttonTouched = 2;
-        		int lastIndex = path.size() - 1; 
-        		if (lastIndex>=0) {
-        			path.remove(lastIndex);
-        			wpModes.remove(lastIndex);
-        		}
-            	//if (voiceOutput>0) tts.speak("removed waypoint "+lastIndex, TextToSpeech.QUEUE_ADD, null);
-            	//else Toast.makeText(getApplicationContext(), "removed waypoint "+lastIndex, Toast.LENGTH_SHORT).show();
-        		return false;
+        	    return false;
         	}
-    	    if (debugMode>0) {
-    	    	debugMode = 0;
-    	    }
-    	    else {
-    	    	debugMode = 1;
-    	    }
-        	if (voiceOutput>0) say("debug "+debugMode);
-        	buttonTouched = 2;
-    	    return false;
         }
         else if ((x<2*corner) && (y>(rows-corner))) {
         	// next corner (bottom left next to debug)
-        	if (wp<(path.size()-1)) computeNextWaypoint(1);
-        	else {
-        		wp = 0;
-    	    	runMode = 0; // run mode (0=wait_for_start, 1=run, 2=finish)
-    	    	goalReached = 0; // we should be at start now
-    	    	state = "normal";
-        		computeNextWaypoint(1);
+        	if (searchMode>3) {
+        		// navigation ON/OFF
+        		if (navMode=="on") navMode = "off";
+        		else navMode = "on";
+            	if (voiceOutput>0) say("nav "+navMode);
+            	else Toast.makeText(getApplicationContext(), "nav "+navMode, Toast.LENGTH_SHORT).show();
+        	} else if (searchMode>0) {
+            	if (wp<(path.size()-1)) computeNextWaypoint(1);
+            	else {
+            		wp = 0;
+        	    	runMode = 0; // run mode (0=wait_for_start, 1=run, 2=finish)
+        	    	goalReached = 0; // we should be at start now
+        	    	state = "normal";
+            		computeNextWaypoint(1);
+            	}
+            	if (voiceOutput>0) say("waypoint "+wp+",,, azimuth "+(int)pathAzimuth+",,, distance "+(int)wpDist+",,, mode "+(int)wpMode);
+            	else Toast.makeText(getApplicationContext(), "wp "+wp+", az "+(int)pathAzimuth+", dist "+(int)wpDist+", mode "+(int)wpMode, Toast.LENGTH_SHORT).show();
+            	buttonTouched = 2;
+        	    return false;
         	}
-        	if (voiceOutput>0) say("waypoint "+wp+",,, azimuth "+(int)pathAzimuth+",,, distance "+(int)wpDist+",,, mode "+(int)wpMode);
-        	else Toast.makeText(getApplicationContext(), "wp "+wp+", az "+(int)pathAzimuth+", dist "+(int)wpDist+", mode "+(int)wpMode, Toast.LENGTH_SHORT).show();
-        	buttonTouched = 2;
-    	    return false;
         }
         else if ((x<corner) && (y<corner) && searchMode>0) {
         	// inputMode corner (top left)
@@ -984,7 +999,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         else if ((x>(cols-2*corner)) && (y>(rows-corner)) && inputMode<1) {
         	// searchmode corner (bottom right)
         	searchMode++;
-    	    if (searchMode>3) searchMode = 0;
+    	    if (searchMode>4) searchMode = 0;
     	    if (searchMode>=1) {
                 mBlobColorHsv = mBlobColorHsv2;
     	    	mColorDetector.setHsvColor(mBlobColorHsv2);
@@ -1047,14 +1062,20 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		setStartTime();
         		return false;
         	}
-        	if (searchMode==6) {
-                mLevel = mLevel + 10;
-                if (mLevel>255) mLevel = 255;
-                mRoadDetector.setLevel(mLevel);
-                mObstacleDetector.setLevel(mLevel);
-                shortTxt = "level: "+mLevel;
+        	if (searchMode>3) {
+                limit1 = limit1 + 1;
+                if (limit1>25) limit1 = 25;
+                limit2 = limit1 + 10;
+                mRoadDetector.setLimits(limit1,limit2);
+                mObstacleDetector.setLimits(limit1,limit2);
+                shortTxt = "limits: "+limit1+" / "+limit2;
+                //mLevel = mLevel + 10;
+                //if (mLevel>255) mLevel = 255;
+                //mRoadDetector.setLevel(mLevel);
+                //mObstacleDetector.setLevel(mLevel);
+                //shortTxt = "level: "+mLevel;
         	}
-        	if (searchMode!=2) {
+        	else if (searchMode!=2) {
                 mLevel = mLevel + 1;
                 if (mLevel>255) mLevel = 255;
                 mRoadDetector.setLevel(mLevel);
@@ -1113,12 +1134,18 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		setStartTime();
         		return false;
         	}
-        	if (searchMode==6) {
-                mLevel = mLevel - 10;
-                if (mLevel<0) mLevel = 0;
-                mRoadDetector.setLevel(mLevel);
-                mObstacleDetector.setLevel(mLevel);
-                shortTxt = "level: "+mLevel;
+        	if (searchMode>3) {
+                limit1 = limit1 - 1;
+                if (limit1<0) limit1 = 0;
+                limit2 = limit1 + 10;
+                mRoadDetector.setLimits(limit1,limit2);
+                mObstacleDetector.setLimits(limit1,limit2);
+                shortTxt = "limits: "+limit1+" / "+limit2;
+                //mLevel = mLevel - 10;
+                //if (mLevel<0) mLevel = 0;
+                //mRoadDetector.setLevel(mLevel);
+                //mObstacleDetector.setLevel(mLevel);
+                //shortTxt = "level: "+mLevel;
         	}
         	else if (searchMode==1 || searchMode==3) {
                 mLevel = mLevel - 1;
@@ -1241,7 +1268,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
                 ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
 
-        if (searchMode==4 || searchMode==5) {
+        if (searchMode==44 || searchMode==5) {
         	mColorDetector.setHsvColor(mBlobColorHsv);
         	//mColorDetector.setMinArea(mArea);
         	mHSV1 = mBlobColorHsv.toString();
@@ -1527,6 +1554,29 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	//direction = topDirection + direction/2; // merging disabled
             } else if (searchMode==4) {
             	// Road Assistance (track good features)
+    	    	mColorDetector.setHsvColor(mBlobColorHsv2);
+            	mColorDetector.process(mRgba);
+                //mTemp = mColorDetector.getResultMat();
+            	blobDirection = mColorDetector.getBlobDirection();
+            	mBoundingRectangle = mColorDetector.getBoundingRectangle();
+            	// since 2017-05-21
+                mContours = null;
+            	direction = 0;
+            	centPoint = new Point(w/2,h/w);
+            	topPoint = new Point(w/2,0);
+            	topDirection = 0;
+            	topHeight = 3;
+            	mLeftOK = 1;
+            	mRightOK = 1;
+            	mCenterOK = 1;
+    	    	Scalar mColorx = new Scalar(255,0,255); // violet
+            	if (mBoundingRectangle==null) {
+            		mBoundingRectangle = new Rect(w/2,h/2,1,1);
+            		blobDirection = 0;
+            	}
+            	if (mBoundingRectangle.height>=(h/200)) Imgproc.rectangle(mRgba, mBoundingRectangle.tl(), mBoundingRectangle.br(), mColorx, 4);
+            	trackObject();
+            	if (navMode=="on") fastCommand();
             } else if (searchMode==5) {
             	// Puck Collect (track good features and color blobs)
             } else if (searchMode==6) {
@@ -1561,6 +1611,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             mRgba.setTo(new Scalar(0,0,0));
         }
     	if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
+    	if (searchMode==0) {
+        	btConnected = MainActivity.mSerialService.getState();
+        	mTxt1 = "BT";
+           	//textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
+        	if (debugMode>=0 && btConnected>2) Imgproc.putText(mRgba, mTxt1, new Point(corner/2-textSize.width,h-corner/2), 1, siz*1.5, new Scalar(0,255,0), 3*wi/2);
+        	else Imgproc.putText(mRgba, mTxt1, new Point(corner/2-textSize.width,h-corner/2), 1, siz*1.5, new Scalar(255,0,0), 3*wi/2);
+    	}
         if (searchMode!=0 && !stopped) {
 //        	//Imgproc.line(mRgba, new Point(mBoundingRectangle.x, mBoundingRectangle.y), new Point(w/2,h), new Scalar(255,255,50), 2);
 //        	if (mBoundingRectangle.height>9) Imgproc.rectangle(mRgba, mBoundingRectangle.br(), mBoundingRectangle.tl(), new Scalar(255,255,50), 2);
@@ -1622,14 +1679,20 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	mTxt1 = ""+(int)azimuthOK+"/"+(int)pathAzimuth+"/"+(int)azimuthToNextWaypoint+"/"+(int)azimDiff+"/"+(int)blobDirection;;
             	//if (searchMode==2) mTxt1 = "" + mBlobColorHsv2.toString() + "/" + (int)mArea + " # " + mTxt1;
             	if (searchMode==2) mTxt1 = ""+(int)mArea+"#"+(int)azimuthToNextWaypoint+"/"+(int)azimDiff+"#"+(int)blobDirection+"/"+(int)mBoundingRectangle.y+"#"+wpMode+"/"+(int)distanceToNextWaypoint;
+            	else if (searchMode==4) mTxt1 = ""+(int)blobDirection+" x:"+(int)mBoundingRectangle.x+" y:"+(int)mBoundingRectangle.y;
                	textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	//if (debugMode>=0) Imgproc.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
-            	if (debugMode>0) Imgproc.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+            	if (searchMode==4) Imgproc.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+            	if (debugMode>0) {
+            		//Imgproc.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+            	}
             	else if (shortTxt!="") {
+                	long time = System.currentTimeMillis();
+            		if (shortNum==0) lastShow = time + 300;
             		shortNum++;
                    	textSize = Imgproc.getTextSize(shortTxt, 1, 1.4*siz, 14*wi/10, baseline);
-                	Imgproc.putText(mRgba, ""+shortTxt, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
-                	if (shortNum>2) {
+                	Imgproc.putText(mRgba, ""+shortTxt, new Point((w-textSize.width)/2,0.8*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+                	if (shortNum>20 || lastShow<time) {
                 		shortTxt = "";
                 		shortNum = 0;
                 	}
@@ -1641,9 +1704,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	mTxt1 = ""+mText;
                	textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	if (debugMode>=0) Imgproc.putText(mRgba, mTxt1, new Point(w/5,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
+            	btConnected = MainActivity.mSerialService.getState();
             	mTxt1 = "BT";
                	//textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
-            	if (debugMode>=0 && btValid>0) Imgproc.putText(mRgba, mTxt1, new Point(2*w/3,h-h/60), 1, siz*1.5, new Scalar(0,255,0), 3*wi/2);
+            	if (debugMode>=0 && btConnected>2) Imgproc.putText(mRgba, mTxt1, new Point(2*w/3,h-h/60), 1, siz*1.5, new Scalar(0,255,0), 3*wi/2);
             	else Imgproc.putText(mRgba, mTxt1, new Point(2*w/3,h-h/60), 1, siz*1.5, new Scalar(255,0,0), 3*wi/2);
     			Imgproc.circle(mRgba, topPoint, h/50, new Scalar(255,0,0), -1);
     			Imgproc.circle(mRgba, centPoint, h/50, new Scalar(0,0,255), -1);
@@ -1700,7 +1764,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	else if (txtCommand=="back") {ok = 1; tmpx = 0.9*w; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
         		}
         		if (ok>0) Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/20, tmpColor, -1);
-        		if (azimuthOK!=999) {
+        		if (azimuthOK!=999 && searchMode!=4) {
         			// add aimuthOK to mRgba
             		tmpx = w*0.5+h*0.2*Math.sin(Math.toRadians(azimuthOK));
             		tmpy = h*(0.5-0.2*Math.cos(Math.toRadians(azimuthOK)));
@@ -1728,7 +1792,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	double tmpy0 = 0;
         	tmpx = 0;
         	tmpy = 0;
-        	if (inputMode<2) {
+        	if (inputMode<2 && searchMode<=3) {
             	// add map points to mRgba
                 for (int i=0; i<points.size(); i++) {
                 	tmpx = (points.get(i).x - centLon)*multLon+w/2;
@@ -1812,15 +1876,19 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	Imgproc.putText(mRgba, tx, new Point(w/4,h/25+2), 1, siz, new Scalar(255,255,100), wi);
         }
         if (!stopped) {
-        	mColor = RED; tx = "D";
-        	if (debugMode>0) {mColor = GREEN; tx = "D";}
-        	Imgproc.rectangle(mRgba, new Point(0,h), new Point(corner,h-corner), mColor, 1);
-        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Imgproc.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
-        	mColor = RED; tx = "N";
-        	Imgproc.rectangle(mRgba, new Point(corner,h), new Point(2*corner,h-corner), mColor, 1);
-        	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
-        	Imgproc.putText(mRgba, tx, new Point(3*corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
+        	if (searchMode>0) {
+            	mColor = RED; tx = "D";
+            	if (debugMode>0) {mColor = GREEN; tx = "D";}
+            	Imgproc.rectangle(mRgba, new Point(0,h), new Point(corner,h-corner), mColor, 1);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
+            	mColor = RED; tx = "N";
+            	if (navMode=="on") mColor = GREEN;
+            	if (searchMode>3) tx += navMode;
+            	Imgproc.rectangle(mRgba, new Point(corner,h), new Point(2*corner,h-corner), mColor, 1);
+            	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+            	Imgproc.putText(mRgba, tx, new Point(3*corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, mColor, 2*wi);
+        	}
         	mColor = RED; tx = "M";
         	if (voiceOutput>0) {mColor = GREEN; tx = "V";}
         	Imgproc.rectangle(mRgba, pt1, pt2, mColor, -1);
@@ -2096,21 +2164,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
       		    	return;
           		}
           		computeCommand(); // main navigation algorithm => mCommand
-          		if (searchMode>2 && tmpSec>=-5) mCommand = 'w'; // initial mCommand is "forward"
-    	    	out[0] = mCommand;
+          		if (searchMode==3 && tmpSec>=-5) mCommand = 'w'; // initial mCommand for RoboTour is "forward"
              	txtCommand = "";
-                if (mCommand!='-') {
-                 	writeCommand();
-                	tellCommand((char)out[0]);
-                 	mPrevCommand = mCommand;
-                 	mCommand = '-';
-                } else if (mPrevCommand!='-') {
-                	// send 'f' once before nothing ('-')
-        	    	out[0] = 'f';
-                 	writeCommand();
-                	tellCommand((char)out[0]);
-                	mPrevCommand = '-';
-                }
+          		if (searchMode<=3) {
+          			// send "slow" command (once per second) for defined modes only
+          			slowCommand();
+          		}
             	SimpleDateFormat format = new SimpleDateFormat("yyMMdd_HHmmss",Locale.US);
             	String dateTimeString = format.format(new Date());
                 //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+direction+";"+topDirection+";"+averageDirection+";"+averageTopPoint+";"+directionNum+";"+azimuth+";"+initialAzimuth+";"+azimuthDifference+";"+azimuthValid+";"+btPwm+";"+btRng+";"+btDst+";"+btSpd+";"+limit1+";"+limit2+";"+mLevel+";"+azimuthLimit+";"+mArea+";"+minArea+";"+btLat+";"+btLon+";"+btRngLeft+";"+btRngRight+";"+btRngBack+";");
@@ -2169,14 +2228,20 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	else if (command>='0' && command<='9') txtCommand = ""+command;
     	if (txtCommand!="") {
     		if (searchMode<1 || searchMode>3 || mCommand!='w' || mPrevCommand!=mCommand) {
-            	if (voiceOutput>0) say(txtCommand);
+    			long time = System.currentTimeMillis()/1000;
+            	if (voiceOutput>0 && time!=lastSay) {
+            		lastSay = time;
+            		say(txtCommand);
+            	}
         		//Toast.makeText(getApplicationContext(), txtCommand, Toast.LENGTH_SHORT).show();
     		}
     	}
     }
     
     private void say(String txt) {
-    	if (voiceOutput>0) tts.speak(txt, TextToSpeech.QUEUE_ADD, null);	
+    	if (voiceOutput>0 && repeatedCommand<1) tts.speak(txt, TextToSpeech.QUEUE_ADD, null);	
+    	if (txt=="stop") repeatedCommand = 1;
+    	else repeatedCommand = 0;
     }
     
     private void saveConfig() {
@@ -2659,10 +2724,18 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	// main navigation algorithm (finite automata and fuzzy logic)
     	whatToDo(); // get current state
     	if (state=="normal") {
-        	getAngleToNextWaypoint();
-        	getAngleToStayOnRoad();
-        	getAngletoAvoidObstacle();
-        	turnByDrivingSignals();
+    		if (searchMode!=4) {
+            	getAngleToNextWaypoint();
+            	getAngleToStayOnRoad();
+            	getAngletoAvoidObstacle();
+            	turnByDrivingSignals();
+    		} else {
+            	//getAngleToNextWaypoint();
+            	//getAngleToStayOnRoad();
+            	//getAngletoAvoidObstacle();
+            	trackObject();
+            	//turnByDrivingSignals();
+    		}
     	}
     }
     
@@ -2734,6 +2807,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	 * - at finish waypoint drop payload and then navigate back to start (stop at start)
     	 */
 		mCommand = '-'; // implicit mCommand
+		if (searchMode==4) {
+			// Road Assistance
+			state = "normal";
+			//mCommand = 'w';
+			return;
+		}
 		if (searchMode>0) {
 			// finite automata navigation
 	  		//mCommand = '-'; // implicit mCommand
@@ -3191,4 +3270,47 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	}
     	
     }
+
+    
+    public void slowCommand() {
+    	out[0] = mCommand;
+        if (mCommand!='-') {
+         	writeCommand();
+        	tellCommand((char)out[0]);
+         	mPrevCommand = mCommand;
+         	mCommand = '-';
+        } else if (mPrevCommand!='-') {
+        	// send 'f' once before nothing ('-')
+	    	out[0] = 'f';
+         	writeCommand();
+        	tellCommand((char)out[0]);
+        	mPrevCommand = '-';
+        }
+    }
+
+    public void fastCommand() {
+    	out[0] = mCommand;
+     	writeCommand();
+    	tellCommand((char)out[0]);
+     	mPrevCommand = mCommand;
+     	mCommand = '-';
+    }
+
+    public void trackObject() {
+		// color blob navigation
+		mCommand = 's';
+		drivingSignal = 0.0;
+		if (mBoundingRectangle!=null) {
+			if (mBoundingRectangle.height>(h/50)) {
+				if (blobDirection<-limit2) mCommand = 'l';
+				else if (blobDirection<-limit1) mCommand = 'h';
+				else if (blobDirection>limit2) mCommand = 'r';
+				else if (blobDirection>limit1) mCommand = 'k';
+				else if (mBoundingRectangle.br().y>(h-h/4)) mCommand = 'b';
+				else if (mBoundingRectangle.br().y<(h/2) || mBoundingRectangle.height<(h/40)) mCommand = 'w';
+				drivingSignal = (double)blobDirection;
+			}
+		}
+    }
+
 }

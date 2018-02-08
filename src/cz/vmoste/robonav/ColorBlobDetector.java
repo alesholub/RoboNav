@@ -27,6 +27,7 @@ public class ColorBlobDetector {
     private Mat mSpectrum = new Mat();
     private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
     private int direction = 0;
+    private int blobDirection = 0;
     private int mTopDirection = 0;
     private int mTopHeight = 0;
 	private Point mTopPoint = new Point(0,0);
@@ -207,11 +208,13 @@ public class ColorBlobDetector {
 				// landscape
         		//direction = (int)Math.round(Math.toDegrees(Math.atan((x3-(w/2))/(h-y3))));
 				direction = 200*(x-w/2)/w + 100*mBoundingRectangle.height/h;
+				blobDirection = 100*(x-w/2)/w;
 			} else {
 				// portrait
         		//direction = (int)Math.round(Math.toDegrees(Math.atan((h/2-y3)/(w-x3))));
 //        		endPoint = new Point(w,h/2);
 				direction = 200*(h/2-y)/h + 100*mBoundingRectangle.width/w;
+				blobDirection = 100*(h/2-y)/h;
 			}
         }
 		//mResultMat = mRgba;
@@ -227,6 +230,10 @@ public class ColorBlobDetector {
 
     public int getDirection() {
         return direction;
+    }
+
+    public int getBlobDirection() {
+        return blobDirection;
     }
 
     public int getTopDirection() {

@@ -130,6 +130,7 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V1.9.9.03 2018-02-04 searchmode 4 (Road Assistance) for object tracking demo, better BT state indication
 V1.9.9.02 2018-01-05 logging OpenCVLoader.OPENCV_VERSION
 V1.9.9.01 2018-01-04 transition to OpenCV 3.4.0
 V1.9.9.00 2018-01-02 new default APK icon
@@ -399,38 +400,18 @@ public class MainActivity extends Activity {
             } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                        //bluetooth device found => autoconnect
                 BluetoothDevice device = (BluetoothDevice) intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+    	    	//Toast.makeText(getApplicationContext(), "BT device found: "+device.getAddress(), Toast.LENGTH_SHORT).show();
                 
-                if (btAllowed.indexOf(device.getAddress())>0) {
+                //if (btAllowed.indexOf(device.getAddress())>0) {
+                if (true) {
         	    	if (mBluetoothAdapter.isDiscovering()) {
         	    		mBluetoothAdapter.cancelDiscovery();
         	    	}
         	    	address = device.getAddress();
+        	    	String deviceName = device.getName();
         	    	NavigationActivity.setConnectedAddress(address);
         	    	String robotName = NavigationActivity.getRobotName();
-//        	    	List<String> ret = new ArrayList<String>();
-//        	    	String fil = "RoboNavRobots.txt";
-//        	        try {
-//        	            File sdcard = Environment.getExternalStorageDirectory();
-//        	            File file = new File(sdcard,fil);
-//        	            BufferedReader br = new BufferedReader(new FileReader(file));  
-//        	            String line;
-//        	            while ((line = br.readLine()) != null) {
-//        	            	if (line.length()>10) {
-//        	                	ret.add(line.trim());
-//        	    	            //Toast.makeText(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT).show();
-//        	        	    	String[] parts = line.trim().split(";");
-//        	        	    	if (address.equalsIgnoreCase(parts[0].trim())) {
-//        	        	    		robotName = parts[1];
-//        	        	            //Toast.makeText(getApplicationContext(), "robot: "+robotName, Toast.LENGTH_SHORT).show();
-//        	        	    	}
-//        	            	}
-//        	            }
-//        	            br.close();
-//        	        }
-//        	        catch (Exception e) {
-//        	            e.printStackTrace();                    
-//        	        }
-        	    	Toast.makeText(getApplicationContext(), "Connect to: "+address+" ("+robotName+")", Toast.LENGTH_SHORT).show();
+        	    	Toast.makeText(getApplicationContext(), "Connect to: "+address+"/"+deviceName+" ("+robotName+")", Toast.LENGTH_SHORT).show();
         	    	// Get the BLuetoothDevice object
         	    	//BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         	    	// Attempt to connect to the device
