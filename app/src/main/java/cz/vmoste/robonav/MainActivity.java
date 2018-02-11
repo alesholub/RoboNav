@@ -8,7 +8,7 @@ RoboNav = visual navigation for mobile robot (OpenCV + BlueTerm) [author's email
 - application sends bluetooth commands to robot (see below) [so you need a bluetooth enabled robot]
 - RoboNav.apk is targeted for Android 2.3.3 Gingerbread (API level 10) [it also runs in higher versions of Android]
 - RoboNav.apk requires OpenCV Manager installed on your Android system
-- development environment is Eclipse ADT and OpenCV 3.4.0
+- development environment is Android Studio and OpenCV 3.4.0
 - for proper function, you have to put map file RoboNavMap.txt (see map format below) into SD card root
 - for conversion from OSM file to RoboNavMap.txt is my online tool at http://www.vmoste.cz/RoboNav/maps/index.php 
 - application at startup tries to connect to a paired and active bluetooth device nearby
@@ -130,6 +130,7 @@ V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
 V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V2.0.0.00 2018-02-11 migration to Android Studio 3
 V1.9.9.03 2018-02-04 searchmode 4 (Road Assistance) for object tracking demo, better BT state indication
 V1.9.9.02 2018-01-05 logging OpenCVLoader.OPENCV_VERSION
 V1.9.9.01 2018-01-04 transition to OpenCV 3.4.0
