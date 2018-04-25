@@ -2,8 +2,8 @@
 <resources>
     
     <string name="app_name">RoboNav</string>
-    <string name="app_version">2.0.0</string>
-    <string name="app_date">- 11.2.2018 (AndroidStudio)</string>
+    <string name="app_version">2.0.1</string>
+    <string name="app_date">- 25.4.2018 (stability)</string>
     
 	<string name="alert_dialog_no_bt">Cannot use this application without bluetooth.</string>
 	<string name="alert_dialog_yes">Yes</string>

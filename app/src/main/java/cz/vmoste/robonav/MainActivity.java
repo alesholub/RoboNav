@@ -123,13 +123,13 @@ b=backObstacleRange, p=payload, w=pwm
 - probability and artificial intelligence
 
 **Changelog:**
-V1.9.?.?? 201?-??-?? 
-V1.9.?.?? 201?-??-?? A* algorithm for path planning (according to map)
-V1.9.?.?? 201?-??-?? optimized user interface (buttons, HUD)
-V1.9.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for buttons)
-V1.9.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression) 
-V1.9.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
-V1.9.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V?.?.?.?? 201?-??-??
+V?.?.?.?? 201?-??-?? A* algorithm for path planning (according to map)
+V?.?.?.?? 201?-??-?? optimized user interface (buttons, HUD)
+V?.?.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for buttons)
+V?.?.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression)
+V?.?.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
+V?.?.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
 V2.0.0.00 2018-02-11 migration to Android Studio 3
 V1.9.9.03 2018-02-04 searchmode 4 (Road Assistance) for object tracking demo, better BT state indication
 V1.9.9.02 2018-01-05 logging OpenCVLoader.OPENCV_VERSION
@@ -3475,7 +3475,9 @@ class EmulatorView extends View implements GestureDetector.OnGestureListener {
      * @param length the number of bytes to process
      */
     public void append(byte[] buffer, int base, int length) {
-        mEmulator.append(buffer, base, length);
+        if (mEmulator!=null) {
+            mEmulator.append(buffer, base, length);
+        }
         ensureCursorVisible();
         invalidate();
     }

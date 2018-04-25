@@ -1804,11 +1804,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	edge = edges.get(i);
                 	int p1 = edge[0];
                 	int p2 = edge[1];
-                	tmpx0 = (points.get(p1).x - centLon)*multLon+w/2;
-                	tmpy0 = (centLat - points.get(p1).y)*multLat+h/2;
-                	tmpx = (points.get(p2).x - centLon)*multLon+w/2;
-                	tmpy = (centLat - points.get(p2).y)*multLat+h/2;
-            		Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,0,255),2);
+                	if (p1<points.size() && p2<points.size()) {
+						tmpx0 = (points.get(p1).x - centLon)*multLon+w/2;
+						tmpy0 = (centLat - points.get(p1).y)*multLat+h/2;
+						tmpx = (points.get(p2).x - centLon)*multLon+w/2;
+						tmpy = (centLat - points.get(p2).y)*multLat+h/2;
+						Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,0,255),2);
+					}
                 }
             	// add goals to mRgba
                 for (int i=0; i<goals.size(); i++) {
