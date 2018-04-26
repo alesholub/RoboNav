@@ -1640,11 +1640,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 //Core.add(mRgba, new Scalar(100), mRgba);
                 //Core.add(mRgba, channels.get(0), mRgba);
                 //Core.merge(channels, mRgba);
-                try {
-                	Imgproc.drawContours(mRgba, mContours, 0, new Scalar(255,0,0), 4);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+				if (mContours!=null && mRgba!=null && mContours.size()>0) {
+					try {
+						Imgproc.drawContours(mRgba, mContours, 0, new Scalar(255,0,0), 4);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
             	//if (mRgba!=null && mContours!=null && mContours.size()>0) Imgproc.drawContours(mRgba, mContours, 0, new Scalar(255,0,0), 4);
             	//if (debugMode>=0) Core.putText(mRgba, ""+mLevel+" "+cameraDirection+" "+" "+Math.round(drivingSignal)+" "+mod4, new Point(w/6,h-h/6), 1, siz*2, new Scalar(255,255,50), wi*3);
             	mTxt1 = ""+String.format("%4d", (int)azimuthOK);
@@ -1794,46 +1796,58 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	tmpy = 0;
         	if (inputMode<2 && searchMode<=3) {
             	// add map points to mRgba
-                for (int i=0; i<points.size(); i++) {
-                	tmpx = (points.get(i).x - centLon)*multLon+w/2;
-                	tmpy = (centLat - points.get(i).y)*multLat+h/2;
-            		Imgproc.circle(mRgba, new Point(tmpx,tmpy), 4, new Scalar(0,0,255),-1);
-                }
-            	// add edges to mRgba
-                for (int i=0; i<edges.size(); i++) {
-                	edge = edges.get(i);
-                	int p1 = edge[0];
-                	int p2 = edge[1];
-                	if (p1<points.size() && p2<points.size()) {
-						tmpx0 = (points.get(p1).x - centLon)*multLon+w/2;
-						tmpy0 = (centLat - points.get(p1).y)*multLat+h/2;
-						tmpx = (points.get(p2).x - centLon)*multLon+w/2;
-						tmpy = (centLat - points.get(p2).y)*multLat+h/2;
-						Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,0,255),2);
+				if (points!=null) {
+					for (int i=0; i<points.size(); i++) {
+						tmpx = (points.get(i).x - centLon)*multLon+w/2;
+						tmpy = (centLat - points.get(i).y)*multLat+h/2;
+						Imgproc.circle(mRgba, new Point(tmpx,tmpy), 4, new Scalar(0,0,255),-1);
 					}
-                }
+				}
+            	// add edges to mRgba
+				if (edges!=null) {
+					for (int i=0; i<edges.size(); i++) {
+						edge = edges.get(i);
+						int p1 = edge[0];
+						int p2 = edge[1];
+						if (p1<points.size() && p2<points.size()) {
+							tmpx0 = (points.get(p1).x - centLon)*multLon+w/2;
+							tmpy0 = (centLat - points.get(p1).y)*multLat+h/2;
+							tmpx = (points.get(p2).x - centLon)*multLon+w/2;
+							tmpy = (centLat - points.get(p2).y)*multLat+h/2;
+							Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,0,255),2);
+						}
+					}
+				}
             	// add goals to mRgba
-                for (int i=0; i<goals.size(); i++) {
-                	tmpx = (goals.get(i).x - centLon)*multLon+w/2;
-                	tmpy = (centLat - goals.get(i).y)*multLat+h/2;
-            		Imgproc.circle(mRgba, new Point(tmpx+3,tmpy+0), 4, new Scalar(255,0,0),-1);
-                	Imgproc.putText(mRgba, ""+i+"/"+goalPoints.get(i)[0], new Point(tmpx,tmpy), 1, siz, new Scalar(255,255,255), wi);
-                }
+				if (goals!=null) {
+					for (int i=0; i<goals.size(); i++) {
+						tmpx = (goals.get(i).x - centLon)*multLon+w/2;
+						tmpy = (centLat - goals.get(i).y)*multLat+h/2;
+						Imgproc.circle(mRgba, new Point(tmpx+3,tmpy+0), 4, new Scalar(255,0,0),-1);
+						if (i<goalPoints.size()) {
+							Imgproc.putText(mRgba, ""+i+"/"+goalPoints.get(i)[0], new Point(tmpx,tmpy), 1, siz, new Scalar(255,255,255), wi);
+						}
+					}
+				}
             	// add path to mRgba
-                for (int i=0; i<path.size(); i++) {
-                	tmpx = (path.get(i).x - centLon)*multLon+w/2+1;
-                	tmpy = (centLat - path.get(i).y)*multLat+h/2+1;
-                	if (i==wp) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 10, new Scalar(200,200,200),-1);
-                	if (wpModes.get(i)[0]==1) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 5, new Scalar(255,153,0),-1);
-                	else if (wpModes.get(i)[0]==2) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 6, new Scalar(255,0,0),-1);
-                	else Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 4, new Scalar(0,255,0),-1);
-            		if (i>0) {
-            			if (i==wp) Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(255,165,0),4);
-            			else Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,255,0),1);
-            		}
-            		tmpx0 = tmpx;
-            		tmpy0 = tmpy;
-                }
+				if (path!=null) {
+					for (int i=0; i<path.size(); i++) {
+						tmpx = (path.get(i).x - centLon)*multLon+w/2+1;
+						tmpy = (centLat - path.get(i).y)*multLat+h/2+1;
+						if (i==wp) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 10, new Scalar(200,200,200),-1);
+						if (i<wpModes.size()) {
+							if (wpModes.get(i)[0]==1) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 5, new Scalar(255,153,0),-1);
+							else if (wpModes.get(i)[0]==2) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 6, new Scalar(255,0,0),-1);
+							else Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 4, new Scalar(0,255,0),-1);
+						}
+						if (i>0) {
+							if (i==wp) Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(255,165,0),4);
+							else Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,255,0),1);
+						}
+						tmpx0 = tmpx;
+						tmpy0 = tmpy;
+					}
+				}
             	// add actual GPS position to mRgba
                 if (latOK>30f) {
                 	tmpx = (lonOK - centLon)*multLon+w/2;
