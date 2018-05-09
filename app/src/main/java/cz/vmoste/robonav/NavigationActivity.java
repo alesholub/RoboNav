@@ -136,8 +136,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     private static String address2 = "00:00:00:00:00:00";
     private static String allowedAddresses = "";
     private static String connectedAddress = "";
-	private static String commandsTable0 = "lrswfbhkptn";
-	private static String commandsTable = "lrswfbhkptn";
+	private static String commandsTable0 = "lrswfbhkptnqe";
+	private static String commandsTable = "lrswfbhkptnqe";
 	private static String telemetryTable = "   ... hhh ...  ... ... fff ddd sss ... aaaaaaaa oooooooo lll rrr bbb www";
 	private static Map<Character, Character> commandsMap = new HashMap<Character, Character>();
 	private SharedPreferences mPrefs;
@@ -915,7 +915,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	buttonTouched = 1;
     	    return false;
         }
-        else if ((x<corner) && (y>(rows-corner))) {
+        else if ((x<corner) && (y>(rows-corner)) && searchMode>0) {
         	// debugMode corner (bottom left)
         	if (searchMode>0) {
             	if (inputMode==1) {
@@ -1178,9 +1178,17 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	// manual control
         	buttonTouched = 0;
             if (x<=(1.5*w/10)) {
-            	// turn
-    	    	out[0] = 't';
+            	// top (left) row
+    	    	out[0] = 't'; // turn
             	buttonTouched = 11;
+				if (y>(2*h/3)) {
+					buttonTouched = 12;
+                    out[0] = 'q'; // adjust center to the left
+				}
+				else if (y<(1*h/3)) {
+					buttonTouched = 13;
+                    out[0] = 'e'; // adjust center to the right
+				}
             } else if (x<=(3*w/10)) {
             	// speed
     	    	out[0] = (byte)('0'+10*(h-y-h/20)/h);
@@ -1450,9 +1458,18 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		ptb.x = cw+bw/2; ptb.y = ch+bh/2;
         		mColor = new Scalar(128,128,128);
             	Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
-            	tx = "t";
+            	tx = "e";
             	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
             	Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
+				cw = (int)(0.5*w)/10;
+				ch = 5*h/6;
+				pta.x = cw-bw/4; pta.y = ch-bh/2;
+				ptb.x = cw+bw/2; ptb.y = ch+bh/2;
+				mColor = new Scalar(128,128,128);
+				Imgproc.rectangle(mRgba, pta, ptb, mColor, -1);
+				tx = "q";
+				textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+				Imgproc.putText(mRgba, tx, new Point(cw-2*siz,ch+2*siz), 1, 2*siz, new Scalar(255,255,255), 2*wi);
                 //Imgproc.transpose(mRgba, mRgba);
                 //w = h;
                 //h = mTmp;
@@ -2239,6 +2256,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	else if (command=='p') txtCommand = "drop";
     	else if (command=='o') txtCommand = "load";
     	else if (command=='t') txtCommand = "turn";
+		else if (command=='q') txtCommand = "q";
+		else if (command=='e') txtCommand = "e";
     	else if (command=='$') txtCommand = "finish";
     	else if (command=='n') txtCommand = "new azimuth";
     	else if (command>='0' && command<='9') txtCommand = ""+command;
@@ -3134,37 +3153,85 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	// - avoiding, turnAngleToAvoidObstacle
 
     	if (searchMode==3) {
-    		// RoboTour (simple algorithm since 2017-12-30)
+			// RoboTour (simple algorithm since 2017-12-30)
 			mText += "RT";
-    		// drive to waypoint
-            if (turnAngleToNextWaypoint<-limit2) mCommand = 'l'; // extra left
-			else if (turnAngleToNextWaypoint<=-limit1) mCommand = 'h'; // slightly left
-			else if (turnAngleToNextWaypoint>limit2) mCommand = 'r'; // extra right
-			else if (turnAngleToNextWaypoint>=limit1) mCommand = 'k'; // slightly right
-            // stay on road
-            drivingSignal = directionOK;
-			if (mod6<=1) {
-	            // by direction to blob centroid
-	            drivingSignal = direction;
-  				mText += "c";
-			} else if (mod6<=3) {
-	            // by topDirection
-	            drivingSignal = topDirection;
-  				mText += "t";
+			// drive to waypoint
+			if (turnAngleToNextWaypoint < -limit2) mCommand = 'l'; // extra left
+			else if (turnAngleToNextWaypoint <= -limit1) mCommand = 'h'; // slightly left
+			else if (turnAngleToNextWaypoint > limit2) mCommand = 'r'; // extra right
+			else if (turnAngleToNextWaypoint >= limit1) mCommand = 'k'; // slightly right
+			// stay on road
+			drivingSignal = directionOK;
+			if (mod6 <= 1) {
+				// by direction to blob centroid
+				drivingSignal = direction;
+				mText += "c";
+			} else if (mod6 <= 3) {
+				// by topDirection
+				drivingSignal = topDirection;
+				mText += "t";
 			}
-            if (drivingSignal<-limit2) mCommand = 'l'; // extra left
+			if (drivingSignal < -limit2) mCommand = 'l'; // extra left
+			else if (drivingSignal <= -limit1) mCommand = 'h'; // slightly left
+			else if (drivingSignal > limit2) mCommand = 'r'; // extra right
+			else if (drivingSignal >= limit1) mCommand = 'k'; // slightly right
+			// avoid obstacle
+			if (avoiding > 0 || Math.abs(turnAngleToAvoidObstacle) > 1.0) {
+				// avoiding, so drive by turnAngleToAvoidObstacle
+				mText += "avo";
+				if (turnAngleToAvoidObstacle < -170.0) mCommand = 's';
+				else if (turnAngleToAvoidObstacle > 170.0) mCommand = 'b';
+				else if (turnAngleToAvoidObstacle > 30.0) mCommand = 'r';
+				else if (turnAngleToAvoidObstacle < -30.0) mCommand = 'l';
+			}
+		} else if (searchMode==1) {
+    		// Robotem rovne (since 2018-05-09)
+			// 1. stay on road
+			//drivingSignal = turnAngleToStayOnRoad;
+            if (mod6<2) {
+                drivingSignal = topDirection;
+                mText += "T";
+            } else if (mod6<4) {
+                directionOK = (int)Math.round(topDirection * 0.5 + cameraProbability * cameraDirection * 0.005);
+                drivingSignal = directionOK;
+                mText += "X";
+            } else {
+                drivingSignal = cameraDirection;
+                mText += "O";
+            }
+
+			if ((mod6%2)==1) {
+				drivingSignal += azimDiff/2;
+				mText += "C";
+			}
+
+			if (drivingSignal<-limit2) mCommand = 'l'; // extra left
 			else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
 			else if (drivingSignal>limit2) mCommand = 'r'; // extra right
 			else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
-            // avoid obstacle
-      		if (avoiding>0 || Math.abs(turnAngleToAvoidObstacle)>1.0) {
-    			// avoiding, so drive by turnAngleToAvoidObstacle
-    			mText += "avo";
-                if (turnAngleToAvoidObstacle<-170.0) mCommand = 's';
-    			else if (turnAngleToAvoidObstacle>170.0) mCommand = 'b';
-    			else if (turnAngleToAvoidObstacle>30.0) mCommand = 'r';
-    			else if (turnAngleToAvoidObstacle<-30.0) mCommand = 'l';
-            }
+
+			// 4. sanitize command (restrictions and stabilization)
+			if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
+			else if (" hl".indexOf(mCommand)>0 && mLeftOK<1) mCommand = 'w'; // can't turn left
+			if (mPrevCommand=='b' && mCommand!='b') {mCommand = 's'; state="stop";}
+			if (mCommand=='b' && mPrevCommand!='b' && mPrevCommand!='s') mCommand = 's';
+			if ((searchMode==1 || searchMode>=2) && mCommand=='-') mCommand = 'w'; // normal mCommand for RR & RO is "forward"
+			if (" lhkr-".indexOf(""+mCommand)>0 && state=="normal" && btSpd<1 && btValid>0) mCommand = 'w'; // forward (if speed is 0)
+			if (mCommand=='w' && state=="stop") state = "normal";
+			if (searchMode>=1) {
+				// stabilization
+				numCleanCommands++;
+				if (mCommand!='w') {
+					// stabilize only few times and only if course is almost OK
+					//if (numCleanCommands<3 && Math.abs(turnAngleToNextWaypoint)<30.0) mCommand = 'w';
+					if (numCleanCommands<3 && Math.abs(azimDiff)<30.0) mCommand = 'w';
+					else {
+						numCleanCommands = 0;
+						if (btSpd>160 || searchMode>1 ) numCleanCommands = 1;
+					}
+
+				}
+			}
     	} else {
         	// since 2017-06-20
         	// 1. stay on road
