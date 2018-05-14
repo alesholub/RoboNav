@@ -172,7 +172,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static int btRngRightR = 99; // right sonar range from bluetooth
 	private static int btRngBack = 99; // IR range from bluetooth
 	private static int btPayload = 0; // actual number of payloads
-    private boolean  stopped = false;
+    private static boolean stopped = false;
     private static double lat = 0.0;
     private static double lon = 0.0;
     private static float accuracy = 888;
@@ -2351,7 +2351,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         return val;
     }
 
-    public void appendLog(String text)
+    public static void appendLog(String text)
     {
     	if (!stopped) {
     	       File sdCard = Environment.getExternalStorageDirectory();

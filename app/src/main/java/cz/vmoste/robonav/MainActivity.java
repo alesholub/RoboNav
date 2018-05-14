@@ -130,7 +130,8 @@ V?.?.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V?.?.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression)
 V?.?.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V?.?.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
-V2.0.1.00 2018-05-19 better RR mode
+V2.0.1.01 2018-05-14 BT connect to known addresses only
+V2.0.1.00 2018-05-09 better RR mode
 V2.0.0.02 2018-04-26 more stability
 V2.0.0.00 2018-02-11 migration to Android Studio 3
 V1.9.9.03 2018-02-04 searchmode 4 (Road Assistance) for object tracking demo, better BT state indication
@@ -405,8 +406,8 @@ public class MainActivity extends Activity {
                 BluetoothDevice device = (BluetoothDevice) intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
     	    	//Toast.makeText(getApplicationContext(), "BT device found: "+device.getAddress(), Toast.LENGTH_SHORT).show();
                 
-                //if (btAllowed.indexOf(device.getAddress())>0) {
-                if (true) {
+                if (btAllowed.length()<15 || btAllowed.indexOf(device.getAddress())>0) {
+                //if (true) {
         	    	if (mBluetoothAdapter.isDiscovering()) {
         	    		mBluetoothAdapter.cancelDiscovery();
         	    	}
@@ -415,6 +416,7 @@ public class MainActivity extends Activity {
         	    	NavigationActivity.setConnectedAddress(address);
         	    	String robotName = NavigationActivity.getRobotName();
         	    	Toast.makeText(getApplicationContext(), "Connect to: "+address+"/"+deviceName+" ("+robotName+")", Toast.LENGTH_SHORT).show();
+                    NavigationActivity.appendLog("BT connect to: "+address+"/"+deviceName+" ("+robotName+")");
         	    	// Get the BLuetoothDevice object
         	    	//BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         	    	// Attempt to connect to the device
