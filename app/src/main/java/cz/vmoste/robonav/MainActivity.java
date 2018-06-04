@@ -130,6 +130,7 @@ V?.?.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V?.?.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression)
 V?.?.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V?.?.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V2.0.1.02 2018-06-04 10 test maps (0 - 9), then named maps for RoboOrienteering
 V2.0.1.01 2018-05-14 BT connect to known addresses only
 V2.0.1.00 2018-05-09 better RR mode
 V2.0.0.02 2018-04-26 more stability

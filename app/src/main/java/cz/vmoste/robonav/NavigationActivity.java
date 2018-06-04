@@ -317,8 +317,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static String testTxt = "";
    	private int shortNum = 0;
 	private static String robotName = "robot";
-	String[] maps = {"t0","t1","t2","t3","0A","1A","1B","1C","1D","1E","1F","2A","2B","2C","2D","2E","2F","3A","3B","3C","3D","3E","3F"};	
-	
+	//String[] maps = {"t0","t1","t2","t3","0A","1A","1B","1C","1D","1E","1F","2A","2B","2C","2D","2E","2F","3A","3B","3C","3D","3E","3F"};
+	String[] maps = {"t0","t1","t2","t3","t4","t5","t6","t7","t8","t9","0","A","B","C","D","E","F","G","H","CH","I"};
+
 	private static Rect mBoundingRectangle = null;
 	//private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
 	private List<MatOfPoint> mContours = null;
