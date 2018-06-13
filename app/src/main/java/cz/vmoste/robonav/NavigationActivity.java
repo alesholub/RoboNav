@@ -318,7 +318,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
    	private int shortNum = 0;
 	private static String robotName = "robot";
 	//String[] maps = {"t0","t1","t2","t3","0A","1A","1B","1C","1D","1E","1F","2A","2B","2C","2D","2E","2F","3A","3B","3C","3D","3E","3F"};
-	String[] maps = {"t0","t1","t2","t3","t4","t5","t6","t7","t8","t9","0","A","B","C","D","E","F","G","H","CH","I"};
+	String[] maps = {"t0","t1","t2","t3","t4","t5","t6","t7","t8","t9","0","A","B","C","D","E","F","G","H","CH","I","A2","B2","C2","D2","E2","F2","G2","H2","CH2","I2"};
 
 	private static Rect mBoundingRectangle = null;
 	//private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
@@ -1703,6 +1703,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                	textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	//if (debugMode>=0) Imgproc.putText(mRgba, ""+mTxt1+" "+mTxt2+" "+" "+mTxt3+" "+mTxt4+" "+mTxt5+" "+mTxt6+" "+mTxt7, new Point(1,0.7*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
             	if (searchMode==4) Imgproc.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
+				else if (searchMode==2) Imgproc.putText(mRgba, ""+mTxt4, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
             	if (debugMode>0) {
             		//Imgproc.putText(mRgba, ""+mTxt1, new Point((w-textSize.width)/2,0.9*h), 1, siz*1.4, new Scalar(255,255,50), 14*wi/10);
             	}
@@ -1813,65 +1814,69 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	tmpx = 0;
         	tmpy = 0;
         	if (inputMode<2 && searchMode<=3) {
-            	// add map points to mRgba
-				if (points!=null) {
-					for (int i=0; i<points.size(); i++) {
-						tmpx = (points.get(i).x - centLon)*multLon+w/2;
-						tmpy = (centLat - points.get(i).y)*multLat+h/2;
-						Imgproc.circle(mRgba, new Point(tmpx,tmpy), 4, new Scalar(0,0,255),-1);
-					}
-				}
-            	// add edges to mRgba
-				if (edges!=null) {
-					for (int i=0; i<edges.size(); i++) {
-						edge = edges.get(i);
-						int p1 = edge[0];
-						int p2 = edge[1];
-						if (p1<points.size() && p2<points.size()) {
-							tmpx0 = (points.get(p1).x - centLon)*multLon+w/2;
-							tmpy0 = (centLat - points.get(p1).y)*multLat+h/2;
-							tmpx = (points.get(p2).x - centLon)*multLon+w/2;
-							tmpy = (centLat - points.get(p2).y)*multLat+h/2;
-							Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,0,255),2);
+        		try {
+					// add map points to mRgba
+					if (points!=null && points.size()>0) {
+						for (int i=0; i<points.size(); i++) {
+							tmpx = (points.get(i).x - centLon)*multLon+w/2;
+							tmpy = (centLat - points.get(i).y)*multLat+h/2;
+							Imgproc.circle(mRgba, new Point(tmpx,tmpy), 4, new Scalar(0,0,255),-1);
 						}
 					}
-				}
-            	// add goals to mRgba
-				if (goals!=null) {
-					for (int i=0; i<goals.size(); i++) {
-						tmpx = (goals.get(i).x - centLon)*multLon+w/2;
-						tmpy = (centLat - goals.get(i).y)*multLat+h/2;
-						Imgproc.circle(mRgba, new Point(tmpx+3,tmpy+0), 4, new Scalar(255,0,0),-1);
-						if (i<goalPoints.size()) {
-							Imgproc.putText(mRgba, ""+i+"/"+goalPoints.get(i)[0], new Point(tmpx,tmpy), 1, siz, new Scalar(255,255,255), wi);
+					// add edges to mRgba
+					if (edges!=null && edges.size()>0) {
+						for (int i=0; i<edges.size(); i++) {
+							edge = edges.get(i);
+							int p1 = edge[0];
+							int p2 = edge[1];
+							if (p1<points.size() && p2<points.size()) {
+								tmpx0 = (points.get(p1).x - centLon)*multLon+w/2;
+								tmpy0 = (centLat - points.get(p1).y)*multLat+h/2;
+								tmpx = (points.get(p2).x - centLon)*multLon+w/2;
+								tmpy = (centLat - points.get(p2).y)*multLat+h/2;
+								Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,0,255),2);
+							}
 						}
 					}
-				}
-            	// add path to mRgba
-				if (path!=null) {
-					for (int i=0; i<path.size(); i++) {
-						tmpx = (path.get(i).x - centLon)*multLon+w/2+1;
-						tmpy = (centLat - path.get(i).y)*multLat+h/2+1;
-						if (i==wp) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 10, new Scalar(200,200,200),-1);
-						if (i<wpModes.size()) {
-							if (wpModes.get(i)[0]==1) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 5, new Scalar(255,153,0),-1);
-							else if (wpModes.get(i)[0]==2) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 6, new Scalar(255,0,0),-1);
-							else Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 4, new Scalar(0,255,0),-1);
+					// add goals to mRgba
+					if (goals!=null) {
+						for (int i=0; i<goals.size(); i++) {
+							tmpx = (goals.get(i).x - centLon)*multLon+w/2;
+							tmpy = (centLat - goals.get(i).y)*multLat+h/2;
+							Imgproc.circle(mRgba, new Point(tmpx+3,tmpy+0), 4, new Scalar(255,0,0),-1);
+							if (i<goalPoints.size()) {
+								Imgproc.putText(mRgba, ""+i+"/"+goalPoints.get(i)[0], new Point(tmpx,tmpy), 1, siz, new Scalar(255,255,255), wi);
+							}
 						}
-						if (i>0) {
-							if (i==wp) Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(255,165,0),4);
-							else Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,255,0),1);
-						}
-						tmpx0 = tmpx;
-						tmpy0 = tmpy;
 					}
+					// add path to mRgba
+					if (path!=null) {
+						for (int i=0; i<path.size(); i++) {
+							tmpx = (path.get(i).x - centLon)*multLon+w/2+1;
+							tmpy = (centLat - path.get(i).y)*multLat+h/2+1;
+							if (i==wp) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 10, new Scalar(200,200,200),-1);
+							if (i<wpModes.size()) {
+								if (wpModes.get(i)[0]==1) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 5, new Scalar(255,153,0),-1);
+								else if (wpModes.get(i)[0]==2) Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 6, new Scalar(255,0,0),-1);
+								else Imgproc.circle(mRgba, new Point(tmpx-3,tmpy-0), 4, new Scalar(0,255,0),-1);
+							}
+							if (i>0) {
+								if (i==wp) Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(255,165,0),4);
+								else Imgproc.line(mRgba, new Point(tmpx0,tmpy0), new Point(tmpx,tmpy), new Scalar(0,255,0),1);
+							}
+							tmpx0 = tmpx;
+							tmpy0 = tmpy;
+						}
+					}
+					// add actual GPS position to mRgba
+					if (latOK>30f) {
+						tmpx = (lonOK - centLon)*multLon+w/2;
+						tmpy = (centLat - latOK)*multLat+h/2;
+						Imgproc.circle(mRgba, new Point(tmpx,tmpy), 6, new Scalar(255,0,0),-1);
+					}
+				} catch (Exception e) {
+					//e.printStackTrace();
 				}
-            	// add actual GPS position to mRgba
-                if (latOK>30f) {
-                	tmpx = (lonOK - centLon)*multLon+w/2;
-                	tmpy = (centLat - latOK)*multLat+h/2;
-            		Imgproc.circle(mRgba, new Point(tmpx,tmpy), 6, new Scalar(255,0,0),-1);
-                }
         	}
         	mColor = RED;
         	tx = ""+fileNumber;
@@ -2879,7 +2884,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		// waypoint navigation
 	  		if (wpDist>0 && wpDist<999 && searchMode>1 && state!="end") {
 	  			// if orange cone is close (at RO), then drop payload (waypoint is reached)
-	  			if (searchMode==2 && wpMode>0 && distanceToNextWaypoint<15 && state!="drop" && ((mBoundingRectangle.height>h/3) || (mBoundingRectangle.height>h/4 && mBoundingRectangle.y>(h/2)))) {
+	  			if (searchMode==2 && wpMode>0 && distanceToNextWaypoint<15 && state!="drop" && ((mBoundingRectangle.height>h/4) || (mBoundingRectangle.height>h/5 && mBoundingRectangle.y>(h/2)))) {
 	  				state = "drop";
 	  				tmpSec0 = 0;
 	  				say("cone");
@@ -2954,6 +2959,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		    		} else if (((tmpSec0-tmpSec))<=4) {
 	  		    			state = "drop";
 		  		    		mCommand = 'r'; // right
+							//mCommand = 'w'; // forward (test 12.6.2018)
 		  		    		//if (blobDirection>30) mCommand = 'l';
 		  		    		return;
 	  		    		} else if (((tmpSec0-tmpSec))<=5) {
@@ -2968,12 +2974,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		    		} else if (((tmpSec0-tmpSec))<=7) {
 	  		    			state = "drop";
 		  		    		mCommand = 'l'; // left
-		  		    		if (turnAngleToNextWaypoint>0) mCommand = 'r';
+		  		    		if (turnAngleToNextWaypoint>20) mCommand = 'r';
 		  		    		return;
 	  		    		} else if (((tmpSec0-tmpSec))<=8) {
 	  		    			state = "drop";
 		  		    		mCommand = 'l'; // left
-		  		    		if (turnAngleToNextWaypoint>0) mCommand = 'r';
+		  		    		if (turnAngleToNextWaypoint>20) mCommand = 'r';
 		  		    		return;
 	  		    		} else if (((tmpSec0-tmpSec))>=9) {
 	  		    			state = "normal";
@@ -3293,10 +3299,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
        	    // navigation to orange cone
     		if (wpMode>0 && searchMode==2 && distanceToNextWaypoint<19 && state!="drop" && mBoundingRectangle.height>(h/100)) {
-    			if (blobDirection<-30) mCommand = 'l';
-    			else if (blobDirection<-10) mCommand = 'h';
-    			else if (blobDirection>30) mCommand = 'r';
-    			else if (blobDirection>10) mCommand = 'k';
+      			int coneDirection = blobDirection;
+      			//if (mBoundingRectangle.height>(h/8)) coneDirection += 20;
+    			if (coneDirection<-30) mCommand = 'l';
+    			else if (coneDirection<-10) mCommand = 'h';
+    			else if (coneDirection>30) mCommand = 'r';
+    			else if (coneDirection>10) mCommand = 'k';
     			else mCommand = 'w';
     			mText += "cone";
     		}

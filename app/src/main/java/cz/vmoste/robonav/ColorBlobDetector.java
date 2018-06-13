@@ -208,14 +208,14 @@ public class ColorBlobDetector {
 			if (mOrientation==2) {
 				// landscape
         		//direction = (int)Math.round(Math.toDegrees(Math.atan((x3-(w/2))/(h-y3))));
-				direction = 200*(x-w/2)/w + 100*mBoundingRectangle.height/h;
-				blobDirection = 100*(x-w/2)/w;
+				direction = 200*(x-w/2)/w + 80*mBoundingRectangle.height/h;
+				blobDirection = 200*(x-w/2)/w;
 			} else {
 				// portrait
         		//direction = (int)Math.round(Math.toDegrees(Math.atan((h/2-y3)/(w-x3))));
 //        		endPoint = new Point(w,h/2);
-				direction = 200*(h/2-y)/h + 100*mBoundingRectangle.width/w;
-				blobDirection = 100*(h/2-y)/h;
+				direction = 200*(h/2-y)/h + 80*mBoundingRectangle.width/w;
+				blobDirection = 180*(h/2-y)/h;
 			}
         }
 		//mResultMat = mRgba;
