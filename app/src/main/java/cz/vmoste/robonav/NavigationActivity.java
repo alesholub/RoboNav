@@ -52,9 +52,12 @@ import org.opencv.imgproc.Imgproc;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 //import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -320,6 +323,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	//String[] maps = {"t0","t1","t2","t3","0A","1A","1B","1C","1D","1E","1F","2A","2B","2C","2D","2E","2F","3A","3B","3C","3D","3E","3F"};
 	String[] maps = {"t0","t1","t2","t3","t4","t5","t6","t7","t8","t9","0","A","B","C","D","E","F","G","H","CH","I","A2","B2","C2","D2","E2","F2","G2","H2","CH2","I2"};
 
+	private static final int ACTIVITY_RESULT_QR_DRDROID = 0;
+
 	private static Rect mBoundingRectangle = null;
 	//private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
 	private List<MatOfPoint> mContours = null;
@@ -365,7 +370,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	mObstacleDetector.setLevel(mLevel);
     	mColorDetector.setLevel(mLevel);
     }
-    
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		//Nothing
+	}
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -730,7 +741,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     public void onCameraViewStopped() {
         appendLog("cameraStop");
-        finish();
+        //finish();
     }
 
     public boolean onTouchEvent(MotionEvent event) {
@@ -940,7 +951,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	if (voiceOutput>0) say("debug "+debugMode);
             	buttonTouched = 2;
         	    return false;
-        	}
+			}
         }
         else if ((x<2*corner) && (y>(rows-corner))) {
         	// next corner (bottom left next to debug)
@@ -1184,7 +1195,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	buttonTouched = 11;
 				if (y>(2*h/3)) {
 					buttonTouched = 12;
+                    appendLog("QR Droid external call");
                     out[0] = 'q'; // adjust center to the left
+					Intent returnIntent = new Intent();
+					//returnIntent.putExtra("result",result);
+					setResult(Activity.RESULT_OK,returnIntent);
+					finish();
 				}
 				else if (y<(1*h/3)) {
 					buttonTouched = 13;

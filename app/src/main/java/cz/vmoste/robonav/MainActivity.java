@@ -130,6 +130,7 @@ V?.?.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V?.?.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression)
 V?.?.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V?.?.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V2.0.2.01 2018-07-12 QR Droid services integration (tests)
 V2.0.1.04 2018-06-13 another cone navigation method
 V2.0.1.03 2018-06-12 more named maps for RoboOrienteering (A2 - I2), better cone navigation
 V2.0.1.02 2018-06-04 10 test maps (0 - 9), then named maps for RoboOrienteering (A - I)
@@ -203,6 +204,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -369,6 +371,9 @@ public class MainActivity extends Activity {
     public static final int BLACK = 0xff000000;
     public static final int BLUE = 0xff344ebd;
 
+    private static final int ACTIVITY_RESULT_QR_DRDROID = 0;
+    private static final int ACTIVITY_RESULT_NAVIGATION = 9;
+
     private static final int[][] COLOR_SCHEMES = {
         {BLACK, WHITE}, {WHITE, BLACK}, {WHITE, BLUE}};
 
@@ -517,7 +522,8 @@ public class MainActivity extends Activity {
 
 	    // autostart of NavigationActivity
     	Intent intent = new Intent(this, NavigationActivity.class);
-    	startActivity(intent);
+    	//startActivity(intent);
+        startActivityForResult(intent, ACTIVITY_RESULT_NAVIGATION);
     	NavigationActivity.setSearchMode(mSearchMode);
     	NavigationActivity.setLevel(mThresholdLimit);
     	NavigationActivity.setArea(mMinArea);
@@ -650,6 +656,29 @@ public class MainActivity extends Activity {
         finish();
         
 	}
+
+	public void scanQrCode() {
+        Toast.makeText(getApplicationContext(), "QR Droid Intent 3", Toast.LENGTH_SHORT).show();
+        //Create a new Intent to send to QR Droid
+        Intent qrDroid = new Intent("la.droid.qr.scan"); //Set action "la.droid.qr.scan"
+
+        //Check whether a complete or displayable result is needed
+        //if( spinner.getSelectedItemId()==0 ) { //First item selected ("Complete content")
+        //	//Notify we want complete results (default is FALSE)
+        //	qrDroid.putExtra( Services.COMPLETE , true);
+        //}
+
+        //Send intent and wait result
+        try {
+            startActivityForResult(qrDroid, 0);
+            Toast.makeText(getApplicationContext(), "Start scan 3", Toast.LENGTH_SHORT).show();
+        } catch (ActivityNotFoundException activity) {
+            //Services.qrDroidRequired(Scan.this);
+            //TODO: Ask user to get “QR Droid” or “QR Droid Private” from http://qrdroid.com/get.php
+            Toast.makeText(getApplicationContext(), "NO QR Droid 3", Toast.LENGTH_SHORT).show();
+        }
+
+    }
 
     private void readPrefs() {
         mLocalEcho = mPrefs.getBoolean(LOCALECHO_KEY, mLocalEcho);
@@ -859,7 +888,30 @@ public class MainActivity extends Activity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(DEBUG) Log.d(LOG_TAG, "onActivityResult " + resultCode);
         switch (requestCode) {
-        
+
+        case ACTIVITY_RESULT_NAVIGATION:
+            if (resultCode == Activity.RESULT_OK) {
+                // TODO: save state of the NavigationActivity (searcMode, i, state)
+                scanQrCode();
+            }
+            break;
+
+        case ACTIVITY_RESULT_QR_DRDROID:
+            if(null!=data && data.getExtras()!=null ) {
+                //Read result from QR Droid (it's stored in la.droid.qr.result)
+                String result = data.getExtras().getString("la.droid.qr.result");
+                //Just set result to EditText to be able to view it
+                //EditText resultTxt = ( EditText ) findViewById(R.id.result);
+                //resultTxt.setText( result );
+                //resultTxt.setVisibility(View.VISIBLE);
+                Toast.makeText(getApplicationContext(), "QRCode3: "+result, Toast.LENGTH_LONG).show();
+            }
+            Intent intent = new Intent(this, NavigationActivity.class);
+            //startActivity(intent);
+            startActivityForResult(intent, ACTIVITY_RESULT_NAVIGATION);
+            // TODO: restore previous state of the NavigationActivity (searcMode, i, state)
+            break;
+
         case REQUEST_CONNECT_DEVICE:
 
             // When DeviceListActivity returns with a device to connect
@@ -1039,7 +1091,8 @@ public class MainActivity extends Activity {
             return true;
     	} else if (item.getItemId()==R.id.menu_about) {
         	Intent intent = new Intent(this, NavigationActivity.class);
-        	startActivity(intent);
+        	//startActivity(intent);
+            startActivityForResult(intent, ACTIVITY_RESULT_NAVIGATION);
         	NavigationActivity.setSearchMode(mSearchMode);
         	NavigationActivity.setVoiceOutput(mVoiceOutput);
         	showAboutDialog();

@@ -28,11 +28,14 @@ import cz.vmoste.robonav.R;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 /**
  * This class does all the work for setting up and managing Bluetooth
@@ -210,7 +213,7 @@ public class BluetoothSerialService {
         // Perform the write unsynchronized
         r.write(out);
     }
-    
+
     /**
      * Indicate that the connection attempt failed and notify the UI Activity.
      */
