@@ -324,6 +324,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	String[] maps = {"t0","t1","t2","t3","t4","t5","t6","t7","t8","t9","0","A","B","C","D","E","F","G","H","CH","I","A2","B2","C2","D2","E2","F2","G2","H2","CH2","I2"};
 
 	private static final int ACTIVITY_RESULT_QR_DRDROID = 0;
+	private static String qrCode = "";
 
 	private static Rect mBoundingRectangle = null;
 	//private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
@@ -736,6 +737,31 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	startTimeMilis = (startTimeMilis/300000)*300000;
     	setStartTime();
     	runMode = 0; // wait for start time
+		try {
+			Intent trigger = getIntent();
+			String sMode = trigger.getExtras().getString("sMode");
+			String qrCode2 = trigger.getExtras().getString("qrCode");
+			String sWp = trigger.getExtras().getString("sWp");
+			String sState = trigger.getExtras().getString("sState");
+            Toast.makeText(getApplicationContext(), "sMode: "+sMode+" / sWp: "+sWp+" / sState: "+sState+" / qrCode2: "+qrCode2, Toast.LENGTH_LONG).show();
+			if (qrCode2.length()>0) {
+				qrCode = qrCode2;
+				appendLog("restart after QR Droid (qrCode: "+qrCode+")");
+			}
+			if (sMode.length()>0) {
+				searchMode = Integer.parseInt(sMode);
+				wp = Integer.parseInt(sWp);
+				state = sState;
+				computeNextWaypoint(0);
+				now.setToNow();
+				startTimeMilis = now.toMillis(false) - 10000;
+				setStartTime();
+				runMode = 1;
+				appendLog("set new state (searchMode: "+searchMode+" / wp: "+wp+" / state: "+state+")");
+			}
+		} catch (Exception e) {
+			// TODO
+		}
         appendLog("date_time;mCommand;searchMode;azimuthOK;btDst;btSpd;latOK;lonOK;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;drivingSignal;");
     }
 
@@ -950,6 +976,15 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	    }
             	if (voiceOutput>0) say("debug "+debugMode);
             	buttonTouched = 2;
+				appendLog("QR Droid external call");
+				out[0] = 'q'; // adjust center to the left
+				saveConfig();
+				Intent returnIntent = new Intent();
+				returnIntent.putExtra("sMode",""+searchMode);
+				returnIntent.putExtra("sWp",""+wp);
+				returnIntent.putExtra("sState",state);
+				setResult(Activity.RESULT_OK,returnIntent);
+				finish();
         	    return false;
 			}
         }
@@ -2056,7 +2091,15 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	}
     }
 
-    static void setSearchMode(int sMode) {
+	public static void setState(int sMode, int sWp, String sState, String sQrCode) {
+		searchMode = sMode;
+		wp = sWp;
+		state = sState;
+		qrCode = sQrCode;
+		//computeNextWaypoint(0);
+	}
+
+	static void setSearchMode(int sMode) {
     	searchMode = sMode;
     }
 

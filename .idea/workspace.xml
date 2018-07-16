@@ -13,7 +13,6 @@
     <list default="true" id="983319bb-cac1-455e-b225-07792a29cc8f" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.gradle/4.1/fileHashes/fileHashes.bin" afterPath="$PROJECT_DIR$/.gradle/4.1/fileHashes/fileHashes.bin" />
       <change beforePath="$PROJECT_DIR$/.gradle/4.1/fileHashes/fileHashes.lock" afterPath="$PROJECT_DIR$/.gradle/4.1/fileHashes/fileHashes.lock" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.1/fileHashes/resourceHashesCache.bin" afterPath="$PROJECT_DIR$/.gradle/4.1/fileHashes/resourceHashesCache.bin" />
       <change beforePath="$PROJECT_DIR$/.gradle/4.1/javaCompile/classAnalysis.bin" afterPath="$PROJECT_DIR$/.gradle/4.1/javaCompile/classAnalysis.bin" />
       <change beforePath="$PROJECT_DIR$/.gradle/4.1/javaCompile/javaCompile.lock" afterPath="$PROJECT_DIR$/.gradle/4.1/javaCompile/javaCompile.lock" />
       <change beforePath="$PROJECT_DIR$/.gradle/4.1/javaCompile/taskHistory.bin" afterPath="$PROJECT_DIR$/.gradle/4.1/javaCompile/taskHistory.bin" />
@@ -21,8 +20,7 @@
       <change beforePath="$PROJECT_DIR$/.gradle/4.1/taskHistory/taskHistory.bin" afterPath="$PROJECT_DIR$/.gradle/4.1/taskHistory/taskHistory.bin" />
       <change beforePath="$PROJECT_DIR$/.gradle/4.1/taskHistory/taskHistory.lock" afterPath="$PROJECT_DIR$/.gradle/4.1/taskHistory/taskHistory.lock" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/BluetoothSerialService.java" afterPath="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/BluetoothSerialService.java" />
+      <change beforePath="$PROJECT_DIR$/app/app.iml" afterPath="$PROJECT_DIR$/app/app.iml" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/MainActivity.java" afterPath="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/MainActivity.java" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/NavigationActivity.java" afterPath="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/NavigationActivity.java" />
       <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" />
@@ -66,8 +64,8 @@
       <file leaf-file-name="strings.xml" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/res/values/strings.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="5" column="32" lean-forward="false" selection-start-line="5" selection-start-column="32" selection-end-line="5" selection-end-column="32" />
+            <state relative-caret-position="85">
+              <caret line="5" column="50" lean-forward="false" selection-start-line="5" selection-start-column="50" selection-end-line="5" selection-end-column="50" />
               <folding />
             </state>
           </provider>
@@ -83,21 +81,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="MainActivity.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="MainActivity.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/MainActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="68">
-              <caret line="911" column="91" lean-forward="false" selection-start-line="911" selection-start-column="91" selection-end-line="911" selection-end-column="91" />
+            <state relative-caret-position="204">
+              <caret line="901" column="71" lean-forward="false" selection-start-line="901" selection-start-column="71" selection-end-line="901" selection-end-column="71" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="NavigationActivity.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="NavigationActivity.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/NavigationActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="313">
-              <caret line="1200" column="22" lean-forward="false" selection-start-line="1200" selection-start-column="22" selection-end-line="1200" selection-end-column="22" />
+            <state relative-caret-position="468">
+              <caret line="759" column="99" lean-forward="false" selection-start-line="759" selection-start-column="99" selection-end-line="759" selection-end-column="99" />
               <folding />
             </state>
           </provider>
@@ -106,8 +104,8 @@
       <file leaf-file-name="ColorBlobDetector.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/ColorBlobDetector.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1309">
-              <caret line="92" column="8" lean-forward="false" selection-start-line="92" selection-start-column="8" selection-end-line="92" selection-end-column="8" />
+            <state relative-caret-position="271">
+              <caret line="101" column="33" lean-forward="false" selection-start-line="101" selection-start-column="33" selection-end-line="101" selection-end-column="33" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -119,28 +117,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>d app</find>
-      <find>maps</find>
-      <find>cone</find>
-      <find>try</find>
-      <find>try {</find>
-      <find>blobdir</find>
-      <find>blobDirection</find>
-      <find>toast</find>
-      <find>QR Dro</find>
-      <find>pause</find>
-      <find>navigationA</find>
-      <find>cameraSto</find>
-      <find>finish</find>
-      <find>onCameraViewStopped</find>
-      <find>qr dro</find>
-      <find>onActivityResult</find>
-      <find>mSerialService</find>
-      <find>getInstanceCount</find>
-      <find>writeCommand</find>
-      <find>write(</find>
-      <find>send(</find>
-      <find>REQUEST_CONNECT_DEVICE</find>
       <find>MainActivity</find>
       <find>start</find>
       <find>ACTIVITY_RESULT_QR_DRDROID</find>
@@ -149,6 +125,28 @@
       <find>startAct</find>
       <find>navigationAct</find>
       <find>qr dr</find>
+      <find>computeNextWaypoint</find>
+      <find>setstarttime</find>
+      <find>setstate</find>
+      <find>qr droid</find>
+      <find>searchMode</find>
+      <find>searchMode =</find>
+      <find>finish(</find>
+      <find>sState</find>
+      <find>read</find>
+      <find>readPref</find>
+      <find>wp</find>
+      <find>putExtra</find>
+      <find>catch</find>
+      <find>qrCode</find>
+      <find>toast</find>
+      <find>readPrefs</find>
+      <find>setStartTime</find>
+      <find>putextra</find>
+      <find>startActivityFor</find>
+      <find>state</find>
+      <find>init</find>
+      <find>sMode</find>
     </findStrings>
     <dirStrings>
       <dir>C:\Users\AH\StudioProjects\RoboNav\app\src\main\java\cz\vmoste\robonav</dir>
@@ -2921,9 +2919,9 @@
         <option value="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/ColorBlobDetector.java" />
         <option value="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/BluetoothSerialService.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/NavigationActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/res/values/strings.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/MainActivity.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/NavigationActivity.java" />
       </list>
     </option>
   </component>
@@ -2949,9 +2947,8 @@
     </navigator>
     <panes>
       <pane id="PackagesPane" />
-      <pane id="ProjectPane" />
-      <pane id="Scope" />
       <pane id="Scratches" />
+      <pane id="ProjectPane" />
       <pane id="AndroidView">
         <subPane>
           <expand>
@@ -2963,6 +2960,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -2974,7 +2972,7 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="device.picker.selection" value="5210799f53b9c4f5" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1531427336593" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1531770474129" />
     <property name="show.do.not.ask.upgrade.gradle.plugin" value="3.0.1" />
   </component>
   <component name="RunDashboard">
@@ -3301,13 +3299,12 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1696" height="1026" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Android Profiler" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16992664" sideWeight="0.6017897" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16992664" sideWeight="0.61333334" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -3317,8 +3314,8 @@
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16992664" sideWeight="0.3982103" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Build" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32885906" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16992664" sideWeight="0.38666666" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Build" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32885906" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Device File Explorer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
@@ -3693,16 +3690,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/ColorBlobDetector.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1309">
-          <caret line="92" column="8" lean-forward="false" selection-start-line="92" selection-start-column="8" selection-end-line="92" selection-end-column="8" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/BluetoothSerialService.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -3711,26 +3698,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/NavigationActivity.java">
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/ColorBlobDetector.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="313">
-          <caret line="1200" column="22" lean-forward="false" selection-start-line="1200" selection-start-column="22" selection-end-line="1200" selection-end-column="22" />
-          <folding />
+        <state relative-caret-position="271">
+          <caret line="101" column="33" lean-forward="false" selection-start-line="101" selection-start-column="33" selection-end-line="101" selection-end-column="33" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/res/values/strings.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="5" column="32" lean-forward="false" selection-start-line="5" selection-start-column="32" selection-end-line="5" selection-end-column="32" />
+        <state relative-caret-position="85">
+          <caret line="5" column="50" lean-forward="false" selection-start-line="5" selection-start-column="50" selection-end-line="5" selection-end-column="50" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/MainActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="911" column="91" lean-forward="false" selection-start-line="911" selection-start-column="91" selection-end-line="911" selection-end-column="91" />
+        <state relative-caret-position="204">
+          <caret line="901" column="71" lean-forward="false" selection-start-line="901" selection-start-column="71" selection-end-line="901" selection-end-column="71" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/cz/vmoste/robonav/NavigationActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="468">
+          <caret line="759" column="99" lean-forward="false" selection-start-line="759" selection-start-column="99" selection-end-line="759" selection-end-column="99" />
           <folding />
         </state>
       </provider>
