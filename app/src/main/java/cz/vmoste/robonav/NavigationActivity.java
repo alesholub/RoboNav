@@ -751,7 +751,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			if (sMode.length()>0) {
 				searchMode = Integer.parseInt(sMode);
 				wp = Integer.parseInt(sWp);
-				state = sState;
+				state = new String(sState);
 				computeNextWaypoint(0);
 				now.setToNow();
 				startTimeMilis = now.toMillis(false) - 10000;
@@ -945,7 +945,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         y = ey*rows/vh-offset;
 
         Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
-        
+
         if ((x>(cols-corner)) && (y<corner)) {
         	// mute corner (top right)
     	    if (voiceOutput>0) voiceOutput = 0; else voiceOutput = 1;
@@ -976,19 +976,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	    }
             	if (voiceOutput>0) say("debug "+debugMode);
             	buttonTouched = 2;
-				appendLog("QR Droid external call");
 				out[0] = 'q'; // adjust center to the left
-				saveConfig();
-				Intent returnIntent = new Intent();
-				returnIntent.putExtra("sMode",""+searchMode);
-				returnIntent.putExtra("sWp",""+wp);
-				returnIntent.putExtra("sState",state);
-				setResult(Activity.RESULT_OK,returnIntent);
-				finish();
+				callQrDroid();
         	    return false;
 			}
         }
-        else if ((x<2*corner) && (y>(rows-corner))) {
+		//else if (searchMode==3 && (state=="loading" || state=="start")) {
+		else if ((x<2*corner) && (y>(rows-corner))) {
         	// next corner (bottom left next to debug)
         	if (searchMode>3) {
         		// navigation ON/OFF
@@ -1221,6 +1215,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	mColor2 = RED;
     	    return false;
         }
+		else if (searchMode==3) {
+			// end of start/loading/unloading
+			Toast.makeText(getApplicationContext(), "continue ("+state+")", Toast.LENGTH_SHORT).show();
+			say("continue");
+			state = "normal";
+			runMode = 1;
+			mCommand = 'w';
+			computeNextWaypoint(0);
+			return false;
+		}
         else if (searchMode==0) {
         	// manual control
         	buttonTouched = 0;
@@ -1230,12 +1234,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	buttonTouched = 11;
 				if (y>(2*h/3)) {
 					buttonTouched = 12;
-                    appendLog("QR Droid external call");
+                    //appendLog("QR Droid external call");
                     out[0] = 'q'; // adjust center to the left
-					Intent returnIntent = new Intent();
+					callQrDroid();
+					//Intent returnIntent = new Intent();
 					//returnIntent.putExtra("result",result);
-					setResult(Activity.RESULT_OK,returnIntent);
-					finish();
+					//setResult(Activity.RESULT_OK,returnIntent);
+					//finish();
 				}
 				else if (y<(1*h/3)) {
 					buttonTouched = 13;
@@ -1287,7 +1292,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         
         if (inputMode==1) return false;
 
-        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+		if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
         
         if (inputMode<1 && (searchMode==1)) {
         	// targetAzimuth for RR
@@ -1301,7 +1306,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	    tellCommand((char)out[0]);
             }
         }
-        
+
         if (inputMode<2) return false;
 
         Rect touchedRect = new Rect();
@@ -1384,6 +1389,18 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         return false; // don't need subsequent touch events
     }
 
+    private void callQrDroid() {
+		appendLog("QR Droid external call");
+		saveConfig();
+		Intent returnIntent = new Intent();
+		returnIntent.putExtra("sMode",""+searchMode);
+		returnIntent.putExtra("sWp",""+wp);
+		returnIntent.putExtra("sState",state);
+		setResult(Activity.RESULT_OK,returnIntent);
+		stopped = true;
+		finish();
+	}
+
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
       	if (stopped) return mRgba;
@@ -1406,6 +1423,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	if (now.toMillis(false)<=(startTimeMilis+3000)) runMode = 0;
     	else runMode = 1;
     	if (searchMode!=3) runMode = 1; // disabled except RT
+		else {
+			if (runMode==0 && state=="normal" && qrCode.length()<1) {
+				state = "start";
+			}
+			runMode = 1;
+		}
         mod2 = mLevel % 2;
         //mod4 = mLevel % 4;
         mod6 = mLevel % 6;
@@ -1769,8 +1792,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 		shortNum = 0;
                 	}
             	}
-            	mTxt1 = ""+state+" "+mText+" "+txtCommand;
-            	mTxt1 = ""+txtCommand;
+            	mTxt1 = ""+state+"/"+qrCode.length()+"/"+txtCommand;
+            	//mTxt1 = ""+txtCommand;
+				//mTxt1 = ""+state+"/"+runMode+"/"+txtCommand+"/"+qrCode;
                	textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	if (debugMode>=0) Imgproc.putText(mRgba, mTxt1, new Point((w-textSize.width)/2,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
             	mTxt1 = ""+mText;
@@ -2208,6 +2232,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     private void sendCommand() {
         final Timer timer = new Timer();
+		//Toast.makeText(getApplicationContext(), "sendCommand", Toast.LENGTH_SHORT).show();
         timer.schedule(new TimerTask() {
 
         @Override
@@ -2229,12 +2254,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
           		now.setToNow();
           		long tmpTime = now.toMillis(false);
       			long runTime = (tmpTime - firstTime)/1000;
+                //Toast.makeText(getApplicationContext(), "t:"+runTime, Toast.LENGTH_SHORT).show();
           		if (searchMode==1 && runTime<10) {
                 	//azimuth_calib += pathAzimuth - azimuthOK;
           		}
       			tmpSec = (startTimeMilis - tmpTime)/1000;
           		if (runMode<1) {
           			// countdown active
+					//mText = "countdown ";
           	    	String txtCommand1 = "";
           	    	if (tmpSec==120) txtCommand1 = "2 minutes";
           	    	else if (tmpSec==60) txtCommand1 = "1 minute";
@@ -2261,6 +2288,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                  	txtCommand = "";
       		    	return;
           		}
+				//mText = "c2 ";
           		computeCommand(); // main navigation algorithm => mCommand
           		if (searchMode==3 && tmpSec>=-5) mCommand = 'w'; // initial mCommand for RoboTour is "forward"
              	txtCommand = "";
@@ -2940,6 +2968,17 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
   				mCommand = 'w';
   				return;
   			}
+			//else if (state=="start" && qrCode.length()>0) {
+			//	state = "normal";
+			//	runMode = 1;
+			//	mCommand = 'w';
+			//	return;
+			//}
+			else if (state=="loading" && qrCode.length()<1 && tmpSec0>=5) {
+				callQrDroid();
+				mCommand = 's';
+				return;
+			}
 	  		// waypoint navigation
 	  		if (wpDist>0 && wpDist<999 && searchMode>1 && state!="end") {
 	  			// if orange cone is close (at RO), then drop payload (waypoint is reached)
@@ -2952,6 +2991,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  			if ((actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<7 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<51 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
 	  				// waypoint reached
 	  				mText += "WP"+wp;
+					if (searchMode==3 && wpMode>0) {
+						// RT loading
+						state = "loading";
+						qrCode = "";
+						goalReached = 1;
+						mCommand = 's'; // stop
+						tmpSec0 = 0;
+						say("Loading point reached. Please install payload.");
+						return;
+					}
 	  				if (state!="drop") say("point "+wp);
 	  		    	if (path.size()==(wp+1) || wp==0 || wpMode>0 || state=="drop") {
 	  		    		// payload drop
