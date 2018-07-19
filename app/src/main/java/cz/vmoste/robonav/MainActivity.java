@@ -130,6 +130,7 @@ V?.?.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V?.?.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression)
 V?.?.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V?.?.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V2.0.2.05 2018-07-19 version for Robotour 2018 homologation
 V2.0.2.04 2018-07-18 new RT states "start", "loading" and "finish"
 V2.0.2.03 2018-07-16 inter-Activity communication via putExtra/getExtras
 V2.0.2.02 2018-07-13 NavigationActivity.setState()
@@ -900,7 +901,7 @@ public class MainActivity extends Activity {
                 sMode = data.getExtras().getString("sMode");
                 sWp = data.getExtras().getString("sWp");
                 sState = data.getExtras().getString("sState");
-                Toast.makeText(getApplicationContext(), "postNavigation sMode:"+sMode+" / sWp:"+sWp+" / sState:"+sState, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "postNavigation sMode:"+sMode+" / sWp:"+sWp+" / sState:"+sState, Toast.LENGTH_SHORT).show();
                 scanQrCode();
             }
             break;
@@ -922,7 +923,7 @@ public class MainActivity extends Activity {
             intent.putExtra("sWp",sWp);
             intent.putExtra("sState",sState);
             intent.putExtra("qrCode",result);
-            Toast.makeText(getApplicationContext(), "prestart sMode:"+sMode+" / sWp:"+sWp+" / sState:"+sState, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), "prestart sMode:"+sMode+" / sWp:"+sWp+" / sState:"+sState, Toast.LENGTH_SHORT).show();
             startActivityForResult(intent, ACTIVITY_RESULT_NAVIGATION);
             NavigationActivity.setSearchMode(3);
             NavigationActivity.setState(3,2, "normal", result);

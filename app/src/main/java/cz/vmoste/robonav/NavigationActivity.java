@@ -743,7 +743,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			String qrCode2 = trigger.getExtras().getString("qrCode");
 			String sWp = trigger.getExtras().getString("sWp");
 			String sState = trigger.getExtras().getString("sState");
-            Toast.makeText(getApplicationContext(), "sMode: "+sMode+" / sWp: "+sWp+" / sState: "+sState+" / qrCode2: "+qrCode2, Toast.LENGTH_LONG).show();
+            //Toast.makeText(getApplicationContext(), "sMode: "+sMode+" / sWp: "+sWp+" / sState: "+sState+" / qrCode2: "+qrCode2, Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "qrCode2: "+qrCode2, Toast.LENGTH_LONG).show();
 			if (qrCode2.length()>0) {
 				qrCode = qrCode2;
 				appendLog("restart after QR Droid (qrCode: "+qrCode+")");
@@ -751,7 +752,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			if (sMode.length()>0) {
 				searchMode = Integer.parseInt(sMode);
 				wp = Integer.parseInt(sWp);
-				state = new String(sState);
+				state = "start";
+				if (sState.contains("load")) state = "loading";
 				computeNextWaypoint(0);
 				now.setToNow();
 				startTimeMilis = now.toMillis(false) - 10000;
@@ -1992,7 +1994,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         if (!stopped) {
         	if (searchMode>0) {
             	mColor = RED; tx = "D";
-            	if (debugMode>0) {mColor = GREEN; tx = "D";}
+            	if (searchMode==3) tx = "QR";
+            	if (debugMode>0) {mColor = GREEN;}
             	Imgproc.rectangle(mRgba, new Point(0,h), new Point(corner,h-corner), mColor, 1);
             	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
             	Imgproc.putText(mRgba, tx, new Point(corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
@@ -2002,6 +2005,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	Imgproc.rectangle(mRgba, new Point(corner,h), new Point(2*corner,h-corner), mColor, 1);
             	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
             	Imgproc.putText(mRgba, tx, new Point(3*corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, mColor, 2*wi);
+            	if (state=="start" || state=="loading") {
+					mColor = GREEN;
+					Imgproc.rectangle(mRgba, new Point(corner+3,corner+3), new Point(w - corner - 3,h - corner - 3), mColor, -1);
+					mColor = WHITE; tx = "tap to continue";
+					textSize = Imgproc.getTextSize(tx, 1, 4*siz, 4*wi, baseline);
+					Imgproc.putText(mRgba, tx, new Point(w/2-textSize.width/2+1,h/2+textSize.height/2+1), 1, 4*siz, mColor, 4*wi);
+				}
         	}
         	mColor = RED; tx = "M";
         	if (voiceOutput>0) {mColor = GREEN; tx = "V";}
@@ -2290,7 +2300,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
           		}
 				//mText = "c2 ";
           		computeCommand(); // main navigation algorithm => mCommand
-          		if (searchMode==3 && tmpSec>=-5) mCommand = 'w'; // initial mCommand for RoboTour is "forward"
+          		//if (searchMode==3 && tmpSec>=-5) mCommand = 'w'; // initial mCommand for RoboTour is "forward"
              	txtCommand = "";
           		if (searchMode<=3) {
           			// send "slow" command (once per second) for defined modes only
@@ -2977,6 +2987,22 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			else if (state=="loading" && qrCode.length()<1 && tmpSec0>=5) {
 				callQrDroid();
 				mCommand = 's';
+				return;
+			}
+			else if (state=="loading" && qrCode.length()<1 && tmpSec0>=4) {
+				mCommand = 'o'; // load
+				return;
+			}
+			else if (state=="loading" && qrCode.length()<1 && tmpSec0>=3) {
+				mCommand = 'p'; // drop
+				return;
+			}
+			else if (state=="loading" && qrCode.length()<1 && tmpSec0>=1) {
+				mCommand = 's';
+				return;
+			}
+			else if (state=="start" || state=="loading") {
+				mCommand = '-';
 				return;
 			}
 	  		// waypoint navigation
