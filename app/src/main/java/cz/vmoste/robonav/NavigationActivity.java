@@ -178,6 +178,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     private static boolean stopped = false;
     private static double lat = 0.0;
     private static double lon = 0.0;
+	private static double qrLat = 0.0;
+	private static double qrLon = 0.0;
     private static float accuracy = 888;
     private static float bearing = 888;
 	private static String stav = "???";
@@ -748,18 +750,24 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			if (qrCode2.length()>0) {
 				qrCode = qrCode2;
 				appendLog("restart after QR Droid (qrCode: "+qrCode+")");
+				if (qrCode2.length()>0) {
+					String[] qrParts = qrCode2.split(",");
+					qrLat = Float.parseFloat(qrParts[0].trim());
+					qrLon = Float.parseFloat(qrParts[1].trim());
+				}
 			}
 			if (sMode.length()>0) {
 				searchMode = Integer.parseInt(sMode);
 				wp = Integer.parseInt(sWp);
 				state = "start";
-				if (sState.contains("load")) state = "loading";
+				if (sState.contains("unload")) state = "unloading";
+				else if (sState.contains("load")) state = "loading";
 				computeNextWaypoint(0);
 				now.setToNow();
 				startTimeMilis = now.toMillis(false) - 10000;
 				setStartTime();
 				runMode = 1;
-				appendLog("set new state (searchMode: "+searchMode+" / wp: "+wp+" / state: "+state+")");
+				appendLog("set new state (searchMode: "+searchMode+" / wp: "+wp+" / state: "+state+" / qrLat: "+qrLat+" / qrLon: "+qrLon+")");
 			}
 		} catch (Exception e) {
 			// TODO
@@ -950,8 +958,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
         if ((x>(cols-corner)) && (y<corner)) {
         	// mute corner (top right)
-    	    if (voiceOutput>0) voiceOutput = 0; else voiceOutput = 1;
-        	if (voiceOutput>0) say("voice");
+			voiceOutput++;
+    	    if (voiceOutput>2) voiceOutput = 0;
+        	if (voiceOutput>0) say("voice "+voiceOutput);
         	buttonTouched = 1;
     	    return false;
         }
@@ -1832,7 +1841,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	if (txtCommand=="xleft") {ok = 1; tmpx = w/4; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="xright") {ok = 1; tmpx = 3*w/4; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="forward") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(0,255,0);}
-                	else if (txtCommand=="straigh") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(255,255,255);}
+                	else if (txtCommand=="straight") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(255,255,255);}
                 	else if (txtCommand=="left") {ok = 1; tmpx = w/3; tmpy = h/3; tmpColor = new Scalar(0,0,255);}
                 	else if (txtCommand=="right") {ok = 1; tmpx = 2*w/3; tmpy = h/3; tmpColor = new Scalar(0,0,255);}
                 	else if (txtCommand=="stop") {ok = 1; tmpx = w/2; tmpy = h/2; tmpColor = new Scalar(0,0,0);}
@@ -1855,7 +1864,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	if (txtCommand=="xleft") {ok = 1; tmpx = w/2; tmpy = 3*h/4; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="xright") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="forward") {ok = 1; tmpx = w/4; tmpy = h/2; tmpColor = new Scalar(0,255,0);}
-                	else if (txtCommand=="straigh") {ok = 1; tmpx = w/4; tmpy = h/2; tmpColor = new Scalar(255,255,255);}
+                	else if (txtCommand=="straight") {ok = 1; tmpx = w/4; tmpy = h/2; tmpColor = new Scalar(255,255,255);}
                 	else if (txtCommand=="left") {ok = 1; tmpx = w/3; tmpy = 2*h/3; tmpColor = new Scalar(0,0,255);}
                 	else if (txtCommand=="right") {ok = 1; tmpx = w/3; tmpy = h/3; tmpColor = new Scalar(0,0,255);}
                 	else if (txtCommand=="stop") {ok = 1; tmpx = w/2; tmpy = h/2; tmpColor = new Scalar(0,0,0);}
@@ -1994,7 +2003,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         if (!stopped) {
         	if (searchMode>0) {
             	mColor = RED; tx = "D";
-            	if (searchMode==3) tx = "QR";
+            	if (searchMode==3 && inputMode<1) tx = "QR";
             	if (debugMode>0) {mColor = GREEN;}
             	Imgproc.rectangle(mRgba, new Point(0,h), new Point(corner,h-corner), mColor, 1);
             	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
@@ -2005,7 +2014,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	Imgproc.rectangle(mRgba, new Point(corner,h), new Point(2*corner,h-corner), mColor, 1);
             	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
             	Imgproc.putText(mRgba, tx, new Point(3*corner/2-textSize.width/2+1,h-corner/2+textSize.height/2+1), 1, 2*siz, mColor, 2*wi);
-            	if (state=="start" || state=="loading") {
+            	if (inputMode<1 && (state=="start" || state=="loading" || state=="unloading")) {
 					mColor = GREEN;
 					Imgproc.rectangle(mRgba, new Point(corner+3,corner+3), new Point(w - corner - 3,h - corner - 3), mColor, -1);
 					mColor = WHITE; tx = "tap to continue";
@@ -2014,7 +2023,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 				}
         	}
         	mColor = RED; tx = "M";
-        	if (voiceOutput>0) {mColor = GREEN; tx = "V";}
+        	if (voiceOutput>0) {mColor = GREEN; tx = "V1";}
+			if (voiceOutput>1) {mColor = WHITE; tx = "V2";}
         	Imgproc.rectangle(mRgba, pt1, pt2, mColor, -1);
         	textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
         	Imgproc.putText(mRgba, tx, new Point(w-corner/2-textSize.width/2+1,corner/2+textSize.height/2+1), 1, 2*siz, new Scalar(0,0,255), 2*wi);
@@ -2352,7 +2362,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	else if (command=='r') txtCommand = "xright";
     	else if (command=='h') txtCommand = "left";
     	else if (command=='k') txtCommand = "right";
-    	else if (command=='f') txtCommand = "straigt";
+    	else if (command=='f') txtCommand = "straight";
     	else if (command=='s') txtCommand = "stop";
     	else if (command=='b') txtCommand = "back";
     	else if (command=='w') txtCommand = "forward";
@@ -2377,7 +2387,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     }
     
     private void say(String txt) {
-    	if (voiceOutput>0 && repeatedCommand<1) tts.speak(txt, TextToSpeech.QUEUE_ADD, null);	
+    	if (repeatedCommand<1 && voiceOutput>0) {
+    		if (voiceOutput>1 || !"xleft xright back stop straight forward".contains(txt)) {
+				tts.speak(txt, TextToSpeech.QUEUE_ADD, null);
+			}
+		}
     	if (txt=="stop") repeatedCommand = 1;
     	else repeatedCommand = 0;
     }
@@ -2937,12 +2951,16 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	 * - if height of cone is above limit, drop ball, set next waipoint and avoid orange cone
     	 * 
     	 * strategy for RoboTour:
-    	 * - start with loading procedure (automatic paylouad pick up)
-    	 * - turn to targetAzimuth and avoid any obstacle (another robots)
-    	 * - drive to next waypoint by azimuth, but on the road only
-    	 * - prefer best estimation of roadDirection (topDirection, direction, topHeight, azimuthOK, azimDiff, leftOK, rightOK)
-    	 * - if crossing is near, switch to wall follow procedure (to safely turn to next targetAzimuth) by leftOK and rightOK
-    	 * - at finish waypoint drop payload and then navigate back to start (stop at start)
+		 * - start with QR code scan of loading point coordinates, then tap to continue
+		 * - compute waipoints to loading point (save starting position)
+		 * - drive between waypoints by GPS and azimuth, but on the road only (according the camera)
+		 * - at loading point switch to QR code scan of unloading point coordinates, tap to continue when loading is complete
+		 * - compute waipoints to unloading point
+		 * - drive between waypoints by GPS and azimuth, but on the road only (according the camera)
+		 * - at unloading point tap to continue when unloading is complete
+		 * - compute waipoints to the starting position
+		 * - drive between waypoints by GPS and azimuth, but on the road only (according the camera)
+		 * - at starting point stop and finish navigation
     	 */
 		mCommand = '-'; // implicit mCommand
 		if (searchMode==4) {
@@ -2993,11 +3011,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 				mCommand = 'o'; // load
 				return;
 			}
-			else if (state=="loading" && qrCode.length()<1 && tmpSec0>=3) {
+			else if (state=="unloading" && qrCode.length()<1 && tmpSec0>=3) {
 				mCommand = 'p'; // drop
 				return;
 			}
-			else if (state=="loading" && qrCode.length()<1 && tmpSec0>=1) {
+			else if (state.contains("load") && qrCode.length()<1 && tmpSec0>=1) {
 				mCommand = 's';
 				return;
 			}
@@ -3017,14 +3035,24 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  			if ((actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<7 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<51 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
 	  				// waypoint reached
 	  				mText += "WP"+wp;
-					if (searchMode==3 && wpMode>0) {
+					if (searchMode==3 && wpMode==1) {
 						// RT loading
 						state = "loading";
 						qrCode = "";
 						goalReached = 1;
 						mCommand = 's'; // stop
 						tmpSec0 = 0;
-						say("Loading point reached. Please install payload.");
+						say("Loading area reached. Please place the payload on the robot.");
+						return;
+					}
+					if (searchMode==3 && wpMode==2) {
+						// RT unloading
+						state = "unloading";
+						qrCode = "";
+						goalReached = 2;
+						mCommand = 's'; // stop
+						tmpSec0 = 0;
+						say("Unloading area reached. Please remove the payload from the robot.");
 						return;
 					}
 	  				if (state!="drop") say("point "+wp);

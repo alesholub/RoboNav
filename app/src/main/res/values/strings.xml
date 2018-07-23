@@ -3,7 +3,7 @@
     
     <string name="app_name">RoboNav</string>
     <string name="app_version">2.0.2</string>
-    <string name="app_date">- 19.7.2018 (RT2018a)</string>
+    <string name="app_date">- 23.7.2018 (RT2018b)</string>
     
 	<string name="alert_dialog_no_bt">Cannot use this application without bluetooth.</string>
 	<string name="alert_dialog_yes">Yes</string>

@@ -130,8 +130,9 @@ V?.?.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V?.?.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression)
 V?.?.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V?.?.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V2.0.2.06 2018-07-23 QRCode parsing => qrLat, qrLon
 V2.0.2.05 2018-07-19 version for Robotour 2018 homologation
-V2.0.2.04 2018-07-18 new RT states "start", "loading" and "finish"
+V2.0.2.04 2018-07-18 new RT states "start", "loading" (wpMode=1) and "unloading" (wpMode=2)
 V2.0.2.03 2018-07-16 inter-Activity communication via putExtra/getExtras
 V2.0.2.02 2018-07-13 NavigationActivity.setState()
 V2.0.2.01 2018-07-12 QR Droid services integration (tests)
