@@ -327,6 +327,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
 	private static final int ACTIVITY_RESULT_QR_DRDROID = 0;
 	private static String qrCode = "";
+	private static int startMode = 0;
 
 	private static Rect mBoundingRectangle = null;
 	//private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
@@ -746,7 +747,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			String sWp = trigger.getExtras().getString("sWp");
 			String sState = trigger.getExtras().getString("sState");
             //Toast.makeText(getApplicationContext(), "sMode: "+sMode+" / sWp: "+sWp+" / sState: "+sState+" / qrCode2: "+qrCode2, Toast.LENGTH_LONG).show();
-			Toast.makeText(getApplicationContext(), "qrCode2: "+qrCode2, Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "qrCode: "+qrCode2, Toast.LENGTH_LONG).show();
 			if (qrCode2.length()>0) {
 				qrCode = qrCode2;
 				appendLog("restart after QR Droid (qrCode: "+qrCode+")");
@@ -1226,14 +1227,15 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	mColor2 = RED;
     	    return false;
         }
-		else if (searchMode==3) {
+		else if (searchMode==3 && inputMode<1) {
 			// end of start/loading/unloading
 			Toast.makeText(getApplicationContext(), "continue ("+state+")", Toast.LENGTH_SHORT).show();
 			say("continue");
 			state = "normal";
+			startMode = 1;
 			runMode = 1;
-			mCommand = 'w';
 			computeNextWaypoint(0);
+            mCommand = 'w';
 			return false;
 		}
         else if (searchMode==0) {
@@ -1435,7 +1437,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	else runMode = 1;
     	if (searchMode!=3) runMode = 1; // disabled except RT
 		else {
-			if (runMode==0 && state=="normal" && qrCode.length()<1) {
+			if (runMode==0 && state=="normal" && startMode<1) {
 				state = "start";
 			}
 			runMode = 1;
@@ -3002,24 +3004,24 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			//	mCommand = 'w';
 			//	return;
 			//}
-			else if (state=="loading" && qrCode.length()<1 && tmpSec0>=5) {
+			else if (state=="loading" && qrCode.length()<1 && (tmpSec0-tmpSec)>=5) {
 				callQrDroid();
 				mCommand = 's';
 				return;
 			}
-			else if (state=="loading" && qrCode.length()<1 && tmpSec0>=4) {
+			else if (state=="loading" && qrCode.length()<1 && (tmpSec0-tmpSec)>=4) {
 				mCommand = 'o'; // load
 				return;
 			}
-			else if (state=="unloading" && qrCode.length()<1 && tmpSec0>=3) {
+			else if (state=="unloading" && qrCode.length()<1 && (tmpSec0-tmpSec)>=3) {
 				mCommand = 'p'; // drop
 				return;
 			}
-			else if (state.contains("load") && qrCode.length()<1 && tmpSec0>=1) {
+			else if (state.contains("load") && qrCode.length()<1 && (tmpSec0-tmpSec)>=1) {
 				mCommand = 's';
 				return;
 			}
-			else if (state=="start" || state=="loading") {
+			else if (state=="start" || state.contains("load")) {
 				mCommand = '-';
 				return;
 			}
@@ -3035,24 +3037,26 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  			if ((actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<7 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<51 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
 	  				// waypoint reached
 	  				mText += "WP"+wp;
-					if (searchMode==3 && wpMode==1) {
+                    if (searchMode==3 && wpMode>=2) {
+                        // RT unloading
+                        state = "unloading";
+                        qrCode = "";
+                        goalReached = 2;
+                        computeNextWaypoint(1);
+                        mCommand = 's'; // stop
+                        tmpSec0 = tmpSec;
+                        say("Unloading area reached. Please remove the payload from the robot.");
+                        return;
+                    }
+					else if (searchMode==3 && wpMode>=1) {
 						// RT loading
 						state = "loading";
 						qrCode = "";
 						goalReached = 1;
+                        computeNextWaypoint(1);
 						mCommand = 's'; // stop
-						tmpSec0 = 0;
+                        tmpSec0 = tmpSec;
 						say("Loading area reached. Please place the payload on the robot.");
-						return;
-					}
-					if (searchMode==3 && wpMode==2) {
-						// RT unloading
-						state = "unloading";
-						qrCode = "";
-						goalReached = 2;
-						mCommand = 's'; // stop
-						tmpSec0 = 0;
-						say("Unloading area reached. Please remove the payload from the robot.");
 						return;
 					}
 	  				if (state!="drop") say("point "+wp);
