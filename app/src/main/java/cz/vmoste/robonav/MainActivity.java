@@ -130,6 +130,7 @@ V?.?.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V?.?.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression)
 V?.?.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V?.?.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V2.0.2.08 2018-07-25 nextWp (for waypoint reaching simulation)
 V2.0.2.07 2018-07-24 proper state machine
 V2.0.2.06 2018-07-23 QRCode parsing => qrLat, qrLon
 V2.0.2.05 2018-07-19 version for Robotour 2018 homologation

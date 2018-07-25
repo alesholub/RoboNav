@@ -327,7 +327,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
 	private static final int ACTIVITY_RESULT_QR_DRDROID = 0;
 	private static String qrCode = "";
-	private static int startMode = 0;
+	private static int startMode = 0; // for RT startup
+	private static int nextWp = 0; // for waypoint reaching simulation
 
 	private static Rect mBoundingRectangle = null;
 	//private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
@@ -1003,6 +1004,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	if (voiceOutput>0) say("nav "+navMode);
             	else Toast.makeText(getApplicationContext(), "nav "+navMode, Toast.LENGTH_SHORT).show();
         	} else if (searchMode>0) {
+        		if (state=="normal") {
+        			nextWp = 1;
+					buttonTouched = 2;
+                    Toast.makeText(getApplicationContext(), "nextWp: "+wp, Toast.LENGTH_SHORT).show();
+        			return false;
+				}
             	if (wp<(path.size()-1)) computeNextWaypoint(1);
             	else {
             		wp = 0;
@@ -1404,7 +1411,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     private void callQrDroid() {
 		appendLog("QR Droid external call");
-		saveConfig();
+		//saveConfig();
 		Intent returnIntent = new Intent();
 		returnIntent.putExtra("sMode",""+searchMode);
 		returnIntent.putExtra("sWp",""+wp);
@@ -3006,7 +3013,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			//}
 			else if (state=="loading" && qrCode.length()<1 && (tmpSec0-tmpSec)>=5) {
 				callQrDroid();
-				mCommand = 's';
+				mCommand = '-';
 				return;
 			}
 			else if (state=="loading" && qrCode.length()<1 && (tmpSec0-tmpSec)>=4) {
@@ -3026,7 +3033,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 				return;
 			}
 	  		// waypoint navigation
-	  		if (wpDist>0 && wpDist<999 && searchMode>1 && state!="end") {
+	  		if (nextWp>0 || (wpDist>0 && wpDist<999 && searchMode>1 && state!="end")) {
 	  			// if orange cone is close (at RO), then drop payload (waypoint is reached)
 	  			if (searchMode==2 && wpMode>0 && distanceToNextWaypoint<15 && state!="drop" && ((mBoundingRectangle.height>h/4) || (mBoundingRectangle.height>h/5 && mBoundingRectangle.y>(h/2)))) {
 	  				state = "drop";
@@ -3034,8 +3041,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  				say("cone");
 	  				mText += "cone";
 	  			}
-	  			if ((actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<7 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<51 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
+	  			if (nextWp>0 || (actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<7 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<51 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
 	  				// waypoint reached
+					nextWp = 0;
 	  				mText += "WP"+wp;
                     if (searchMode==3 && wpMode>=2) {
                         // RT unloading
