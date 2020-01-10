@@ -1,12 +1,19 @@
 apply plugin: 'com.android.application'
 android {
     compileSdkVersion 10
-    buildToolsVersion "27.0.3"
+    //buildToolsVersion "27.0.3"
 
     defaultConfig {
         applicationId "cz.vmoste.robonav"
         minSdkVersion 10
         targetSdkVersion 10
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        abortOnError false
     }
 
     buildTypes {

@@ -130,6 +130,9 @@ V?.?.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V?.?.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression)
 V?.?.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V?.?.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V3.0.1.02 2020-01-10 new log structure (additional parameters)
+V3.0.1.01 2020-01-09 AI test removed
+V3.0.1.00 2019-06-19 turn at place, check sonars from the robot (for RoboOrienteering 2019), AI test
 V2.0.2.08 2018-07-25 nextWp (for waypoint reaching simulation)
 V2.0.2.07 2018-07-24 proper state machine
 V2.0.2.06 2018-07-23 QRCode parsing => qrLat, qrLon
