@@ -50,14 +50,15 @@ public class ColorBlobDetector {
 //    private int limit1 = 10;
 //    private int limit2 = 25;
 
-    private int mOrientation = 0;
+    private int mOrientation = 2;
 
     public void setColorRadius(Scalar radius) {
         mColorRadius = radius;
     }
 
     public void setOrientation(int sOrientation) {
-        mOrientation = sOrientation;
+        //mOrientation = sOrientation;
+        mOrientation = 2;
     }
 
     public void setSearchMode(int sMode) {

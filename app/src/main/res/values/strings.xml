@@ -2,8 +2,8 @@
 <resources>
     
     <string name="app_name">RoboNav</string>
-    <string name="app_version">3.0.1</string>
-    <string name="app_date"> 10.1.2020 (log)</string>
+    <string name="app_version">3.0.3</string>
+    <string name="app_date">17.11.2020 (BT1)</string>
     
 	<string name="alert_dialog_no_bt">Cannot use this application without bluetooth.</string>
 	<string name="alert_dialog_yes">Yes</string>

@@ -12,6 +12,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -34,6 +35,7 @@ public class RoadDetector {
     private int mLeftOK = 1;
     private int mRightOK = 1;
     private int mCenterOK = 1;
+    private int[] vfh = new int[]{9,9,9,9,9,9,9,9};
 	int w = 1;
 	int h = 1;
 
@@ -52,14 +54,15 @@ public class RoadDetector {
     //private int limit1 = 10;
     //private int limit2 = 25;
 
-    private int mOrientation = 0;
+    private int mOrientation = 2;
 
     public void setColorRadius(Scalar radius) {
         mColorRadius = radius;
     }
 
     public void setOrientation(int sOrientation) {
-        mOrientation = sOrientation;
+        //mOrientation = sOrientation;
+        mOrientation = 2;
     }
 
     public void setSearchMode(int sMode) {
@@ -340,14 +343,34 @@ public class RoadDetector {
 		//if (mDirection<-limit1 || mDirection>limit1) mColor = new Scalar(0,0,255); // blue
 		//if (mDirection<-limit2 || mDirection>limit2) mColor = new Scalar(255,0,0); // red
 		//Core.circle(mRgba, new Point(x, y), 5, new Scalar(255,49,0,255));
+        double[] xa = {0.1,0.2,0.36,0.5,0.64,0.8,0.9,0.5};
+        double[] ya = {0.74,0.5,0.32,0.28,0.32,0.5,0.74,0.65};
+        int ix = 0;
+        int iy = 0;
 		if (mOrientation==2) {
 			// landscape
 			//Core.line(mRgba, new Point(x,y), new Point(w/2,h-lin), mColor, 3);
 			//Core.line(mRgba, new Point(topPoint.x,topPoint.y), new Point(w/2,h-lin), new Scalar(255,255,0), 1);
-			mLeftOK = 0;
-			if (mGreyMat.get(2*h/3,w/4)[0]>0.5) mLeftOK = 1;
-			mRightOK = 0;
-			if (mGreyMat.get(2*h/3,3*w/4)[0]>0.5) mRightOK = 1;
+            if (mContours.size()>0) {
+                try {
+                    MatOfPoint2f xCont = new MatOfPoint2f( mContours.get(0).toArray() );
+                    for (int i=0; i<8; i++) {
+                        ix = (int)(xa[i]*w);
+                        iy = (int)(ya[i]*h);
+                        vfh[i] = 0;
+                        vfh[i] = (int)Imgproc.pointPolygonTest(xCont, new Point(ix,iy),false);
+                        //if (mGreyMat.get(iy,ix)[0]>0.5) vfh[i] = 1;;
+                    }
+                } catch (Exception e) {
+                    // TODO
+                }
+            } else {
+                for (int i=0; i<8; i++) {
+                    ix = (int)(xa[i]*w);
+                    iy = (int)(ya[i]*h);
+                    vfh[i] = 0;
+                }
+            }
 		} else {
 			// portrait
 			//Core.line(mRgba, new Point(x,y), new Point(w-2*lin,h/2), mColor, 3);
@@ -357,8 +380,9 @@ public class RoadDetector {
 			mRightOK = 0;
 			if (mGreyMat.get(h/4,2*w/3)[0]>0.5) mRightOK = 1;
 		}
-		mCenterOK = 0;
-		if (mGreyMat.get(h/2,w/2)[0]>0.5) mCenterOK = 1;
+        mLeftOK = vfh[1];
+		mCenterOK = vfh[3];
+        mRightOK = vfh[5];
     	//mRgba.copyTo(mResultMat);
     }
 
@@ -401,4 +425,9 @@ public class RoadDetector {
     public int getCenterOK() {
         return mCenterOK;
     }
+
+    public int[] getVFH() {
+        return vfh;
+    }
+
 }

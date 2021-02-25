@@ -130,6 +130,32 @@ V?.?.?.?? 201?-??-?? extra layer for user interface (or extra Mat and mask for b
 V?.?.?.?? 201?-??-?? using AI principles (neural network, decision tree, regression)
 V?.?.?.?? 201?-??-?? fusion of all signals to best possible command (driving, start/stop/back) with probability
 V?.?.?.?? 201?-??-?? basic ObstacleDetector (main features, contours, free directions)
+V3.0.3.24 2020-11-17 BT1 (testing of the BT telemetry readings)
+V3.0.3.23 2020-11-09 nav11 (better btRng computation)
+V3.0.3.22 2020-11-08 nav10 (correct vfhr from shorter telemetry lines)
+V3.0.3.21 2020-10-31 nav9 (detect waypoint by wpDist and nextTurn), U turn by the camera (vfh[7])
+V3.0.3.20 2020-10-28 nav8 (detect waypoint by maxDist and turnAngleToNextWaypoint)
+V3.0.3.19 2020-10-26 nav7 (display reached wwypoint and distanceToWaypoint)
+V3.0.3.18 2020-10-25 nav6 (better waypoint detection)
+V3.0.3.17 2020-10-06 nav5 (show turnAngleToNextWaypoint)
+V3.0.3.16 2020-10-05 noGo (not sending "w" in loading/unloading state [RoboTour])
+V3.0.3.15 2020-10-04 nav4 (multiple stop at loading/unloading)
+V3.0.3.14 2020-09-21 nav3 (stop at loading/unloading, driving by azimuth)
+V3.0.3.13 2020-09-19 nav2 (more complex navigation between waypoints in mode 3 [RoboTour])
+V3.0.3.12 2020-09-14 wider limits
+V3.0.3.11 2020-09-13 azimuthToNextWp allways computed, debugging
+V3.0.3.10 2020-09-11 reliable BT reading, reliable vfhc testing
+V3.0.3.09 2020-09-10 simple VFH navigation
+V3.0.3.08 2020-09-09 reliable navigation with BT telemetry processing
+V3.0.3.07 2020-09-07 nav1 (better vfhc, reliable navigation between waypoints in mode 3 [RoboTour])
+V3.0.3.06 2020-09-06 VFH (vfhr, vfhc), simplest driving navigation (azimuth, topPoint, VFH)
+V3.0.3.05 2020-09-06 go (say "go" at start), orientation is always landscape
+V3.0.3.04 2020-09-05 route2 (add new point and edges to the map)
+V3.0.3.03 2020-09-04 route1 (procedure for computing routes for the Robotour 2020)
+V3.0.3.02 2020-09-03 testTxt
+V3.0.3.01 2020-09-02 automatic continue at loading (after QR code reading)
+V3.0.3.00 2020-08-18 computeRoute (A* algorithm)
+V3.0.2.00 2020-08-15 refactor, new Finite State Machine
 V3.0.1.02 2020-01-10 new log structure (additional parameters)
 V3.0.1.01 2020-01-09 AI test removed
 V3.0.1.00 2019-06-19 turn at place, check sonars from the robot (for RoboOrienteering 2019), AI test
@@ -400,6 +426,8 @@ public class MainActivity extends Activity {
     public static String sMode;
     public static String sWp;
     public static String sState;
+    public static String sGr;
+    public static String sSp;
 
     private int mControlKeyCode;
 
@@ -441,7 +469,7 @@ public class MainActivity extends Activity {
         	    	// Get the BLuetoothDevice object
         	    	//BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         	    	// Attempt to connect to the device
-        	    	mSerialService.connect(device);
+                    if (mSerialService.getState()<3) mSerialService.connect(device);
                     //showToast("Found device " + device.getName());
                 }
  
@@ -907,6 +935,8 @@ public class MainActivity extends Activity {
                 sMode = data.getExtras().getString("sMode");
                 sWp = data.getExtras().getString("sWp");
                 sState = data.getExtras().getString("sState");
+                sGr = data.getExtras().getString("sGr");
+                sSp = data.getExtras().getString("sSp");
                 //Toast.makeText(getApplicationContext(), "postNavigation sMode:"+sMode+" / sWp:"+sWp+" / sState:"+sState, Toast.LENGTH_SHORT).show();
                 scanQrCode();
             }
@@ -929,10 +959,12 @@ public class MainActivity extends Activity {
             intent.putExtra("sWp",sWp);
             intent.putExtra("sState",sState);
             intent.putExtra("qrCode",result);
+            intent.putExtra("sGr",sGr);
+            intent.putExtra("sSp",sSp);
             //Toast.makeText(getApplicationContext(), "prestart sMode:"+sMode+" / sWp:"+sWp+" / sState:"+sState, Toast.LENGTH_SHORT).show();
             startActivityForResult(intent, ACTIVITY_RESULT_NAVIGATION);
             NavigationActivity.setSearchMode(3);
-            NavigationActivity.setState(3,2, "normal", result);
+            NavigationActivity.setState(3,2, "normal", result, 1, "");
             break;
 
         case REQUEST_CONNECT_DEVICE:
@@ -947,7 +979,7 @@ public class MainActivity extends Activity {
                 // Get the BLuetoothDevice object
                 BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
                 // Attempt to connect to the device
-                mSerialService.connect(device);                
+                if (mSerialService.getState()<3) mSerialService.connect(device);
             }
             break;
 
@@ -964,7 +996,7 @@ public class MainActivity extends Activity {
                 // Get the BLuetoothDevice object
                 BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
                 // Attempt to connect to the device
-                mSerialService.connect(device);                
+                if (mSerialService.getState()<3) mSerialService.connect(device);
             }
         }
     }
@@ -1119,6 +1151,8 @@ public class MainActivity extends Activity {
             intent.putExtra("sWp","0");
             intent.putExtra("sState","normal");
             intent.putExtra("qrCode","");
+            intent.putExtra("sGr","0");
+            intent.putExtra("sSp","");
             startActivityForResult(intent, ACTIVITY_RESULT_NAVIGATION);
         	NavigationActivity.setSearchMode(mSearchMode);
         	NavigationActivity.setVoiceOutput(mVoiceOutput);

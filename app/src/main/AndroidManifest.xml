@@ -3,10 +3,9 @@
     package="cz.vmoste.robonav"
     xmlns:tools="http://schemas.android.com/tools"
     android:versionCode="301"
-    android:versionName="3.0.1">
+    android:versionName="3.0.2">
 
-    <uses-sdk
-        android:targetSdkVersion="10" tools:overrideLibrary="org.opencv" />
+    <uses-sdk tools:overrideLibrary="org.opencv" />
 
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />

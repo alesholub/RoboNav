@@ -1,4 +1,4 @@
-package cz.vmoste.robonav; 
+package cz.vmoste.robonav;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -135,7 +135,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private int[] baseline = null;
 	private static double minArea = 0.5;
 	private static String[] sm = new String[]{"MC","RR","RO","RT","RA","PC","LF","KH","BR","RC"};
-	private static int mOrientation = 0;
+	private static int mOrientation = 2; // 0=auto, 1=portrait, 2=landscape
 	private static String mHSV1 = "";
 	private static String mHSV2 = "";
     private static String address = "00:00:00:00:00:00";
@@ -163,20 +163,23 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private static int btConnected = 0;
 	private static int btValid = 0;
 	private static int btPwm = 0; // PWM from bluetooth
-	private static int btRng = 99; // center sonar range from bluetooth
-	private static int btRngL = 99; // left center sonar range from bluetooth
-	private static int btRngR = 99; // right center sonar range from bluetooth
+	private static int btRng = 999; // full center sonar range from bluetooth
+    private static int btRngC = 9; // center sonar range from bluetooth
+	private static int btRngL = 9; // left center sonar range from bluetooth
+	private static int btRngR = 9; // right center sonar range from bluetooth
 	private static int btDst = 0; // distance from bluetooth
 	private static int btSpd = 0; // speed from bluetooth
     private static double btLat = 0.0; // waypoint latitude from BT connection
     private static double btLon = 0.0; // waypoint longitude from BT connection
-	private static int btRngLeft = 99; // left sonar range from bluetooth
-	private static int btRngRight = 99; // right sonar range from bluetooth
-	private static int btRngLeftL = 99; // left sonar range from bluetooth
-	private static int btRngRightL = 99; // right sonar range from bluetooth
-	private static int btRngLeftR = 99; // left sonar range from bluetooth
-	private static int btRngRightR = 99; // right sonar range from bluetooth
-	private static int btRngBack = 99; // IR range from bluetooth
+	private static int btRngLeft = 999; // left sonar range from bluetooth
+    private static int btRngLeftC = 9; // left sonar range from bluetooth
+	private static int btRngRight = 999; // right sonar range from bluetooth
+    private static int btRngRightC = 9; // right sonar range from bluetooth
+	private static int btRngLeftL = 9; // left sonar range from bluetooth
+	private static int btRngRightL = 9; // right sonar range from bluetooth
+	private static int btRngLeftR = 9; // left sonar range from bluetooth
+	private static int btRngRightR = 9; // right sonar range from bluetooth
+	private static int btRngBack = 999; // IR range from bluetooth
 	private static int btPayload = 0; // actual number of payloads
     private static boolean stopped = false;
     private static double lat = 0.0;
@@ -198,8 +201,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     private static double wpDist = 0.0; // waypoint distance
     private static double pathAzimuth = 0.0; // azimuth from previous waypoint to next waypoint
     private static double azimuthToNextWaypoint = 0.0; // azimuth from actual GPS position to next waypoint
+	private static double nextWpDist = 0.0; // next waypoint distance
+	private static double nextPathAzimuth = 0.0; // path azimuth from the next waypoint
+	private static int nextTurn = 0; // next turn angle
+	private static int intersection = 0; // is at the next waypoint an intersection? (more than 1 route?)
+    private static int turnCount = 0; // U turn commands counter
 	private static int wpMode = 0; // waypoint mode (or points)
 	private static int wpMode0 = wpMode;
+	private static String startPoint = ""; // starting point
     private static int lastDist = 0; // distance at last waypoint
 	private static List<Point> goals = new ArrayList<Point>(); // waypoints
 	private static List<Point> points = new ArrayList<Point>(); // map points
@@ -250,6 +259,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private float oldDist = 1f;
 	private float newDist = 1f;
 	private int touchMode = 0;
+    private static int btCounter = 0;
+	private static int runCounter = 0;
 	private int counter = 0;
 	private int debugMode = 0;
 	private int buttonTouched = 0;
@@ -267,6 +278,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private String mTxt6 = "";
 	private String mTxt7 = "";
 	private String mText = "";
+	private String cTxt1 = ""; // central text (line 1)
+	private String cTxt2 = ""; // central text (line 2)
+	private int nTxt2 = 0; // counter for central text (line 2)
 	private int mTargetAzimuth = 999;
 	private int compassAzimuth = 999;
 	private int numCleanCommands = 0;
@@ -323,6 +337,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private String fileName = "";
 	private String shortTxt = "";
 	private static String testTxt = "";
+	private static String testTxt2 = "";
    	private int shortNum = 0;
 	private static String robotName = "robot";
 	//String[] maps = {"t0","t1","t2","t3","0A","1A","1B","1C","1D","1E","1F","2A","2B","2C","2D","2E","2F","3A","3B","3C","3D","3E","3F"};
@@ -343,6 +358,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	private List<MatOfPoint> mContours = null;
 
 	float[] results = new float[3];
+
+    private static int[] vfhr = new int[]{9,9,9,9,9,9,9,9,9,9,9,9}; // VFH from robot (+-180°)
+    private static int[] vfhc = new int[]{9,9,9,9,9,9,9,9}; // VFH from camera (+-90°)
 
 	private LocationManager locationManager;
     
@@ -395,8 +413,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
-        //if (tts!=null) Toast.makeText(getApplicationContext(), "TTS OK", Toast.LENGTH_SHORT).show();
-        //else Toast.makeText(getApplicationContext(), "TTS ERR", Toast.LENGTH_SHORT).show();
+        //if (tts!=null) showToast(getApplicationContext(), "TTS OK", Toast.LENGTH_SHORT);
+        //else showToast(getApplicationContext(), "TTS ERR", Toast.LENGTH_SHORT);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -425,6 +443,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         //LayoutParams mLayoutParams = (LayoutParams) mOpenCvCameraView.getLayoutParams();
         //mLayoutParams.width = 640;
         mOpenCvCameraView.setCvCameraViewListener(this);
+        mOpenCvCameraView.setCameraIndex(0);
+        mOpenCvCameraView.setMaxFrameSize(1400,720);
+        //mOpenCvCameraView.setMinimumWidth(300);
+		//mOpenCvCameraView.setMinimumHeight(300);
     	mOpenCvCameraView.enableFpsMeter();
     	mOpenCvCameraView.offsetTopAndBottom(0);
     	init();
@@ -459,21 +481,21 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         String ocver = OpenCVLoader.OPENCV_VERSION_3_4_0;
         OpenCVLoader.initAsync(ocver, this, mLoaderCallback);
         appendLog("NavigationActivity OpenCV "+ocver+" loading initiated");
-        //Toast.makeText(getApplicationContext(), "onResume", Toast.LENGTH_SHORT).show();
+        //showToast(getApplicationContext(), "onResume", Toast.LENGTH_SHORT);
         tts = new TextToSpeech(getApplicationContext(), 
       	      new TextToSpeech.OnInitListener() {
       	      @Override
       	      public void onInit(int status) {
       	         if(status != TextToSpeech.ERROR){
       	             tts.setLanguage(Locale.US);
-         	             Toast.makeText(getApplicationContext(), "TTS OK "+status, Toast.LENGTH_SHORT).show();
+         	             showToast(getApplicationContext(), "TTS OK "+status, Toast.LENGTH_SHORT);
       	            } else {
-            	             Toast.makeText(getApplicationContext(), "TTS ERR "+status, Toast.LENGTH_SHORT).show();
+            	             showToast(getApplicationContext(), "TTS ERR "+status, Toast.LENGTH_SHORT);
       	            }
       	         }
       	      });
-        //if (tts!=null) Toast.makeText(getApplicationContext(), "TTS OK", Toast.LENGTH_SHORT).show();
-        //else Toast.makeText(getApplicationContext(), "TTS ERR", Toast.LENGTH_SHORT).show();
+        //if (tts!=null) showToast(getApplicationContext(), "TTS OK", Toast.LENGTH_SHORT);
+        //else showToast(getApplicationContext(), "TTS ERR", Toast.LENGTH_SHORT);
         stopped = false;
         appendLog("resume");
     }
@@ -488,7 +510,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	}
         //mGoogleApiClient.connect();
     	compass.start();
-		//Toast.makeText(getApplicationContext(), "compass start", Toast.LENGTH_SHORT).show();
+		//showToast(getApplicationContext(), "compass start", Toast.LENGTH_SHORT);
     	stopped = false;
         super.onStart();
     }
@@ -500,7 +522,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	super.onStop();
         appendLog("stop");
         compass.stop();
-		//Toast.makeText(getApplicationContext(), "compass stop", Toast.LENGTH_SHORT).show();
+		//showToast(getApplicationContext(), "compass stop", Toast.LENGTH_SHORT);
     	stopped = true;
         //locationManager.removeUpdates(this);
         finish();
@@ -531,11 +553,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 //                .isGooglePlayServicesAvailable(this);
 //        if (resultCode != ConnectionResult.SUCCESS) {
 //            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-//                Toast.makeText(getApplicationContext(),
+//                showToast(getApplicationContext(),
 //                        "This device is supported. Please download google play services", Toast.LENGTH_LONG)
 //                        .show();
 //            } else {
-//                Toast.makeText(getApplicationContext(),
+//                showToast(getApplicationContext(),
 //                        "This device is not supported.", Toast.LENGTH_LONG)
 //                        .show();
 //                finish();
@@ -613,7 +635,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 //    	String dateTimeString = format.format(new Date());
 //        appendToFile("RoboNavGps.log",dateTimeString+" "+fusedLatitude+" "+fusedLongitude);
 //
-//        //Toast.makeText(getApplicationContext(), "NEW LOCATION RECEIVED", Toast.LENGTH_LONG).show();
+//        //showToast(getApplicationContext(), "NEW LOCATION RECEIVED", Toast.LENGTH_LONG);
 //
 //    }
 //
@@ -646,7 +668,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		  	SimpleDateFormat format = new SimpleDateFormat("yyMMdd_HHmmss",Locale.US);
 		  	String dateTimeString = format.format(new Date());
 		    appendToFile("RoboNavGps.log",dateTimeString+" "+lat+" "+lon+" "+accuracy+" "+bearing);
-	        //Toast.makeText(getApplicationContext(), "GPS location changed", Toast.LENGTH_SHORT).show();
+	        //showToast(getApplicationContext(), "GPS location changed", Toast.LENGTH_SHORT);
 		} else {
 	        lat = location.getLatitude();
 	        lon = location.getLongitude();
@@ -659,28 +681,28 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
 	@Override
 	public void onProviderDisabled(String arg0) {
-        //Toast.makeText(getApplicationContext(), "GPS off", Toast.LENGTH_SHORT).show();
+        //showToast(getApplicationContext(), "GPS off", Toast.LENGTH_SHORT);
 	}
 
 	@Override
 	public void onProviderEnabled(String arg0) {
-        //Toast.makeText(getApplicationContext(), "GPS on", Toast.LENGTH_SHORT).show();
+        //showToast(getApplicationContext(), "GPS on", Toast.LENGTH_SHORT);
 	}
 
 	@Override
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
-        //Toast.makeText(getApplicationContext(), "GPS status changed", Toast.LENGTH_SHORT).show();
+        //showToast(getApplicationContext(), "GPS status changed", Toast.LENGTH_SHORT);
 	}
 
     public void onCameraViewStarted(int width, int height) {
-        //Toast.makeText(getApplicationContext(), "onCameraViewStarted", Toast.LENGTH_SHORT).show();
+        //showToast(getApplicationContext(), "onCameraViewStarted", Toast.LENGTH_SHORT);
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mColorDetector = new ColorBlobDetector();
         mRoadDetector = new RoadDetector();
         //mObstacleDetector = new ObstacleDetector();
         appendLog("cameraStart");
         // autotouch (green)
-        //Toast.makeText(getApplicationContext(), "autotouch", Toast.LENGTH_SHORT).show();
+        //showToast(getApplicationContext(), "autotouch", Toast.LENGTH_SHORT);
         //mColorDetector.setColorRadius(new Scalar(25,50,50,0));
         mBlobColorHsv = new Scalar(75,150,150,0); // soft green
         mBlobColorHsv1 = new Scalar(100,255,220,0); // strong green
@@ -758,8 +780,18 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			String qrCode2 = trigger.getExtras().getString("qrCode");
 			String sWp = trigger.getExtras().getString("sWp");
 			String sState = trigger.getExtras().getString("sState");
-            //Toast.makeText(getApplicationContext(), "sMode: "+sMode+" / sWp: "+sWp+" / sState: "+sState+" / qrCode2: "+qrCode2, Toast.LENGTH_LONG).show();
-			Toast.makeText(getApplicationContext(), "qrCode: "+qrCode2, Toast.LENGTH_LONG).show();
+            String sGr = trigger.getExtras().getString("sGr");
+			String sSp = trigger.getExtras().getString("sSp");
+			startPoint = sSp;
+            //showToast(getApplicationContext(), "sMode: "+sMode+" / sWp: "+sWp+" / sState: "+sState+" / qrCode2: "+qrCode2, Toast.LENGTH_LONG);
+			//showToast(getApplicationContext(), "qrCode/sState/sMode: "+qrCode2+" / "+sState+" / "+sMode, Toast.LENGTH_LONG);
+			if (sState.contains("unload") && startPoint.length()>0) {
+				// set location to the saved startingPoint
+				qrCode2 = startPoint;
+				showToast(getApplicationContext(), "qrCodeSp/gr: "+qrCode2+" / "+sGr, Toast.LENGTH_LONG);
+			} else {
+				showToast(getApplicationContext(), "qrCode/gr: "+qrCode2+" / "+sGr, Toast.LENGTH_LONG);
+			}
 			if (qrCode2.length()>0) {
 				qrCode = qrCode2;
 				appendLog("restart after QR Droid (qrCode: "+qrCode+")");
@@ -772,21 +804,30 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			if (sMode.length()>0) {
 				searchMode = Integer.parseInt(sMode);
 				wp = Integer.parseInt(sWp);
+				goalReached = Integer.parseInt(sGr);
 				state = "start";
 				if (sState.contains("unload")) state = "unloading";
 				else if (sState.contains("load")) state = "loading";
-				computeNextWaypoint(0);
-				now.setToNow();
-				startTimeMilis = now.toMillis(false) - 10000;
-				setStartTime();
-				runMode = 1;
+				if (qrCode.length()>0) {
+					computeRoute(qrLat,qrLon);
+					wp = 0;
+					//state = "normal";
+					computeNextWaypoint(1);
+					now.setToNow();
+					startTimeMilis = now.toMillis(false) + 12000;
+					setStartTime();
+					runMode = 1;
+					tmpSec0 = tmpSec;
+				}
 				appendLog("set new state (searchMode: "+searchMode+" / wp: "+wp+" / state: "+state+" / qrLat: "+qrLat+" / qrLon: "+qrLon+")");
+				//state = "normal";
 			}
 		} catch (Exception e) {
 			// TODO
+			//showToast(getApplicationContext(), "EX start "+e.getMessage(), Toast.LENGTH_SHORT);
 		}
         //appendLog("date_time;mCommand;searchMode;azimuthOK;btDst;btSpd;latOK;lonOK;bearing;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;drivingSignal;");
-		appendLog("date_time;mCommand;searchMode;azimuthOK;btDst;btSpd;latOK;lonOK;bearing;wp;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;drivingSignal;distanceToNextWaypoint;turnAngleToNextWaypoint;mode6;state;btRng;btRngLeft;btRngRight;turnAngleToAvoidObstacle;blobDirection;mBoundingRectangle.height;");
+		appendLog("date_time;mCommand;searchMode;azimuthOK;btDst;btSpd;latOK;lonOK;bearing/btValid;wp;wpMode;wpDist;pathAzimuth;azimuthToNextWaypoint;drivingSignal;distanceToNextWaypoint;turnAngleToNextWaypoint;mode6;state;btRng;btRngLeft;btRngRight;turnAngleToAvoidObstacle;blobDirection;mBoundingRectangle.height;");
     }
 
     public void onCameraViewStopped() {
@@ -823,11 +864,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	//tts.speak("up", TextToSpeech.QUEUE_ADD, null);
 			//touchTime = event.getEventTime() - event.getDownTime();
 			touchTime = event.getEventTime() - lastDownTime;
-    		//Toast.makeText(getApplicationContext(), ""+touchTime+" / "+event.getPressure(), Toast.LENGTH_SHORT).show();
-    		//Toast.makeText(getApplicationContext(), ""+inputMode+" / "+move+" / "+touchMode+" / "+buttonTouched, Toast.LENGTH_SHORT).show();
+    		//showToast(getApplicationContext(), ""+touchTime+" / "+event.getPressure(), Toast.LENGTH_SHORT);
+    		//showToast(getApplicationContext(), ""+inputMode+" / "+move+" / "+touchMode+" / "+buttonTouched, Toast.LENGTH_SHORT);
             if (inputMode==1 && move==0 && buttonTouched==0 && (event.getEventTime()-lastDownTime)>=0 && (event.getEventTime()-lastUpTime)>=0) {
             	// new waypoint defined
-        		//Toast.makeText(getApplicationContext(), "rows: "+rows+", vh: "+vh+" / "+cols+" / "+vw, Toast.LENGTH_SHORT).show();
+        		//showToast(getApplicationContext(), "rows: "+rows+", vh: "+vh+" / "+cols+" / "+vw, Toast.LENGTH_SHORT);
                 double xLat = 0; 
                 double xLon = 0; 
             	double tmpLon = centLon + ((x-w/2))/multLon;
@@ -872,11 +913,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	if (touchTime>450) xMode = 1;
             	if (touchTime>1050) xMode = 2;
             	wpModes.add(new int[]{xMode});
+            	if (searchMode==3 && path.size()==2) computeRoute(tmpLat,tmpLon);
                 lastX = -999;
                 lastUpTime = event.getEventTime();
             	buttonTouched = 0;
             	move = 0;
-        		//Toast.makeText(getApplicationContext(), ""+touchTime+" / "+path.size(), Toast.LENGTH_SHORT).show();
+        		//showToast(getApplicationContext(), ""+touchTime+" / "+path.size(), Toast.LENGTH_SHORT);
             	return false;
             }
             if (inputMode==0 && move==0 && buttonTouched==0 && (event.getEventTime()-lastDownTime)>=0 && (event.getEventTime()-lastUpTime)>=0) {
@@ -889,7 +931,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
               	    if (!stopped) {
                  	    writeCommand();
                 	    tellCommand((char)out[0]);
-                		Toast.makeText(getApplicationContext(), "azCalib: "+Math.round(azimuth_calib)+"/"+Math.round(pathAzimuth), Toast.LENGTH_SHORT).show();
+                		showToast(getApplicationContext(), "azCalib: "+Math.round(azimuth_calib)+"/"+Math.round(pathAzimuth), Toast.LENGTH_SHORT);
                     }
                 	return false;
             	}
@@ -980,8 +1022,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         }
         else if ((x<corner) && (y>(rows-corner)) && searchMode>0) {
         	// debugMode corner (bottom left)
-        	if (searchMode>0) {
-            	if (inputMode==1) {
+        	if (searchMode>=0) {
+            	if (searchMode>0 && inputMode==1) {
             		// remove last waypoint
                 	buttonTouched = 2;
             		int lastIndex = path.size() - 1; 
@@ -990,19 +1032,25 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             			wpModes.remove(lastIndex);
             		}
                 	//if (voiceOutput>0) tts.speak("removed waypoint "+lastIndex, TextToSpeech.QUEUE_ADD, null);
-                	//else Toast.makeText(getApplicationContext(), "removed waypoint "+lastIndex, Toast.LENGTH_SHORT).show();
+                	//else showToast(getApplicationContext(), "removed waypoint "+lastIndex, Toast.LENGTH_SHORT);
             		return false;
             	}
-        	    if (debugMode>0) {
-        	    	debugMode = 0;
-        	    }
-        	    else {
-        	    	debugMode = 1;
-        	    }
-            	if (voiceOutput>0) say("debug "+debugMode);
+                if (searchMode==3) {
+                    callQrDroid();
+                    return false;
+                }
+                if (searchMode>0) {
+                    if (debugMode>0) {
+                        debugMode = 0;
+                    }
+                    else {
+                        debugMode = 1;
+                    }
+                    if (voiceOutput>0) say("debug "+debugMode);
+                }
             	buttonTouched = 2;
 				out[0] = 'q'; // adjust center to the left
-				callQrDroid();
+                if (voiceOutput>0) say("q");
         	    return false;
 			}
         }
@@ -1014,12 +1062,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		if (navMode=="on") navMode = "off";
         		else navMode = "on";
             	if (voiceOutput>0) say("nav "+navMode);
-            	else Toast.makeText(getApplicationContext(), "nav "+navMode, Toast.LENGTH_SHORT).show();
+            	else showToast(getApplicationContext(), "nav "+navMode, Toast.LENGTH_SHORT);
         	} else if (searchMode>0) {
-        		if (state=="normal") {
+        		if (state!="xxxnormal") {
         			nextWp = 1;
 					buttonTouched = 2;
-                    Toast.makeText(getApplicationContext(), "nextWp: "+wp, Toast.LENGTH_SHORT).show();
+                    showToast(getApplicationContext(), "nextWp: "+wp, Toast.LENGTH_SHORT);
         			return false;
 				}
             	if (wp<(path.size()-1)) computeNextWaypoint(1);
@@ -1031,7 +1079,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             		computeNextWaypoint(1);
             	}
             	if (voiceOutput>0) say("waypoint "+wp+",,, azimuth "+(int)pathAzimuth+",,, distance "+(int)wpDist+",,, mode "+(int)wpMode);
-            	else Toast.makeText(getApplicationContext(), "wp "+wp+", az "+(int)pathAzimuth+", dist "+(int)wpDist+", mode "+(int)wpMode, Toast.LENGTH_SHORT).show();
+            	else showToast(getApplicationContext(), "wp "+wp+", az "+(int)pathAzimuth+", dist "+(int)wpDist+", mode "+(int)wpMode, Toast.LENGTH_SHORT);
             	buttonTouched = 2;
         	    return false;
         	}
@@ -1232,15 +1280,18 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         	mColor2 = RED;
     	    return false;
         }
-		else if (searchMode==3 && inputMode<1) {
+		else if (searchMode==3 && inputMode<1 && (state.contains("load") || state=="start")) {
 			// end of start/loading/unloading
-			Toast.makeText(getApplicationContext(), "continue ("+state+")", Toast.LENGTH_SHORT).show();
+			showToast(getApplicationContext(), "continue ("+state+")", Toast.LENGTH_SHORT);
 			say("continue");
 			state = "normal";
+            startTimeMilis = now.toMillis(false) - 10000;
+            setStartTime();
+            tmpSec0 = tmpSec;
 			startMode = 1;
 			runMode = 1;
 			computeNextWaypoint(0);
-            mCommand = 'w';
+            //mCommand = 'w';
 			return false;
 		}
         else if (searchMode==0) {
@@ -1254,7 +1305,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 					buttonTouched = 12;
                     //appendLog("QR Droid external call");
                     out[0] = 'q'; // adjust center to the left
-					callQrDroid();
+					//callQrDroid();
 					//Intent returnIntent = new Intent();
 					//returnIntent.putExtra("result",result);
 					//setResult(Activity.RESULT_OK,returnIntent);
@@ -1271,7 +1322,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             } else if (x<=(5*w/10)) {
             	// forward / h / k
             	buttonTouched = 21;
-    	    	out[0] = 'f';
+    	    	//out[0] = 'f';
+				out[0] = 'w';
     	    	if (y>(2*h/3)) {
                 	buttonTouched = 22;
     	    		out[0] = 'h'; // xleft
@@ -1402,6 +1454,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         }
         catch (Exception e) {
             Log.e(TAG, "mCamera.setPreviewDisplay/setPreviewTexture fails: " + e);
+			showToast(getApplicationContext(), "EX preview "+e.getMessage(), Toast.LENGTH_SHORT);
         }
 
         return false; // don't need subsequent touch events
@@ -1414,6 +1467,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		returnIntent.putExtra("sMode",""+searchMode);
 		returnIntent.putExtra("sWp",""+wp);
 		returnIntent.putExtra("sState",state);
+        returnIntent.putExtra("sGr",""+goalReached);
+		returnIntent.putExtra("sSp",startPoint);
 		setResult(Activity.RESULT_OK,returnIntent);
 		stopped = true;
 		finish();
@@ -1654,7 +1709,24 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	mLeftOK = mRoadDetector.getLeftOK();
                 	mRightOK = mRoadDetector.getRightOK();
                 	mCenterOK = mRoadDetector.getCenterOK();
+                	vfhc = mRoadDetector.getVFH();
             	}
+				double[] xa = {0.1,0.2,0.36,0.5,0.64,0.8,0.9,0.5};
+				double[] ya = {0.74,0.5,0.32,0.28,0.32,0.5,0.74,0.65};
+				int ix = 0;
+				int iy = 0;
+				for (int i=0; i<8; i++) {
+					ix = (int)(xa[i]*w);
+					iy = (int)(ya[i]*h);
+					Scalar ic = RED;
+					if (vfhc[i]>0) ic = GREEN;
+					Imgproc.circle(mRgba, new Point(ix, iy), 9, ic, -1);
+					if (i<7) {
+						ic = RED;
+						if (vfhr[(i+2)]>3) ic = GREEN;
+						Imgproc.circle(mRgba, new Point(ix, iy), 14, ic, 2);
+					}
+				}
             	//if (mBoundingRectangle==null) mBoundingRectangle = new Rect(w/2,h/2,1,1);
             	//Imgproc.putText(mRgba, "c: "+(char)mCommand+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+channel, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
             	if (debugMode>0) Imgproc.putText(mRgba, "c: "+txtCommand+"/"+tstText+"/"+state+"/"+runMode+" "+searchMode+"/"+mLevel+"/"+limit1+"/"+limit2+"/"+direction+"/"+topDirection+"/"+cameraDirection+"/"+cameraProbability, new Point(4,(pos-30)), 1, siz, new Scalar(255,255,150), wi);
@@ -1813,6 +1885,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	mTxt1 = ""+state+"/"+qrCode.length()+"/"+txtCommand;
             	//mTxt1 = ""+txtCommand;
 				//mTxt1 = ""+state+"/"+runMode+"/"+txtCommand+"/"+qrCode;
+				//mTxt1 += "/"+tmpSec+"("+btLat+"/"+btLon+")";
                	textSize = Imgproc.getTextSize(mTxt1, 1, 1.4*siz, 14*wi/10, baseline);
             	if (debugMode>=0) Imgproc.putText(mRgba, mTxt1, new Point((w-textSize.width)/2,h-h/60), 1, siz*1.5, new Scalar(255,0,255), 3*wi/2);
                 if (searchMode>=1 && !mText.contains("S") && (mod6==1 || mod6==5)) {
@@ -1833,21 +1906,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	    	Scalar mColorx = new Scalar(0,255,0); // green
     			if (drivingSignal<-limit1 || drivingSignal>limit1) mColorx = new Scalar(0,0,255); // blue
     			if (drivingSignal<-limit2 || drivingSignal>limit2) mColorx = new Scalar(255,0,0); // red
-            	// show command graphically
+            	// show command graphically (and draw drivingSignal)
             	if (mOrientation==2) {
         			// landscape 
             		tmpy = h*(0.75-0.6*Math.cos(drivingSignal/36));
             		tmpx = 0.5*w+0.6*h*Math.sin(drivingSignal/36);
         			Imgproc.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), mColorx, 8);
         			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,0,0), -1);
-//            		tmpy = h*(0.75-0.5*Math.cos(turnAngleToStayOnRoad/36));
-//            		tmpx = 0.5*w+0.5*h*Math.sin(turnAngleToStayOnRoad/36);
-//        			Imgproc.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
-//        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
-//            		tmpy = h*(0.75-0.4*Math.cos(turnAngleToNextWaypoint/36));
-//            		tmpx = 0.5*w+0.4*h*Math.sin(turnAngleToNextWaypoint/36);
-//        			Imgproc.line(mRgba, new Point(0.5*w,0.75*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
-//        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
                 	if (txtCommand=="xleft") {ok = 1; tmpx = w/4; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="xright") {ok = 1; tmpx = 3*w/4; tmpy = h/2; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="forward") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(0,255,0);}
@@ -1862,14 +1927,6 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             		tmpy = 0.5*w+0.6*h*Math.sin(drivingSignal/36);
         			Imgproc.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), mColorx, 5);
         			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,0,0), -1);
-//            		tmpx = h*(0.75-0.5*Math.cos(turnAngleToStayOnRoad/36));
-//            		tmpy = 0.5*w+0.5*h*Math.sin(turnAngleToStayOnRoad/36);
-//        			Imgproc.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(128,255,255), 4);
-//        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(128,255,255), -1);
-//            		tmpx = h*(0.75-0.4*Math.cos(turnAngleToNextWaypoint/36));
-//            		tmpy = 0.5*w+0.4*h*Math.sin(turnAngleToNextWaypoint/36);
-//        			Imgproc.line(mRgba, new Point(0.75*w,0.5*h), new Point(tmpx,tmpy), new Scalar(255,128,255), 4);
-//        			Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/100, new Scalar(255,128,255), -1);
         			//Imgproc.line(mRgba, new Point(topPoint.x,topPoint.y), new Point(w-2*lin,h/2), new Scalar(0), 1);
                 	if (txtCommand=="xleft") {ok = 1; tmpx = w/2; tmpy = 3*h/4; tmpColor = new Scalar(255,0,0);}
                 	else if (txtCommand=="xright") {ok = 1; tmpx = w/2; tmpy = h/4; tmpColor = new Scalar(255,0,0);}
@@ -1882,11 +1939,19 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		}
         		if (ok>0) Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/20, tmpColor, -1);
         		if (azimuthOK!=999 && searchMode!=4) {
+        			// add azimuthToNextWaypoint to mRgba
+					tmpx = w*0.5+h*0.3*Math.sin(Math.toRadians(azimuthToNextWaypoint));
+					tmpy = h*(0.5-0.3*Math.cos(Math.toRadians(azimuthToNextWaypoint)));
+					Imgproc.line(mRgba, new Point(0.5*w,0.5*h), new Point(tmpx,tmpy), BLUE, 4);
         			// add aimuthOK to mRgba
             		tmpx = w*0.5+h*0.2*Math.sin(Math.toRadians(azimuthOK));
             		tmpy = h*(0.5-0.2*Math.cos(Math.toRadians(azimuthOK)));
         			Imgproc.line(mRgba, new Point(0.5*w,0.5*h), new Point(tmpx,tmpy), RED, 6);
         			//Imgproc.circle(mRgba, new Point(tmpx,tmpy), h/50, RED, -1);
+                    // add turnAngleToNextWaypoint to mRgba
+                    tmpx = w*0.5+h*0.1*Math.sin(Math.toRadians(turnAngleToNextWaypoint));
+                    tmpy = h*(0.5-0.1*Math.cos(Math.toRadians(turnAngleToNextWaypoint)));
+                    Imgproc.line(mRgba, new Point(0.5*w,0.5*h), new Point(tmpx,tmpy), YELLOW, 4);
         		}
             	getLocation();
             	if (inputMode<1) if (debugMode>0) Imgproc.putText(mRgba, "a: "+azimuth+"/"+azimuthValid+"/"+azimuthLimit+"/"+mArea+"/"+minArea, new Point(4,(h/4)), 1, siz, new Scalar(255,255,150), wi);
@@ -1903,6 +1968,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 	if (goals.size()>1) if (debugMode>0) Imgproc.putText(mRgba, "t: "+goals.size()+"/"+Math.round(1000*goals.get(0).x)/1000+"/"+Math.round(1000*goals.get(0).y)/1000+"/"+Math.round(1000*goals.get(1).x)/1000+"/"+Math.round(1000*goals.get(1).y)/1000+" "+edges.size()+"/"+edge[0]+"/"+edge[1]+"/"+edge[2]+"/"+edge[3], new Point(4,(5*h/8)+10), 1, siz, new Scalar(255,255,150), wi);
                 	else if (goals.size()>0) if (debugMode>0) Imgproc.putText(mRgba, "t: "+goals.size()+"/"+Math.round(1000*goals.get(0).x)/1000+"/"+Math.round(1000*goals.get(0).y)/1000+" "+edges.size()+"/"+edge[0]+"/"+edge[1]+"/"+edge[2]+"/"+edge[3], new Point(4,(5*h/8)+10), 1, siz, new Scalar(255,255,150), wi);
                 	else if (debugMode>0) Imgproc.putText(mRgba, "t: "+goals.size()+" "+edges.size()+"/"+edge[0]+"/"+edge[1]+"/"+edge[2]+"/"+edge[3], new Point(4,(5*h/8)+10), 1, siz, new Scalar(255,255,150), wi);
+					if (searchMode>0) {
+						Imgproc.putText(mRgba, " "+cTxt1, new Point(0.5*w,0.6*h), 1, siz*2, new Scalar(255,255,150), wi*2);
+						Imgproc.putText(mRgba, " "+cTxt2, new Point(0.5*w,0.66*h), 1, siz*2, new Scalar(255,255,150), wi*2);
+					}
             	}
         	}
         	double tmpx0 = 0;
@@ -1972,6 +2041,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 					}
 				} catch (Exception e) {
 					//e.printStackTrace();
+					showToast(getApplicationContext(), "EX map "+e.getMessage(), Toast.LENGTH_SHORT);
 				}
         	}
         	mColor = RED;
@@ -2012,6 +2082,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         }
         if (!stopped) {
         	if (searchMode>0) {
+        		// draw corners (buttons)
             	mColor = RED; tx = "D";
             	if (searchMode==3 && inputMode<1) tx = "QR";
             	if (debugMode>0) {mColor = GREEN;}
@@ -2027,7 +2098,17 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	if (inputMode<1 && (state=="start" || state=="loading" || state=="unloading")) {
 					mColor = GREEN;
 					Imgproc.rectangle(mRgba, new Point(corner+3,corner+3), new Point(w - corner - 3,h - corner - 3), mColor, -1);
-					mColor = WHITE; tx = "tap to continue";
+					mColor = WHITE; tx = "cont "+testTxt;
+					textSize = Imgproc.getTextSize(tx, 1, 4*siz, 4*wi, baseline);
+					Imgproc.putText(mRgba, tx, new Point(w/2-textSize.width/2+1,h/2+textSize.height/2+1), 1, 4*siz, mColor, 4*wi);
+					mColor = BLACK; tx = "t "+testTxt2;
+					textSize = Imgproc.getTextSize(tx, 1, 2*siz, 2*wi, baseline);
+					Imgproc.putText(mRgba, tx, new Point(0.3*w,(0.65*h)+textSize.height/2), 1, 2*siz, mColor, 2*wi);
+				}
+				else if (inputMode<1 && (state=="end")) {
+					mColor = BLACK;
+					Imgproc.rectangle(mRgba, new Point(corner+3,corner+3), new Point(w - corner - 3,h - corner - 3), mColor, -1);
+					mColor = WHITE; tx = "finish (end)";
 					textSize = Imgproc.getTextSize(tx, 1, 4*siz, 4*wi, baseline);
 					Imgproc.putText(mRgba, tx, new Point(w/2-textSize.width/2+1,h/2+textSize.height/2+1), 1, 4*siz, mColor, 4*wi);
 				}
@@ -2069,64 +2150,101 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     
     static void setToRgba(String addToRgba) {
     	tmpText += addToRgba;
+    	//btCounter++;
+    	//testTxt += "/"+btCounter;
     	if (tmpText.indexOf("\n")>0) {
+    	    // whole telemetry line received => update parameters
+			btCounter++;
+			if (btCounter>9) btCounter = 0;
+            toRgba = tmpText.substring(0, tmpText.indexOf("\n")-1);
+            tmpText = tmpText.substring(tmpText.indexOf("\n")+1);
+			testTxt2 += "/"+btCounter+"/"+toRgba.length();
             try {
-            	toRgba = tmpText.substring(0, tmpText.indexOf("\n")-1);
 //            	if (toRgba.length()>=telemetryTable.length()) {
-              	if (toRgba.length()>=3) {
+              	if (toRgba.length()>=30) {
             		btValid = 1;
-            		int tmp = 0;
+            		int tmp = -1;
             		tmp = Integer.parseInt(toRgba.substring(fromHeading,toHeading).trim());
                 	if (tmp>0) {
+                        testTxt2 += " a:"+tmp;
                 		azimuth = tmp;
                 		now.setToNow();
-                		azimuthValidTime = now.toMillis(false) + 3000;
+                		//azimuthValidTime = now.toMillis(false) + 3000;
+                        //azimuthValidTime = now.toMillis(false) + 1500;
+						btRng = 999;
+						btRngLeft = 999;
+						btRngRight = 999;
+                        azimuthValidTime = (now.toMillis(false) + 3000);
                 		azimuthValid = 1;
                     	//azimuthDifference = azimuth - initialAzimuth;
                     	azimuthDifference = (int)(azimuth - azimuthToNextWaypoint);
                     	if (azimuthDifference<-180) azimuthDifference += 360;
                     	else if (azimuthDifference>180) azimuthDifference -= 360;
+                    	String btRngTx = "888";
                     	if (toPwm>0 && toPwm<=toRgba.length()) btPwm = Integer.parseInt(toRgba.substring(fromPwm,toPwm).trim());
-                    	if (toFront>0 && toFront<=toRgba.length()) btRng = Integer.parseInt(toRgba.substring(fromFront,toFront).trim());
-                    	if (btRng>100) {
+                    	if (toFront>0 && toFront<=toRgba.length()) {
+                    	    btRngTx = toRgba.substring(fromFront,toFront).trim();
+                    	    btRng = Integer.parseInt(btRngTx);
+                        }
+                    	if (btRng>=0) {
                         	//btRngL = 4*Integer.parseInt(toRgba.substring(24,24).trim());
                         	//btRng = 4*Integer.parseInt(toRgba.substring(25,25).trim());
                         	//btRngR = 4*Integer.parseInt(toRgba.substring(26,26).trim());
-                        	btRngL = 4*(int)Math.floor(btRng/100);
-                        	btRngR = 4*((int)btRng % 10);
-                        	btRng = 4*(int)Math.floor((btRng % 100)/10);
+							if (btRngTx.length()<3) {
+								btRng = (int)Math.floor(btRng / 4);
+								btRng = 100*btRng + 10*btRng + btRng;
+							}
+							btRngL = 4*(int)Math.floor(btRng/100);
+							btRngR = 4*((int)btRng % 10);
+							btRngC = 4*(int)Math.floor((btRng % 100)/10);
                     	}
                     	if (toDistance>0 && toDistance<=toRgba.length()) btDst = Integer.parseInt(toRgba.substring(fromDistance,toDistance).trim());
                     	if (toSpeed>0 && toSpeed<=toRgba.length()) btSpd = Integer.parseInt(toRgba.substring(fromSpeed,toSpeed).trim());
                 		if (toLat>0 && toLat<=toRgba.length()) btLat = Float.parseFloat(toRgba.substring(fromLat,toLat).trim());
                 		if (toLon>0 && toLon<=toRgba.length()) btLon = Float.parseFloat(toRgba.substring(fromLon,toLon).trim());
                 		if (toLeft>0 && toLeft<=toRgba.length()) btRngLeft = Integer.parseInt(toRgba.substring(fromLeft,toLeft).trim());
-                    	if (btRngLeft>100) {
+                    	if (btRngLeft>=0) {
                         	//btRngLeftL = 4*Integer.parseInt(toRgba.substring(58,58).trim());
                         	//btRngLeft = 4*Integer.parseInt(toRgba.substring(59,59).trim());
                         	//btRngLeftR = 4*Integer.parseInt(toRgba.substring(60,60).trim());
                         	btRngLeftL = 4*(int)Math.floor(btRngLeft/100);
                         	btRngLeftR = 4*((int)btRngLeft % 10);
-                        	btRngLeft = 4*(int)Math.floor((btRngLeft % 100)/10);
+                        	btRngLeftC = 4*(int)Math.floor((btRngLeft % 100)/10);
                     	} else {
                         	btRngLeftL = btRngLeft;
                         	btRngLeftR = btRngLeft;
+                            btRngLeftC = btRngLeft;
                     	}
                     	if (toRight>0 && toRight<=toRgba.length()) btRngRight = Integer.parseInt(toRgba.substring(fromRight,toRight).trim());
-                    	if (btRngRight>100) {
+                    	if (btRngRight>=0) {
                         	//btRngRightL = 4*Integer.parseInt(toRgba.substring(62,62).trim());
                         	//btRngRight = 4*Integer.parseInt(toRgba.substring(63,63).trim());
                         	//btRngRightR = 4*Integer.parseInt(toRgba.substring(64,64).trim());
                         	btRngRightL = 4*(int)Math.floor(btRngRight/100);
                         	btRngRightR = 4*((int)btRngRight % 10);
-                        	btRngRight = 4*(int)Math.floor((btRngRight % 100)/10);
+                        	btRngRightC = 4*(int)Math.floor((btRngRight % 100)/10);
                     	} else {
                         	btRngRightL = btRngRight;
                         	btRngRightR = btRngRight;
+                            btRngRightC = btRngRight;
                     	}
                     	if (toBack>0 && toBack<=toRgba.length()) btRngBack = Integer.parseInt(toRgba.substring(fromBack,toBack).trim());
                 		if (toPwm>0 && toPwm<=toRgba.length()) btPwm = Integer.parseInt(toRgba.substring(fromPwm,toPwm).trim());
                     	if (toPayload>0 && toPayload<=toRgba.length()) btPayload = Integer.parseInt(toRgba.substring(fromPayload,toPayload).trim());
+                        vfhr[1] = btRngLeftL;
+                        vfhr[2] = btRngLeftC;
+                        vfhr[3] = btRngLeftR;
+                        vfhr[4] = btRngL;
+                        vfhr[5] = btRngC;
+                        vfhr[6] = btRngR;
+                        vfhr[7] = btRngRightL;
+                        vfhr[8] = btRngRightC;
+                        vfhr[9] = btRngRightR;
+                        if (btRngBack>=0) {
+                            vfhr[10] = 4*(int)Math.floor(btRngBack/100);
+                            vfhr[11] = 4*((int)btRngBack % 10);
+                            vfhr[0]  = 4*(int)Math.floor((btRngBack % 100)/10);
+                        }
                 		//btLat = Float.parseFloat(tmpStr[9].trim());
                 		//btLon = Float.parseFloat(tmpStr[10].trim());
                 		//btRngLeft = Integer.parseInt(tmpStr[11].trim());
@@ -2136,20 +2254,23 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	}
                 //azimuth = 88;
                 //initialAzimuth = 99;
-        		tmpText = tmpText.substring(tmpText.indexOf("\n")+1);
+        		//tmpText = tmpText.substring(tmpText.indexOf("\n")+1);
             } catch (NumberFormatException e) {
                 //azimuth = 99;
                 //initialAzimuth = 88;
+				//showToast(this, "EX start "+e.getMessage(), Toast.LENGTH_SHORT);
             }
         	//tmpText = "";
     	}
     }
 
-	public static void setState(int sMode, int sWp, String sState, String sQrCode) {
+	public static void setState(int sMode, int sWp, String sState, String sQrCode, int sGr, String sSp) {
 		searchMode = sMode;
 		wp = sWp;
 		state = sState;
 		qrCode = sQrCode;
+		goalReached = sGr;
+		startPoint = sSp;
 		//computeNextWaypoint(0);
 	}
 
@@ -2180,7 +2301,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     }
 
     public static void setOrientation(int sOrientation) {
-        mOrientation = sOrientation;
+        //mOrientation = sOrientation;
+        mOrientation = 2;
     }
 
     static void setAddress(String sAddress) {
@@ -2194,14 +2316,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     static void setConnectedAddress(String sAddress) {
     	connectedAddress = sAddress;
 		//testTxt += "a";
-        //Toast.makeText(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT).show();
+        //showToast(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT);
     	robots = readRobots("RoboNavRobots.txt");
 //		for (int x=0; x<robots.size(); x++) {
 //	    	String[] parts = robots.get(x).split(";");
 //	    	if (connectedAddress.equalsIgnoreCase(parts[0].trim())) {
 //	    		testTxt += "f";
 //	    		robotName = parts[1];
-//	            //Toast.makeText(getApplicationContext(), "obot: "+robotName, Toast.LENGTH_SHORT).show();
+//	            //showToast(getApplicationContext(), "obot: "+robotName, Toast.LENGTH_SHORT);
 //	    		if (parts[2].length()>=commandsTable0.length()) {
 //		    		commandsTable = parts[2];
 //		    		commandsMap.clear();
@@ -2252,6 +2374,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	toBack = telemetryTable.lastIndexOf("b")+1;
     	fromPayload = telemetryTable.indexOf("p");
     	toPayload = telemetryTable.lastIndexOf("p")+1;
+		appendLog("telemetry h:"+fromHeading+","+toHeading+" rf:"+fromFront+","+toFront+" la:"+fromLat+","+toLat);
     }
 
     static void setStartTime() {
@@ -2262,7 +2385,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     private void sendCommand() {
         final Timer timer = new Timer();
-		//Toast.makeText(getApplicationContext(), "sendCommand", Toast.LENGTH_SHORT).show();
+		//showToast(getApplicationContext(), "sendCommand", Toast.LENGTH_SHORT);
         timer.schedule(new TimerTask() {
 
         @Override
@@ -2271,89 +2394,140 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
                 timer.cancel();
                 timer.purge();
      		}
-            mText = "";
-          	if (!stopped && searchMode>0 && inputMode<1) {
-               	txtCommand = "";
-                //if (stav=="OK" && lat>30f && inputMode<1 && wpDist1<3000) {
-                if (latOK>30f && inputMode<1 && wpDist1<3000) {
-                	centLat = latOK;
-                	centLon = lonOK;
-                    //Toast.makeText(getApplicationContext(), "center", Toast.LENGTH_SHORT).show();
-                }
-          		// countdown
-          		now.setToNow();
-          		long tmpTime = now.toMillis(false);
-      			long runTime = (tmpTime - firstTime)/1000;
-                //Toast.makeText(getApplicationContext(), "t:"+runTime, Toast.LENGTH_SHORT).show();
-          		if (searchMode==1 && runTime<10) {
-                	//azimuth_calib += pathAzimuth - azimuthOK;
-          		}
-      			tmpSec = (startTimeMilis - tmpTime)/1000;
-          		if (runMode<1) {
-          			// countdown active
-					//mText = "countdown ";
-          	    	String txtCommand1 = "";
-          	    	if (tmpSec==120) txtCommand1 = "2 minutes";
-          	    	else if (tmpSec==60) txtCommand1 = "1 minute";
-          	    	else if (tmpSec==50) {
-          	    		if (latOK>30f) txtCommand1 = "GPS ready";
-          	    		else txtCommand1 = "GPS malfunction";
-          	    	}
-          	    	else if (tmpSec==40) {
-          	    		if (azimuthValid>0) txtCommand1 = "compass ready";
-          	    		else txtCommand1 = "bluetooth malfunction";
-          	    	}
-          	    	else if (tmpSec==30) txtCommand1 = "30 seconds";
-          	    	else if (tmpSec==20) txtCommand1 = "20 seconds";
-          	    	else if (tmpSec==10) txtCommand1 = "10 seconds";
-          	    	else if (tmpSec==0) txtCommand1 = "go";
-          	    	else if (tmpSec<=5 && tmpSec>0) txtCommand1 = ""+(int)tmpSec;
-      		    	if (txtCommand1!="" && !txtCommand1.equals(pom) && voiceOutput>0) {
-          		    	pom = txtCommand1;
-          		    	say(txtCommand1);
-      		    	}
-              		computeCommand(); // main navigation algorithm => mCommand
-              		mCommand = '-';
-        	    	out[0] = mCommand;
-                 	txtCommand = "";
-      		    	return;
-          		}
-				//mText = "c2 ";
-          		computeCommand(); // main navigation algorithm => mCommand
-          		//if (searchMode==3 && tmpSec>=-5) mCommand = 'w'; // initial mCommand for RoboTour is "forward"
-             	txtCommand = "";
-          		if (searchMode<=3) {
-          			// send "slow" command (once per second) for defined modes only
-          			slowCommand();
-          		}
-            	SimpleDateFormat format = new SimpleDateFormat("yyMMdd_HHmmss",Locale.US);
-            	String dateTimeString = format.format(new Date());
-                //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+direction+";"+topDirection+";"+averageDirection+";"+averageTopPoint+";"+directionNum+";"+azimuth+";"+initialAzimuth+";"+azimuthDifference+";"+azimuthValid+";"+btPwm+";"+btRng+";"+btDst+";"+btSpd+";"+limit1+";"+limit2+";"+mLevel+";"+azimuthLimit+";"+mArea+";"+minArea+";"+btLat+";"+btLon+";"+btRngLeft+";"+btRngRight+";"+btRngBack+";");
-            	// new log structure (4.9.2015)
-                //appendLog("date_time;mCommand;searchMode;direction;topDirection;cameraDirection;directionNum;azimuth;azimuthValid;btPwm;btRng;btRngLeft;btRngRight;btRngBack;btDst;btSpd;limit1;limit2;mLevel;azimuthLimit;mArea;minArea;btLat;btLon;stav;lat;lon;bearing;accuracy;wp;wpLat;wpLon;wpMode;wpDist;pathAzimuth;wpDist1;azimuthToNextWaypoint;azimuth;actualDist;lastDist;");
-                //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+direction+";"+topDirection+";"+cameraDirection+";"+azimuth+";"+azimuthValid+";"+btPwm+";"+btRng+";"+btRngLeft+";"+btRngRight+";"+btRngBack+";"+btDst+";"+btSpd+";"+limit1+";"+limit2+";"+mLevel+";"+azimuthLimit+";"+mArea+";"+minArea+";"+Math.round(100000*btLat)+";"+Math.round(100000*btLon)+";"+stav+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+Math.round(accuracy)+";"+wp+";"+Math.round(100000*wpLat)+";"+Math.round(100000*wpLon)+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(wpDist1)+";"+Math.round(azimuthToNextWaypoint)+";"+azimuth+";"+Math.round(azimDiff)+";"+Math.round(turnAngleToNextWaypoint)+";"+Math.round(actualDist)+";"+Math.round(lastDist)+";");
-            	// simplified log structure (26.11.2017)
-                //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
-            	// another log structure (27.11.2017)
-                //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+btDst+";"+btSpd+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
-            	// another log structure (5.12.2017)
-                //appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthOK+";"+btDst+";"+btSpd+";"+Math.round(100000*latOK)+";"+Math.round(100000*lonOK)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";"+Math.round(drivingSignal)+";");
-				// another log structure (14.7.2019)
-				appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+Math.round(azimuthOK)+";"+btDst+";"+btSpd+";"+Math.round(100000*latOK)+";"+Math.round(100000*lonOK)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";"+Math.round(drivingSignal)+";"+Math.round(distanceToNextWaypoint)+";"+Math.round(turnAngleToNextWaypoint)+";"+Math.round(mod6)+";"+state+";"+Math.round(btRng)+";"+Math.round(btRngLeft)+";"+Math.round(btRngRight)+";"+Math.round(turnAngleToAvoidObstacle)+";"+Math.round(blobDirection)+";"+Math.round(mBoundingRectangle.height)+";");
-                //directionTrend = -direction/2;
-                //topPointTrend = -topDirection/2;
-             	if (mPrevCommand=='l' || mPrevCommand=='r') {
-                    directionTrend = -directionTrend;
-                    topPointTrend = -topPointTrend;
-             	} else if (mPrevCommand=='h' || mPrevCommand=='k') {
-                        directionTrend = -directionTrend/2;
-                        topPointTrend = -topPointTrend/2;
-                } else {
-                    directionTrend = 0;
-                    topPointTrend = 0;
-             	}
-                directionNum = 0;
-          	}
+          	testTxt2 = "";
+			//cTxt2 = "";
+			if (cTxt2.length()>0) {
+				nTxt2++;
+				if (nTxt2>5) {
+					nTxt2 = 0;
+					cTxt2 = "";
+				}
+			}
+          	try {
+				mText = "";
+				if (!stopped && searchMode>0 && inputMode<1) {
+					runCounter++;
+					if (runCounter>9) runCounter = 0;
+					testTxt2 += "run "+runCounter;
+					txtCommand = "";
+					//if (stav=="OK" && lat>30f && inputMode<1 && wpDist1<3000) {
+					if (latOK>30f && inputMode<1 && wpDist1<3000) {
+						centLat = latOK;
+						centLon = lonOK;
+						//showToast(getApplicationContext(), "center", Toast.LENGTH_SHORT);
+					}
+					// countdown
+					now.setToNow();
+					long tmpTime = now.toMillis(false);
+					long runTime = (tmpTime - firstTime)/1000;
+					//showToast(getApplicationContext(), "t:"+runTime, Toast.LENGTH_SHORT);
+					if (searchMode==1 && runTime<10) {
+						//azimuth_calib += pathAzimuth - azimuthOK;
+					}
+					tmpSec = (startTimeMilis - tmpTime)/1000;
+					testTxt = state;
+					if (runMode<1) {
+						// countdown active
+						//mText = "countdown ";
+						String txtCommand1 = "";
+						if (tmpSec==120) txtCommand1 = "2 minutes";
+						else if (tmpSec==60) txtCommand1 = "1 minute";
+						else if (tmpSec==50) {
+							if (latOK>30f) txtCommand1 = "GPS ready";
+							else txtCommand1 = "GPS malfunction";
+						}
+						else if (tmpSec==40) {
+							if (azimuthValid>0) txtCommand1 = "compass ready";
+							else txtCommand1 = "bluetooth malfunction";
+						}
+						else if (tmpSec==30) txtCommand1 = "30 seconds";
+						else if (tmpSec==20) txtCommand1 = "20 seconds";
+						else if (tmpSec==10) txtCommand1 = "10 seconds";
+						else if (tmpSec==0) txtCommand1 = "go";
+						else if (tmpSec<=5 && tmpSec>0) txtCommand1 = ""+(int)tmpSec;
+						if (txtCommand1!="" && !txtCommand1.equals(pom) && voiceOutput>0) {
+							pom = txtCommand1;
+							say(txtCommand1);
+						}
+						computeCommand(); // main navigation algorithm => mCommand
+						mCommand = '-';
+						out[0] = mCommand;
+						txtCommand = "";
+						return;
+					}
+					if (searchMode==3 && (state=="start" || state.contains("load")) && tmpSec>=0) {
+						// countdown to continue
+						//mText = "countdown ";
+						String txtCommand1 = "";
+						if (tmpSec==10) txtCommand1 = "10 seconds to continue";
+						else if (tmpSec<=0) {
+							txtCommand1 = "go";
+							state = "normal";
+							startTimeMilis = now.toMillis(false) - 10000;
+							setStartTime();
+							tmpSec0 = tmpSec;
+							startMode = 1;
+							runMode = 1;
+							if (voiceOutput>0) {
+								pom = txtCommand1;
+								say(txtCommand1);
+							}
+							mCommand = 'w';
+							out[0] = mCommand;
+							txtCommand = "";
+							return;
+						}
+						else if (tmpSec<=5 && tmpSec>0) txtCommand1 = ""+(int)tmpSec;
+						if (txtCommand1!="" && !txtCommand1.equals(pom) && voiceOutput>0) {
+							pom = txtCommand1;
+							say(txtCommand1);
+						}
+						testTxt = state+"/"+tmpSec+"/"+txtCommand1;
+						computeCommand(); // main navigation algorithm => mCommand
+						mCommand = '-';
+						out[0] = mCommand;
+						txtCommand = "";
+						return;
+					}
+					//mText = "c2 ";
+					computeCommand(); // main navigation algorithm => mCommand (if telemetry is not valid only)
+					//if (searchMode==3 && tmpSec>=-5) mCommand = 'w'; // initial mCommand for RoboTour is "forward"
+					txtCommand = "";
+					if (searchMode<=3) {
+						// send "slow" command (once per second) for defined modes only
+						slowCommand();
+					}
+					SimpleDateFormat format = new SimpleDateFormat("yyMMdd_HHmmss",Locale.US);
+					String dateTimeString = format.format(new Date());
+					//appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+direction+";"+topDirection+";"+averageDirection+";"+averageTopPoint+";"+directionNum+";"+azimuth+";"+initialAzimuth+";"+azimuthDifference+";"+azimuthValid+";"+btPwm+";"+btRng+";"+btDst+";"+btSpd+";"+limit1+";"+limit2+";"+mLevel+";"+azimuthLimit+";"+mArea+";"+minArea+";"+btLat+";"+btLon+";"+btRngLeft+";"+btRngRight+";"+btRngBack+";");
+					// new log structure (4.9.2015)
+					//appendLog("date_time;mCommand;searchMode;direction;topDirection;cameraDirection;directionNum;azimuth;azimuthValid;btPwm;btRng;btRngLeft;btRngRight;btRngBack;btDst;btSpd;limit1;limit2;mLevel;azimuthLimit;mArea;minArea;btLat;btLon;stav;lat;lon;bearing;accuracy;wp;wpLat;wpLon;wpMode;wpDist;pathAzimuth;wpDist1;azimuthToNextWaypoint;azimuth;actualDist;lastDist;");
+					//appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+direction+";"+topDirection+";"+cameraDirection+";"+azimuth+";"+azimuthValid+";"+btPwm+";"+btRng+";"+btRngLeft+";"+btRngRight+";"+btRngBack+";"+btDst+";"+btSpd+";"+limit1+";"+limit2+";"+mLevel+";"+azimuthLimit+";"+mArea+";"+minArea+";"+Math.round(100000*btLat)+";"+Math.round(100000*btLon)+";"+stav+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+Math.round(accuracy)+";"+wp+";"+Math.round(100000*wpLat)+";"+Math.round(100000*wpLon)+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(wpDist1)+";"+Math.round(azimuthToNextWaypoint)+";"+azimuth+";"+Math.round(azimDiff)+";"+Math.round(turnAngleToNextWaypoint)+";"+Math.round(actualDist)+";"+Math.round(lastDist)+";");
+					// simplified log structure (26.11.2017)
+					//appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
+					// another log structure (27.11.2017)
+					//appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthValid+";"+btDst+";"+btSpd+";"+Math.round(100000*lat)+";"+Math.round(100000*lon)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";");
+					// another log structure (5.12.2017)
+					//appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+azimuthOK+";"+btDst+";"+btSpd+";"+Math.round(100000*latOK)+";"+Math.round(100000*lonOK)+";"+Math.round(bearing)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";"+Math.round(drivingSignal)+";");
+					// another log structure (14.7.2019)
+					appendLog(dateTimeString+";"+(char)out[0]+";"+searchMode+";"+Math.round(azimuthOK)+";"+btDst+";"+btSpd+";"+Math.round(100000*latOK)+";"+Math.round(100000*lonOK)+";"+Math.round(bearing)+"/"+btValid+"/"+((int)(azimuthValidTime/1000) % 1000)+";"+wp+";"+wpMode+";"+Math.round(wpDist)+";"+Math.round(pathAzimuth)+";"+Math.round(azimuthToNextWaypoint)+";"+Math.round(drivingSignal)+";"+Math.round(distanceToNextWaypoint)+";"+Math.round(turnAngleToNextWaypoint)+";"+Math.round(mod6)+";"+state+";"+Math.round(btRng)+";"+Math.round(btRngLeft)+";"+Math.round(btRngRight)+";"+Math.round(turnAngleToAvoidObstacle)+";"+Math.round(blobDirection)+";"+Math.round(mBoundingRectangle.height)+";");
+					//directionTrend = -direction/2;
+					//topPointTrend = -topDirection/2;
+					if (mPrevCommand=='l' || mPrevCommand=='r') {
+						directionTrend = -directionTrend;
+						topPointTrend = -topPointTrend;
+					} else if (mPrevCommand=='h' || mPrevCommand=='k') {
+						directionTrend = -directionTrend/2;
+						topPointTrend = -topPointTrend/2;
+					} else {
+						directionTrend = 0;
+						topPointTrend = 0;
+					}
+					directionNum = 0;
+				}
+			} catch (Exception e) {
+				testTxt2 += " EXsend "+e.getMessage();
+			}
           }
         },0,990); //run every defined ms
     }
@@ -2374,7 +2548,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	else if (command=='r') txtCommand = "xright";
     	else if (command=='h') txtCommand = "left";
     	else if (command=='k') txtCommand = "right";
-    	else if (command=='f') txtCommand = "straight";
+    	//else if (command=='f') txtCommand = "straight";
+		else if (command=='f') txtCommand = "forward";
     	else if (command=='s') txtCommand = "stop";
     	else if (command=='b') txtCommand = "back";
     	else if (command=='w') txtCommand = "forward";
@@ -2393,23 +2568,28 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             		lastSay = time;
             		say(txtCommand);
             	}
-        		//Toast.makeText(getApplicationContext(), txtCommand, Toast.LENGTH_SHORT).show();
+        		//showToast(getApplicationContext(), txtCommand, Toast.LENGTH_SHORT);
     		}
     	}
     }
     
     private void say(String txt) {
     	if (repeatedCommand<1 && voiceOutput>0) {
-    		if (voiceOutput>1 || !"xleft xright back stop straight forward".contains(txt)) {
-				tts.speak(txt, TextToSpeech.QUEUE_ADD, null);
+    		//if (voiceOutput>1 || !"xleft xright back stop straight forward".contains(txt)) {
+			if (voiceOutput>1 || !"xleft xright straight forward".contains(txt)) {
+    			try {
+					tts.speak(txt, TextToSpeech.QUEUE_ADD, null);
+                } catch (Exception e) {
+    				//
+				}
 			}
 		}
-    	if (txt=="stop") repeatedCommand = 1;
+    	if (txt=="xxxstop") repeatedCommand = 1;
     	else repeatedCommand = 0;
     }
     
     private void saveConfig() {
-        Toast.makeText(getApplicationContext(), "saving...", Toast.LENGTH_SHORT).show();
+        showToast(getApplicationContext(), "saving...", Toast.LENGTH_SHORT);
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
     	SharedPreferences.Editor editor = mPrefs.edit();
     	editor.putString(SEARCHMODE_KEY, Integer.toString(searchMode));
@@ -2425,9 +2605,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     private void readPrefs() {
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-		limit1 = readIntPref("limit1", limit1, 5);
-		limit2 = limit1 + 10;
-		azimuthLimit = readIntPref("azimlimit", azimuthLimit, 25);
+		limit1 = readIntPref("limit1", limit1, 45);
+		//limit2 = limit1 + 10;
+		limit2 = (int)(limit1 * 2.2);
+		azimuthLimit = readIntPref("azimlimit", azimuthLimit, 90);
 		mArea = readIntPref("minarea", mArea, 9999);
 		//if (mArea>10) minArea = mArea/100; 
 		fileNumber = readIntPref("hsv1", fileNumber, 99);
@@ -2461,11 +2642,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		}
             } catch (NumberFormatException e) {
                 ok = false;
-            	Toast.makeText(getApplicationContext(), "setColorFromString error "+mStr+", "+ix+", "+e.toString(), Toast.LENGTH_SHORT).show();
+            	showToast(getApplicationContext(), "setColorFromString error "+mStr+", "+ix+", "+e.toString(), Toast.LENGTH_SHORT);
     		}
     		if (ok) mReturn.set(mColors);
     	}
-    	//Toast.makeText(getApplicationContext(), ""+mStr+", "+ok+", "+mDefault.toString(), Toast.LENGTH_SHORT).show();
+    	//showToast(getApplicationContext(), ""+mStr+", "+ok+", "+mDefault.toString(), Toast.LENGTH_SHORT);
     	return mReturn;
     }
 
@@ -2640,6 +2821,150 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         return ret;
     }
 
+    public void computeRoute(double tgLat, double tgLon)
+    {
+        // automatic route selection by the state, by the map, by the current location and by the target location
+		// current location = latOK, lonOk
+		// current waypoint = wp
+		// target location = tgLat, tgLon
+		// map = points(x,y), edges(p1,p2,dist,azim)
+		// output is the path array (waypoints) and wpModes array (modes)
+		int tp = getNearestPoint(tgLat,tgLon,1);
+		int wpx = (wp - 1);
+		//int sp = getNearestPoint(path.get(sp).y,path.get(sp).x);
+		int sp = getNearestPoint(latOK,lonOK,0);
+		int dist = 0;
+		int xMode = 0;
+		String used = " ,";
+		String route = ""+sp;
+		String bestRoute = "";
+		String bestRoute2 = "";
+		String bestRoute3 = "";
+		String xPath = "";
+		String bestPath = "";
+		String bestDists = "";
+		int bestDist = 9999;
+		int bestDist2 = 9999;
+		int bestDist3 = 9999;
+		int xDist0 = 0;
+		int[] xEdge = {0,0,0,0}; // point1, point2, dist, mode
+		int[] xDist = {0,0,0,0}; // dist_prev, dist_next, point, edge
+		List<String> routes = new ArrayList<String>();
+		List<String> paths = new ArrayList<String>();
+		List<int[]> dists = new ArrayList<int[]>();
+		float[] results = new float[3];
+		int xp = sp;
+		int xend = 0;
+		if (startPoint.length()<1) {
+			startPoint = ""+points.get(sp).y+","+points.get(sp).x;
+			showToast(getApplicationContext(), "startPoint: "+startPoint, Toast.LENGTH_SHORT);
+		}
+		if (tp>=0 && sp==tp) {
+		    // we are at the target point
+            path.clear();
+            wpModes.clear();
+            path.add(new Point(points.get(0).x,points.get(0).y));
+            wpModes.add(new int[]{0});
+            path.add(new Point(points.get(tp).x,points.get(tp).y));
+            wpModes.add(new int[]{1});
+            wp = 1;
+            showToast(this, "route SINGLE "+tp, Toast.LENGTH_SHORT);
+            return;
+        }
+		//while (xp!=tp && xp>=0) {
+		while (xend<1) {
+			for (int i=0; i<edges.size(); i++) {
+				if (used.indexOf(","+i+",")<1) {
+					xEdge = edges.get(i);
+					if (xEdge[0]==xp) {
+						routes.add(new String(route+","+xEdge[1]));
+						paths.add(new String(xPath+","+i));
+						xDist[0] = xDist0 + xEdge[2];
+						Location.distanceBetween(points.get(xEdge[1]).y, points.get(xEdge[1]).x, tgLat, tgLon, results);
+						xDist[1] = (int)results[0];
+						xDist[2] = xEdge[1];
+						xDist[3] = i;
+						dists.add(new int[]{xDist[0],xDist[1],xDist[2],xDist[3]});
+						used += ""+i+",";
+					}
+					else if (xEdge[1]==xp) {
+						routes.add(new String(route+","+xEdge[0]));
+						paths.add(new String(xPath+","+i));
+						xDist[0] = xDist0 + xEdge[2];
+						Location.distanceBetween(points.get(xEdge[0]).y, points.get(xEdge[0]).x, tgLat, tgLon, results);
+						xDist[1] = (int)results[0];
+						xDist[2] = xEdge[0];
+						xDist[3] = i;
+						dists.add(new int[]{xDist[0],xDist[1],xDist[2],xDist[3]});
+						used += ""+i+",";
+					}
+				}
+			}
+			int mind = 9999;
+			int minj = -1;
+			for (int j=0; j<dists.size(); j++) {
+				int disth = (dists.get(j)[0] + dists.get(j)[1]);
+				if (disth<mind) {
+					mind = disth;
+					minj = j;
+				}
+			}
+			if (minj>=0) {
+				route = routes.get(minj);
+				xDist = dists.get(minj);
+				xPath = paths.get(minj);
+				xDist0 = xDist[0];
+				xp = xDist[2];
+				if (xp==tp) {
+					if (xDist[0]<bestDist) {
+						bestDist3 = bestDist2;
+						bestDist2 = bestDist;
+						bestDist = xDist[0];
+						bestRoute3 = bestRoute2;
+						bestRoute2 = bestRoute;
+						bestRoute = route;
+						bestPath = xPath;
+					}
+				}
+				routes.remove(minj);
+				dists.remove(minj);
+				paths.remove(minj);
+			} else {
+				xp = -1; // end of search
+				xend = 1;
+			}
+		}
+		if (bestRoute.length()>0) {
+			path.clear();
+			wpModes.clear();
+			String[] idxs = bestRoute.split(",");
+			for (int j=0; j<idxs.length; j++) {
+				int idx = Integer.parseInt(idxs[j]);
+				xMode = 0;
+				if (idx==tp) xMode = 1;
+				path.add(new Point(points.get(idx).x,points.get(idx).y));
+				wpModes.add(new int[]{xMode});
+			}
+			wp = 1;
+			int bestDistSum = 0;
+			idxs = bestPath.split(",");
+			for (int j=1; j<idxs.length; j++) {
+				int idx = Integer.parseInt(idxs[j]);
+				bestDistSum += edges.get(idx)[2];
+				bestDists += ","+edges.get(idx)[2];
+			}
+			wp = 1;
+			//String btxt = bestDist+"|"+bestDistSum+"|"+used+" / "+bestRoute+" / "+bestDists.substring(1)+" / "+bestPath.substring(1);
+			//String btxt = bestDist+" / "+bestRoute+" / "+bestDists.substring(1)+" / "+bestPath.substring(1);
+			String btxt = ""+bestDist;
+			if (bestRoute2.length()>0) btxt += " - "+bestDist2+" / "+bestRoute2;
+			if (bestRoute3.length()>0) btxt += " - "+bestDist3+" / "+bestRoute3;
+			showToast(this, "route OK "+btxt, Toast.LENGTH_LONG);
+		} else {
+			showToast(this, "route ERR", Toast.LENGTH_SHORT);
+		}
+	}
+
     public void computeNextWaypoint(int step)
     {
     	if (path.size()>(wp+step) && (wp+step)>=0) {
@@ -2659,6 +2984,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         		wpDist = results[0];
         		pathAzimuth = results[1];
         		//azimuthToNextWaypoint = results[2];
+				int wp1 = (wp + step);
+				if (step==0) wp1++;
+				if (path.size()>(wp1) && (wp1)>=0) {
+					Location.distanceBetween(wpLat, wpLon, path.get(wp1).y, path.get(wp1).x, results);
+					nextWpDist = results[0];
+					nextPathAzimuth = results[1];
+					nextTurn = (int)(nextPathAzimuth - pathAzimuth);
+				}
             	lastDist = btDst;
             	if (searchMode!=1) mTargetAzimuth = (int)pathAzimuth;
     		}
@@ -2706,7 +3039,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     public void readMap(String fil)
     {
-        //Toast.makeText(getApplicationContext(), "readMap "+fil, Toast.LENGTH_LONG).show();
+        //showToast(getApplicationContext(), "readMap "+fil, Toast.LENGTH_LONG);
         try {
             File sdcard = Environment.getExternalStorageDirectory();
             File file = new File(sdcard,fil);
@@ -2770,7 +3103,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         catch (Exception e) {
             e.printStackTrace();                    
         }
-        //Toast.makeText(getApplicationContext(), ""+centLat+" "+centLon+" "+minLat+" "+minLon+" "+maxLat+" "+maxLon, Toast.LENGTH_LONG).show();
+        //showToast(getApplicationContext(), ""+centLat+" "+centLon+" "+minLat+" "+minLon+" "+maxLat+" "+maxLon, Toast.LENGTH_LONG);
     }
 
     static public List<String> readRobots(String fil)
@@ -2786,12 +3119,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             while ((line = br.readLine()) != null) {
             	if (line.length()>10) {
                 	ret.add(line.trim());
-    	            //Toast.makeText(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT).show();
+    	            //showToast(getApplicationContext(), "line: "+line, Toast.LENGTH_SHORT);
         	    	String[] parts = line.trim().split(";");
         	    	allowedAddresses += " "+parts[0].trim();
         	    	if (connectedAddress.equalsIgnoreCase(parts[0].trim())) {
         	    		robotName = parts[1];
-        	            //Toast.makeText(getApplicationContext(), "robot: "+robotName, Toast.LENGTH_SHORT).show();
+        	            //showToast(getApplicationContext(), "robot: "+robotName, Toast.LENGTH_SHORT);
         	    		if (parts[2].length()>=commandsTable0.length()) {
         		    		commandsTable = parts[2];
         		    		commandsMap.clear();
@@ -2851,7 +3184,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
         catch (Exception e) {
             e.printStackTrace();
         }
-        //Toast.makeText(getApplicationContext(), ""+centLat+" "+centLon+" "+minLat+" "+minLon+" "+maxLat+" "+maxLon, Toast.LENGTH_LONG).show();
+        //showToast(getApplicationContext(), ""+centLat+" "+centLon+" "+minLat+" "+minLon+" "+maxLat+" "+maxLon, Toast.LENGTH_LONG);
     }
 
     public void computePosition()
@@ -2860,10 +3193,6 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	latOK = lat;
     	lonOK = lon;
 		azimuthValid = 0;
-	    if (compassAzimuth!=999) {
-			azimuthOK = compassAzimuth;
-			azimuthValid = 1;
-	    }
     	if (btValid>0) {
         	if (searchMode!=22 || azimuthValid<1) {
         		azimuthOK = azimuth;
@@ -2875,13 +3204,19 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
             	latOK = btLat;
             	lonOK = btLon;
         	}
-    	} else if (stav=="OK") {
-    		// azimuth from GPS?
-    		if (bearing!=0 && azimuthValid<1) {
-            	azimuthOK = (bearing + 360) % 360;
-    			azimuthValid = 1;
-    		}
-    	}
+    	} else {
+			if (compassAzimuth!=999) {
+				azimuthOK = compassAzimuth;
+				azimuthValid = 1;
+			}
+    		if (stav=="OK") {
+				// azimuth from GPS?
+				if (bearing!=0 && azimuthValid<1) {
+					azimuthOK = (bearing + 360) % 360;
+					azimuthValid = 1;
+				}
+			}
+		}
     	if (azimuthValid<1) {
     		// azimuth from path
         	azimuthOK = pathAzimuth;
@@ -2889,6 +3224,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	}
     	azimuthOK += azimuth_calib;
     	if (azimuthOK>180) azimuthOK -= 360;
+    	if (latOK<30f && path.size()>0)  {
+			latOK = path.get(0).y;
+			lonOK = path.get(0).x;
+		}
     }
     
     @SuppressLint("FloatMath")
@@ -2901,18 +3240,21 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     public void init() {
     	btPwm = 0; // PWM from bluetooth
-    	btRng = 99; // center sonar range from bluetooth
-    	btRngL = 99; // center sonar range from bluetooth
-    	btRngR = 99; // center sonar range from bluetooth
+    	btRng = 999; // center sonar range from bluetooth
+    	btRngL = 9; // center sonar range from bluetooth
+    	btRngR = 9; // center sonar range from bluetooth
+		btRngC = 9; // center sonar range from bluetooth
     	btDst = 0; // distance from bluetooth
     	btSpd = 0; // speed from bluetooth
-    	btRngLeft = 99; // left sonar range from bluetooth
-    	btRngRight = 99; // right sonar range from bluetooth
-    	btRngBack = 99; // IR range from bluetooth
-    	btRngLeftL = 99; // left sonar range from bluetooth
-    	btRngRightL = 99; // right sonar range from bluetooth
-    	btRngLeftR = 99; // left sonar range from bluetooth
-    	btRngRightR = 99; // right sonar range from bluetooth
+    	btRngLeft = 999; // left sonar range from bluetooth
+    	btRngRight = 999; // right sonar range from bluetooth
+    	btRngBack = 999; // IR range from bluetooth
+    	btRngLeftL = 9; // left sonar range from bluetooth
+    	btRngRightL = 9; // right sonar range from bluetooth
+    	btRngLeftR = 9; // left sonar range from bluetooth
+    	btRngRightR = 9; // right sonar range from bluetooth
+		btRngLeftC = 9; // left sonar range from bluetooth
+		btRngRightC = 9; // right sonar range from bluetooth
     	wp = 0; // waypoint number
     	runMode = 0; // run mode (0=wait_for_start, 1=run, 2=finish)
     	goalReached = 0; // we should be at start now
@@ -2923,7 +3265,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 
     public void computeCommand()
     {
-    	// main navigation algorithm (finite automata and fuzzy logic)
+    	// main navigation algorithm (finite state machine and fuzzy logic)
     	whatToDo(); // get current state
     	if (state=="normal") {
     		if (searchMode!=4) {
@@ -2940,6 +3282,29 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     		}
     	}
     }
+
+    public boolean wpReached() {
+        if (state=="drop") {
+            return true;
+        }
+        int maxDist = 3 + (int)(Math.abs(turnAngleToNextWaypoint)*0.1);
+        if (Math.abs(nextTurn)>45) maxDist += 5;
+        //if (wpMode>0) maxDist = 10;
+        //if (Math.abs(turnAngleToNextWaypoint)<30) maxDist *= 0.6;
+		//else if (Math.abs(turnAngleToNextWaypoint)<60) maxDist *= 0.8;
+		if (actualDist>(wpDist+30)) {
+		    // too long drive to waypoint => recalculate route?
+            return true;
+        }
+        else if (distanceToNextWaypoint<maxDist) {
+            return true;
+        }
+        if ((wpDist*0.5)>distanceToNextWaypoint && distanceToNextWaypoint<51 && Math.abs(turnAngleToNextWaypoint)>100) {
+            // we are passing by the waypoint => recalculate route?
+            return true;
+        }
+        return false;
+    }
     
     public void whatToDo() {
         mod2 = mLevel % 2;
@@ -2948,12 +3313,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		Location.distanceBetween(latOK, lonOK, wpLat, wpLon, results);
 		distanceToNextWaypoint = results[0];
 		azimuthToNextWaypoint = results[1];
-    	if (latOK<33f && searchMode!=1 && runMode==1) {
-    		distanceToNextWaypoint = 999;
-    		wpDist1 = 999;
-    		pathAzimuth = azimuthOK;
-    		azimuthToNextWaypoint = azimuthOK;
-    	}
+		cTxt1 = "wp"+wp+"/"+(int)distanceToNextWaypoint+"m/"+(int)turnAngleToNextWaypoint+"";
+//    	if (latOK<33f && searchMode!=1 && runMode==1) {
+//    		distanceToNextWaypoint = 999;
+//    		wpDist1 = 999;
+//    		pathAzimuth = azimuthOK;
+//    		azimuthToNextWaypoint = azimuthOK;
+//    	}
     	//turnAngleToNextWaypoint = pathAzimuth - azimuthToNextWaypoint; // actual azimuth difference
     	turnAngleToNextWaypoint = azimuthToNextWaypoint - azimuthOK; // actual azimuth difference
     	if (turnAngleToNextWaypoint<-180) turnAngleToNextWaypoint += 360;
@@ -2964,7 +3330,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     		averageDirection = (int)Math.round(directionTrend/directionNum);
     		averageTopPoint = (int)Math.round(topPointTrend/directionNum);
     	}
-    	btValid = 0;
+    	//btValid = 0;
     	now.setToNow();
     	if (now.toMillis(false)<azimuthValidTime) btValid = 1;
     	else btValid = 0; // bleatooth data are not valid
@@ -3001,14 +3367,14 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	 * - if height of cone is above limit, drop ball, set next waipoint and avoid orange cone
     	 * 
     	 * strategy for RoboTour:
-		 * - start with QR code scan of loading point coordinates, then tap to continue
-		 * - compute waipoints to loading point (save starting position)
+		 * - start with QR code scan of loading location coordinates, then tap to continue
+		 * - compute waypoints to loading location (save starting position)
 		 * - drive between waypoints by GPS and azimuth, but on the road only (according the camera)
 		 * - at loading point switch to QR code scan of unloading point coordinates, tap to continue when loading is complete
-		 * - compute waipoints to unloading point
+		 * - compute waypoints to unloading point
 		 * - drive between waypoints by GPS and azimuth, but on the road only (according the camera)
 		 * - at unloading point tap to continue when unloading is complete
-		 * - compute waipoints to the starting position
+		 * - compute waypoints to the starting position
 		 * - drive between waypoints by GPS and azimuth, but on the road only (according the camera)
 		 * - at starting point stop and finish navigation
     	 */
@@ -3020,7 +3386,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			return;
 		}
 		if (searchMode>0) {
-			// finite automata navigation
+			// finite state machine processing
 	  		//mCommand = '-'; // implicit mCommand
   			actualDist = distanceOK - lastDist;
   			// step backward if state was unknown;
@@ -3049,7 +3415,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			else if (state=="turnL1") {
 				mCommand = 'b';
 				mCommand2 = 'r';
-				state = "turnL2";
+				turnCount--;
+				if (turnCount<=0) {
+                    state = "turnL2";
+                    turnCount = 0;
+                }
 				return;
 			}
 			else if (state=="turnL2") {
@@ -3064,7 +3434,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			else if (state=="turnL3") {
 				mCommand = 'w';
 				mCommand2 = 'l';
-				state = "turnL4";
+				if (vfhc[7]<1) {
+                    mCommand = 's';
+                    mCommand2 = '-';
+				    state = "turnL4";
+                } else {
+				    turnCount++;
+                }
 				return;
 			}
 			else if (state=="turnL4") {
@@ -3079,7 +3455,11 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			else if (state=="turnR1") {
 				mCommand = 'b';
 				mCommand2 = 'l';
-				state = "turnR2";
+                turnCount--;
+                if (turnCount<=0) {
+                    state = "turnR2";
+                    turnCount = 0;
+                }
 				return;
 			}
 			else if (state=="turnR2") {
@@ -3094,7 +3474,13 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			else if (state=="turnR3") {
 				mCommand = 'w';
 				mCommand2 = 'r';
-				state = "turnR4";
+                if (vfhc[7]<1) {
+                    mCommand = 's';
+                    mCommand2 = '-';
+                    state = "turnR4";
+                } else {
+                    turnCount++;
+                }
 				return;
 			}
 			else if (state=="turnR4") {
@@ -3106,15 +3492,21 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 				}
 				return;
 			}
-			else if (wp>1 && turnAngleToNextWaypoint<-110) {
-				state = "turnL1";
-				mCommand = 's';
-				return;
-			}
-			else if (wp>1 && turnAngleToNextWaypoint>110) {
-				state = "turnR1";
-				mCommand = 's';
-				return;
+            else if (state=="normal" && wp>0 && distanceToNextWaypoint>10 && Math.abs(turnAngleToNextWaypoint)>120) {
+                if ((vfhc[0]+vfhc[1]+vfhc[2])>(vfhc[4]+vfhc[5]+vfhc[6])) {
+                    // start turn left
+                    state = "turnL1";
+                    turnCount = 0;
+                    mCommand = 's';
+                    return;
+                }
+                else {
+                    // start turn right
+                    state = "turnR1";
+                    turnCount = 0;
+                    mCommand = 's';
+                    return;
+                }
 			}
 			//else if (state=="start" && qrCode.length()>0) {
 			//	state = "normal";
@@ -3122,29 +3514,39 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			//	mCommand = 'w';
 			//	return;
 			//}
-			else if (state=="loading" && qrCode.length()<1 && (tmpSec0-tmpSec)>=5) {
+			else if (state.contains("load") && qrCode.length()<1 && (tmpSec0-tmpSec)>=5) {
+				goalReached = 1;
+				if (state.contains("unload")) goalReached = 2;
 				callQrDroid();
 				mCommand = '-';
 				return;
 			}
-			else if (state=="loading" && qrCode.length()<1 && (tmpSec0-tmpSec)>=4) {
-				mCommand = 'o'; // load
+			else if (state=="loading" && qrCode.length()<1 && (tmpSec0-tmpSec)>=3) {
+                mCommand = 's';
 				return;
 			}
 			else if (state=="unloading" && qrCode.length()<1 && (tmpSec0-tmpSec)>=3) {
-				mCommand = 'p'; // drop
-				return;
+                mCommand = 's';
+                return;
 			}
+            else if (state.contains("load") && qrCode.length()<1 && (tmpSec0-tmpSec)>=2) {
+                //mCommand = 'p'; // drop
+                //mCommand = 's'; // stop
+                mCommand = '-';
+                return;
+            }
 			else if (state.contains("load") && qrCode.length()<1 && (tmpSec0-tmpSec)>=1) {
-				mCommand = 's';
+                mCommand = 'p'; // drop
+				//mCommand = 's';
 				return;
 			}
 			else if (state=="start" || state.contains("load")) {
-				mCommand = '-';
+				//mCommand = '-';
+                mCommand = 's';
 				return;
 			}
 	  		// waypoint navigation
-	  		if (nextWp>0 || (wpDist>0 && wpDist<999 && searchMode>1 && state!="end")) {
+	  		if (nextWp>0 || (state=="normal" && wpDist>0 && wpDist<999 && searchMode>0)) {
 	  			// if orange cone is close (at RO), then drop payload (waypoint is reached)
 	  			if (searchMode==2 && wpMode>0 && distanceToNextWaypoint<15 && state!="drop" && ((mBoundingRectangle.height>h/4) || (mBoundingRectangle.height>h/5 && mBoundingRectangle.y>(h/2)))) {
 	  				state = "drop";
@@ -3152,34 +3554,59 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  				say("cone");
 	  				mText += "cone";
 	  			}
-	  			if (nextWp>0 || (actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<7 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<51 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
+	  			//if (nextWp>0 || (actualDist>(wpDist+30) && mBoundingRectangle.height<10) || (distanceToNextWaypoint<7 && mBoundingRectangle.height<10) || (distanceToNextWaypoint<51 && Math.abs(turnAngleToNextWaypoint)>110) || state=="drop") {
+                if (nextWp>0 || wpReached()) {
 	  				// waypoint reached
+					cTxt2 = "wp"+wp+" reached "+nextWp;
 					nextWp = 0;
 	  				mText += "WP"+wp;
-                    if (searchMode==3 && wpMode>=2) {
+					if (state!="xxxdrop") {
+						say("point "+wp);
+					}
+                    if (searchMode==3 && goalReached==2 && wpMode>=1) {
+                        // RT finish
+                        state = "end";
+                        qrCode = "";
+                        goalReached = 3;
+                        //runMode = 2;
+                        //computeNextWaypoint(0);
+                        mCommand = 's'; // stop
+                        //slowCommand();
+                        //mCommand = 's'; // stop
+                        tmpSec0 = tmpSec;
+						//showToast(getApplicationContext(), "Service area reached. Mission finished.", Toast.LENGTH_LONG);
+                        say("Stop.   Service area reached. Mission finished.");
+                        return;
+                    }
+                    else if (searchMode==3 && goalReached==1 && wpMode>=1) {
                         // RT unloading
                         state = "unloading";
                         qrCode = "";
                         goalReached = 2;
                         computeNextWaypoint(1);
                         mCommand = 's'; // stop
+                        //slowCommand();
+                        //mCommand = 's'; // stop
                         tmpSec0 = tmpSec;
-                        say("Unloading area reached. Please remove the payload from the robot.");
+						//showToast(getApplicationContext(), "Unloading area reached.", Toast.LENGTH_LONG);
+                        say("Stop.   Unloading area reached. Please remove the payload from the robot.");
                         return;
                     }
-					else if (searchMode==3 && wpMode>=1) {
+					else if (searchMode==3 && goalReached==0 && wpMode>=1) {
 						// RT loading
 						state = "loading";
 						qrCode = "";
 						goalReached = 1;
                         computeNextWaypoint(1);
 						mCommand = 's'; // stop
+                        //slowCommand();
+                        //mCommand = 's'; // stop
                         tmpSec0 = tmpSec;
-						say("Loading area reached. Please place the payload on the robot.");
+						//showToast(getApplicationContext(), "Loading area reached.", Toast.LENGTH_LONG);
+						say("Stop.   Loading area reached. Please place the payload on the robot.");
 						return;
 					}
-	  				if (state!="drop") say("point "+wp);
-	  		    	if (path.size()==(wp+1) || wp==0 || wpMode>0 || state=="drop") {
+	  		    	if ((state=="normal" && (path.size()==(wp+1) || wp==0 || wpMode>0)) || state=="drop") {
 	  		    		// payload drop
 	  		    		if (tmpSec0==0) {
 	  		    			// start payload drop procedure
@@ -3196,7 +3623,8 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		    			}
 	  		    			if (path.size()==(wp+1)) {
 	  		    				goalReached = 2; // go to previous waypoint
-	  			  				computeNextWaypoint(-1);
+	  			  				//computeNextWaypoint(-1);
+								computeNextWaypoint(1);
 	  		    			} else {
 		  		    			goalReached = 1; // go to next waypoint
 				  				computeNextWaypoint(1);
@@ -3204,7 +3632,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		  		    		mCommand = 's'; // stop
 		  		    		counter = 0;
 		  		    		return;
-	  		    		} else if ((tmpSec0-tmpSec)>9) {
+	  		    		} else if (searchMode!=3 && (tmpSec0-tmpSec)>9) {
 	  		    			// end of payload drop procedure
 	  		    			state = "normal";
 	  		    			tmpSec0 = 0;
@@ -3266,7 +3694,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		  		    		mCommand = 'l'; // left
 		  		    		if (turnAngleToNextWaypoint>20) mCommand = 'r';
 		  		    		return;
-	  		    		} else if (((tmpSec0-tmpSec))>=9) {
+	  		    		} else if (searchMode!=3 && ((tmpSec0-tmpSec))>=9) {
 	  		    			state = "normal";
 		  		    		mCommand = 'w'; // forward
 		  		    		return;
@@ -3278,7 +3706,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 	  		    	} else {
 	  		    		// normal waypoint (without payload drop)
 	  		    		if (goalReached!=2) computeNextWaypoint(1);
-	  		    		else computeNextWaypoint(-1);
+	  		    		else computeNextWaypoint(1);
   		    			//state = "waypoint";
 	  		    	}
 	  			}
@@ -3295,6 +3723,18 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		    	}
 		    	return;
   			}
+			if (searchMode>1 && state=="quit") {
+				// mission terminated
+				state = "quit";
+				mCommand = 's'; // stop
+				if (counter>1) {
+					mCommand = '#'; // terminated
+					counter = 0;
+				} else {
+					counter++;
+				}
+				return;
+			}
 		}
 		
     }
@@ -3305,12 +3745,12 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 		distanceToNextWaypoint = results[0];
 		wpDist1 = distanceToNextWaypoint;
 		azimuthToNextWaypoint = results[1];
-    	if (latOK<33f && searchMode!=1 && runMode==1) {
-    		distanceToNextWaypoint = 999;
-    		wpDist1 = 999;
-    		pathAzimuth = azimuthOK;
-    		azimuthToNextWaypoint = azimuthOK;
-    	}
+//    	if (latOK<33f && searchMode!=1 && runMode==1) {
+//    		distanceToNextWaypoint = 999;
+//    		wpDist1 = 999;
+//    		pathAzimuth = azimuthOK;
+//    		azimuthToNextWaypoint = azimuthOK;
+//    	}
     	azimDiff = pathAzimuth - azimuthOK; // initial azimuth difference
     	if (mTargetAzimuth!=999 && (searchMode==1 || searchMode==5)) azimDiff = azimuthOK - mTargetAzimuth; // azimuth difference
     	if (azimDiff<-180) azimDiff += 360;
@@ -3350,7 +3790,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 //		}
 		// probabilistic road navigation
 		if ((searchMode>=1 || mBoundingRectangle.height<10) && roadSearch>=0) {
-	  		if (directionNum>=0) {
+	  		if (directionNum>=0 && searchMode!=3) {
 	  			direction = averageDirection;
 	  			topDirection = averageTopPoint;
 	  		}
@@ -3433,7 +3873,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			}
 			else if (avoiding>0) {
 				avoiding = 0;
-				mCommand = 'w'; // forward
+				//mCommand = 'w'; // forward
 	    		turnAngleToAvoidObstacle = 0.0;
 			}
 		} 
@@ -3445,14 +3885,75 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     	// - turnAngleToStayOnRoad, direction, topDirection, directionOK
     	// - avoiding, turnAngleToAvoidObstacle
 
-    	if (searchMode==3) {
-			// RoboTour (simple algorithm since 2017-12-30)
+        if (searchMode==3) {
+            // complex RoboTour algorithm since 2020-09-19
+            // turnAngleToNextWaypoint, topDirection, turnAngleToAvoidObstacle, vfhr, vfhc
+			// pathAzimuth, nextPathAzimuth, nextTurn, intersection
+            mText += "RT";
+			mCommand = '-'; // no command
+            if (state=="normal") mCommand = 'w'; // go straight
+			// stay on the road (navigate to topPoint)
+			//drivingSignal = topDirection;
+			//drivingSignal = averageTopPoint;
+            drivingSignal = (topDirection + turnAngleToNextWaypoint) * 0.5;
+			if (drivingSignal>80) drivingSignal = 80;
+			else if (drivingSignal<-80) drivingSignal = -80;
+			if (vfhc[2]>0 && drivingSignal < -limit2) mCommand = 'l'; // extra left
+			else if (vfhc[1]>0 && drivingSignal < -limit1) mCommand = 'h'; // slightly left
+			else if (vfhc[5]>0 && drivingSignal > limit2) mCommand = 'r'; // extra right
+			else if (vfhc[4]>0 && drivingSignal > limit1) mCommand = 'k'; // slightly right
+            // drive to the waypoint by the azimuth
+			if (Math.abs(turnAngleToNextWaypoint)>azimuthLimit) {
+				if (vfhc[2]>0 && turnAngleToNextWaypoint < -limit2) mCommand = 'l'; // extra left
+				else if (vfhc[1]>0 && turnAngleToNextWaypoint < -limit1) mCommand = 'h'; // slightly left
+				else if (vfhc[5]>0 && turnAngleToNextWaypoint > limit2) mCommand = 'r'; // extra right
+				else if (vfhc[4]>0 && turnAngleToNextWaypoint > limit1) mCommand = 'k'; // slightly right
+			}
+			// not drive out of the road
+			if (vfhc[6]<-1 && vfhc[2]>0) mCommand = 'l'; // extra left
+            else if (vfhc[0]<-1 && vfhc[4]>0) mCommand = 'r'; // extra right
+			else if ((vfhc[4]<1 || vfhc[5]<1) && vfhc[2]>0) mCommand = 'h'; // slightly left
+			else if ((vfhc[1]<1 || vfhc[2]<1) && vfhc[4]>0) mCommand = 'k'; // slightly right
+			// avoid obstacle
+			if (vfhc[3]<1 || vfhr[5]<5) mCommand = 's';
+			//if (vfhc[3]<1 || vfhr[5]<15) mCommand = 's';
+			//else if (vfhc[1]<1) mCommand = 'r';
+			//else if (vfhc[5]<1) mCommand = 'l';
+		} else if (searchMode==333) {
+			// RoboTour algorithm since 2020-09-06 to 2020-09-18 (with VFH and as simple as possible)
+			// turnAngleToNextWaypoint, topDirection, turnAngleToAvoidObstacle, vfhr, vfhc
+			mText += "RT";
+			mCommand = 'w'; // go straight
+			// stay on the road (navigate to topPoint)
+			drivingSignal = topDirection;
+			//if (drivingSignal < -limit2) mCommand = 'l'; // extra left
+			//else if (drivingSignal < -limit1) mCommand = 'h'; // slightly left
+			//else if (drivingSignal > limit2) mCommand = 'r'; // extra right
+			//else if (drivingSignal > limit1) mCommand = 'k'; // slightly right
+			if (vfhc[2]>0 && drivingSignal < -limit2) mCommand = 'l'; // extra left
+			else if (vfhc[1]>0 && drivingSignal < -limit1) mCommand = 'h'; // slightly left
+			else if (vfhc[5]>0 && drivingSignal > limit2) mCommand = 'r'; // extra right
+			else if (vfhc[4]>0 && drivingSignal > limit1) mCommand = 'k'; // slightly right
+			// drive to the waypoint by the azimuth
+			if (Math.abs(turnAngleToNextWaypoint)>azimuthLimit) {
+				if (vfhc[2]>0 && turnAngleToNextWaypoint < -limit2) mCommand = 'l'; // extra left
+				else if (vfhc[1]>0 && turnAngleToNextWaypoint < -limit1) mCommand = 'h'; // slightly left
+				else if (vfhc[5]>0 && turnAngleToNextWaypoint > limit2) mCommand = 'r'; // extra right
+				else if (vfhc[4]>0 && turnAngleToNextWaypoint > limit1) mCommand = 'k'; // slightly right
+			}
+			// avoid obstacle
+			if (vfhc[3]<1 || vfhr[5]<5) mCommand = 's';
+			//if (vfhc[3]<1 || vfhr[5]<15) mCommand = 's';
+			//else if (vfhc[1]<1) mCommand = 'r';
+			//else if (vfhc[5]<1) mCommand = 'l';
+        } else if (searchMode==33) {
+			// RoboTour algorithm since 2017-12-30 to 2020-09-05
 			mText += "RT";
 			// drive to waypoint
 			if (turnAngleToNextWaypoint < -limit2) mCommand = 'l'; // extra left
-			else if (turnAngleToNextWaypoint <= -limit1) mCommand = 'h'; // slightly left
+			else if (turnAngleToNextWaypoint < -limit1) mCommand = 'h'; // slightly left
 			else if (turnAngleToNextWaypoint > limit2) mCommand = 'r'; // extra right
-			else if (turnAngleToNextWaypoint >= limit1) mCommand = 'k'; // slightly right
+			else if (turnAngleToNextWaypoint > limit1) mCommand = 'k'; // slightly right
 			// stay on road
 			drivingSignal = directionOK;
 			if (mod6 <= 1) {
@@ -3465,9 +3966,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 				mText += "t";
 			}
 			if (drivingSignal < -limit2) mCommand = 'l'; // extra left
-			else if (drivingSignal <= -limit1) mCommand = 'h'; // slightly left
+			else if (drivingSignal < -limit1) mCommand = 'h'; // slightly left
 			else if (drivingSignal > limit2) mCommand = 'r'; // extra right
-			else if (drivingSignal >= limit1) mCommand = 'k'; // slightly right
+			else if (drivingSignal > limit1) mCommand = 'k'; // slightly right
 			// avoid obstacle
 			if (avoiding > 0 || Math.abs(turnAngleToAvoidObstacle) > 1.0) {
 				// avoiding, so drive by turnAngleToAvoidObstacle
@@ -3499,9 +4000,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			}
 
 			if (drivingSignal<-limit2) mCommand = 'l'; // extra left
-			else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
+			else if (drivingSignal<-limit1) mCommand = 'h'; // slightly left
 			else if (drivingSignal>limit2) mCommand = 'r'; // extra right
-			else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
+			else if (drivingSignal>limit1) mCommand = 'k'; // slightly right
 
 			// 4. sanitize command (restrictions and stabilization)
 			if (" kr".indexOf(mCommand)>0 && mRightOK<1) mCommand = 'w'; // can't turn right
@@ -3526,6 +4027,7 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 				}
 			}
     	} else {
+    	    // RoboOrienteering
         	// since 2017-06-20
         	// 1. stay on road
       		if (mod6<3 && searchMode!=1) {
@@ -3561,9 +4063,9 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
     		} else {
     			// not avoiding, so drive by drivingSignal
                 if (drivingSignal<-limit2) mCommand = 'l'; // extra left
-    			else if (drivingSignal<=-limit1) mCommand = 'h'; // slightly left
+    			else if (drivingSignal<-limit1) mCommand = 'h'; // slightly left
     			else if (drivingSignal>limit2) mCommand = 'r'; // extra right
-    			else if (drivingSignal>=limit1) mCommand = 'k'; // slightly right
+    			else if (drivingSignal>limit1) mCommand = 'k'; // slightly right
 
                 // long range obstacle avoiding (for RR, RO and RT)
         		if (searchMode>=1 && (mod6==1 || mod6==5)) {
@@ -3682,9 +4184,10 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
          	mCommand = '-';
         } else if (mPrevCommand!='-') {
         	// send 'f' once before nothing ('-')
-	    	out[0] = 'f';
-         	writeCommand();
-        	tellCommand((char)out[0]);
+	    	//out[0] = 'f';
+			//out[0] = 'w';
+         	//writeCommand();
+        	//tellCommand((char)out[0]);
         	mPrevCommand = '-';
         }
 		if (mCommand2!='-') {
@@ -3720,5 +4223,95 @@ public class NavigationActivity extends Activity implements OnTouchListener, CvC
 			}
 		}
     }
+
+    public int getNearestPoint(double tmpLat, double tmpLon, int xpoc) {
+		double xLat = 0;
+		double xLon = 0;
+		double diff = 0.0;
+		double minDiff = 0.01; // cca 1 km
+		int minIndex = -1;
+		if (tmpLat<40) {
+			int wpx = (wp - 1);
+			if (wpx<0) wpx = 0;
+			tmpLat = path.get(wpx).y;
+			tmpLon = path.get(wpx).x;
+		}
+		for (int i=0; i<points.size(); i++) {
+			xLon = points.get(i).x;
+			xLat = points.get(i).y;
+			diff = Math.abs(tmpLon-xLon)+Math.abs(tmpLat-xLat);
+			if (diff<minDiff) {
+				minDiff = diff;
+				minIndex = i;
+			}
+		}
+		if (minDiff>0.0001 && minDiff<0.01) {
+			// found point is too far (more than 10 m away) so we have to add new point to map
+			int minIndex0 = minIndex;
+			points.add(new Point(tmpLon,tmpLat));
+			minIndex = (points.size() - 1);
+			int ok = 0;
+			float[] results1 = new float[3];
+			float[] results2 = new float[3];
+			int dist1 = 0;
+			int dist2 = 0;
+			int azim = 0;
+			int[] edge = new int[]{0,0,0,0};
+			for (int i=0; i<edges.size(); i++) {
+				// try to find suitable edge in the map
+				int xp1 = edges.get(i)[0];
+				int xp2 = edges.get(i)[1];
+				int xdist = edges.get(i)[2];
+				Point xPoint1 = points.get(xp1);
+				Point xPoint2 = points.get(xp2);
+				Location.distanceBetween(xPoint1.y, xPoint1.x, tmpLat, tmpLon, results1);
+				dist1 = Math.round(results1[0]);
+				Location.distanceBetween(xPoint2.y, xPoint2.x, tmpLat, tmpLon, results2);
+				dist2 = Math.round(results2[0]);
+				int xdiff = Math.abs((xdist-(dist1+dist2)));
+				if (dist1<=xdist && dist2<xdist && xdiff<5) {
+					// OK, this edge is suitable
+					azim = Math.round(results1[1]);
+					edge = new int[]{xp1,minIndex,dist1,azim};
+					edges.add(edge);
+					azim = Math.round(results2[1]);
+					edge = new int[]{xp2,minIndex,dist2,azim};
+					edges.add(edge);
+					ok = 1;
+					showToast(getApplicationContext(), "xdiff: "+xdiff, Toast.LENGTH_SHORT);
+					break;
+				}
+//				if (false && (tmpLon>=xPoint1.x && tmpLon<=xPoint2.x) || (tmpLon>=xPoint2.x && tmpLon<=xPoint1.x) && (tmpLat>=xPoint1.y && tmpLat<=xPoint2.y) || (tmpLat>=xPoint2.y && tmpLat<=xPoint1.y)) {
+//					azim = Math.round(results1[1]);
+//					edge = new int[]{xp1,minIndex,dist1,azim};
+//					edges.add(edge);
+//					azim = Math.round(results2[1]);
+//					edge = new int[]{xp2,minIndex,dist2,azim};
+//					edges.add(edge);
+//					ok = 1;
+//					break;
+//				}
+			}
+			if (ok<1) {
+				// there is not suitable edge, so we have to add new edge to nearest point
+				Location.distanceBetween(points.get(minIndex0).y, points.get(minIndex0).x, tmpLat, tmpLon, results1);
+				dist1 = Math.round(results1[0]);
+				azim = Math.round(results1[1]);
+				edge = new int[]{minIndex0,minIndex,dist1,azim};
+				edges.add(edge);
+			}
+		}
+		if (xpoc<1 && minIndex<0) minIndex = getNearestPoint(path.get(0).y, path.get(0).x, 1);
+		return minIndex;
+	}
+
+	private void showToast(Context context, String text, int lenght) {
+    	try {
+			final Toast toast = Toast.makeText(context, text, lenght);
+			toast.show();
+		} catch (Exception e) {
+    		// TODO
+		}
+	}
 
 }
